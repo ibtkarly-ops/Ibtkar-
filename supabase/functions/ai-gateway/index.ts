@@ -239,6 +239,31 @@ const APP_PROMPT = `أنت مصمم تطبيقات ويب جوال محترف. �
 - أضف في شاشة الإعدادات أو الرئيسية بطاقة قصيرة تشرح كيف يثبّت المستخدم التطبيق على شاشته (مشاركة ثم إضافة إلى الشاشة الرئيسية).
 - لا تخترع أرقام هواتف أو آراء أو إحصائيات حقيقية. لا اتصال بخوادم؛ احفظ ما يلزم في localStorage فقط.`;
 
+// ---- Expo / React Native app chat (super admin) ----
+const EXPO_PROMPT = `أنت مهندس Expo وReact Native محترف يبني تطبيقات جوال من وصف المستخدم بالعربي.
+القواعد:
+- أعطِ ملفاً واحداً كاملاً اسمه App.js (export default function App) يعمل مباشرة في Expo Snack بدون أي إعداد.
+- استعمل فقط هذه المكتبات: react، react-native، expo-status-bar، @expo/vector-icons. لا مكتبات أخرى ولا ملفات أخرى ولا صور خارجية.
+- التنقل بين الشاشات بحالة useState (شريط تبويب سفلي أو أزرار) بدون مكتبات تنقل.
+- دعم العربية: textAlign right وwritingDirection rtl عند الحاجة، وخطوط وأحجام مريحة وأزرار كبيرة سهلة اللمس.
+- تصميم عصري نظيف بالألوان التي يطلبها المستخدم، بيانات نموذجية واضحة، حالات فارغة، وتجربة تشبه تطبيقاً حقيقياً.
+- لا تخترع أرقام هواتف أو معلومات حقيقية. لا اتصال بخوادم؛ خزّن البيانات في الحالة فقط.
+- شكل الرد: رسالة عربية قصيرة (سطرين أو ثلاثة) تشرح ما بنيته أو عدّلته، ثم الكود الكامل في كتلة واحدة \`\`\`jsx. أعد الكود كاملاً في كل مرة (لا مقاطع جزئية).`;
+const APP_IMPORTS = new Set(["react", "react-native", "expo-status-bar"]);
+export function extractApp(text: string): { reply: string; code: string } | null {
+  const m = /```(?:jsx|js|javascript|tsx)?[ \t]*\r?\n([\s\S]*?)```/.exec(text);
+  if (!m) return null;
+  return { code: m[1].trim(), reply: text.replace(m[0], "").trim() };
+}
+export function validApp(code: string): string | null {
+  if (code.length < 50 || code.length > 60_000) return "bad_length";
+  if (!/export\s+default/.test(code)) return "no_default_export";
+  if (/\beval\s*\(|new\s+Function\s*\(|document\.cookie|child_process/.test(code)) return "unsafe_code";
+  const mods = [...code.matchAll(/(?:from|require\s*\()\s*['"]([^'"]+)['"]/g)].map((x) => x[1]);
+  for (const mod of mods) if (!(APP_IMPORTS.has(mod) || mod === "@expo/vector-icons" || mod.startsWith("@expo/vector-icons/"))) return "import_not_allowed:" + mod;
+  return null;
+}
+
 async function prompts(type: string): Promise<string> {
   const key = ({ restaurant: "restaurant", store: "store", company: "company", app: "app" } as Record<string, string>)[type] ?? "landing";
   const { data } = await db.from("ai_prompts").select("key,body").in("key", ["master", key]);
@@ -373,6 +398,28 @@ Deno.serve(async (req) => {
       const { data: all } = await db.from("ai_models").select("model_id,enabled").eq("provider_id", provider.id);
       const en = new Map((all ?? []).map((m: any) => [m.model_id, !!m.enabled]));
       return json({ ok: true, switched, provider: { id: provider.id, name: provider.name, kind }, models: ranked.map((m: Ranked) => ({ id: m.id, role: m.role, tier: m.tier, enabled: en.get(m.id) ?? false })), tested });
+    }
+
+    // ---- Super admin: build / edit an Expo (React Native) app by chatting ----
+    if (body.action === "app_chat") {
+      if (prof.role !== "super_admin") return json({ error: "forbidden" }, 403);
+      const { data: site } = await db.from("websites").select("id,owner_id,name,site_type,config").eq("id", body.website_id).maybeSingle();
+      if (!site || site.site_type !== "app") return json({ error: "website_not_found" }, 404);
+      const msgs = (cleanMessages(body.messages) ?? []).filter((m) => m.role !== "system").slice(-14);
+      if (!msgs.length || msgs[msgs.length - 1].role !== "user") return json({ error: "invalid_messages" }, 400);
+      const cur = String(site.config?.app?.code ?? "");
+      const system = EXPO_PROMPT + (cur ? "\n\nالكود الحالي للتطبيق (عدّله حسب طلب المستخدم وأعده كاملاً):\n```jsx\n" + cur + "\n```" : "");
+      const r = await runAI({ task: "ui", userId: user.id, siteId: site.id, maxTokens: 12000, messages: [{ role: "system", content: system }, ...msgs] });
+      const ex = extractApp(r.text);
+      if (!ex) return json({ ok: false, error: "invalid_output", detail: r.text.slice(0, 200) });
+      const bad = validApp(ex.code);
+      if (bad) return json({ ok: false, error: "invalid_output", detail: bad });
+      const reply = ex.reply || "تم";
+      const chat = [...msgs, { role: "assistant", content: reply }].slice(-40);
+      await db.from("websites").update({ config: { ...(site.config ?? {}), app: { chat, code: ex.code } }, updated_at: new Date().toISOString() }).eq("id", site.id);
+      const { data: vv } = await db.from("website_versions").select("version").eq("website_id", site.id).order("version", { ascending: false }).limit(1);
+      await db.from("website_versions").insert({ website_id: site.id, version: (vv?.[0]?.version ?? 0) + 1, snapshot: { app: { code: ex.code } }, note: "app: " + msgs[msgs.length - 1].content.slice(0, 120), created_by: user.id });
+      return json({ ok: true, reply, code: ex.code, model: r.model });
     }
 
     // ---- Admin: test a provider's real connection ----

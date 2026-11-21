@@ -42,6 +42,28 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
     await p.screenshot({ path: `${out}/site-${n}.png`, fullPage: true });
     await p.close();
   }
+  // ---- effects the customer asked for: promo banner, animated background, motion, floating WhatsApp ----
+  const royal = { name: 'رويال سكيت', type: 'store', lang: 'both', phone: '0931588884', wa: '0931588884', desc: 'متجر إلكتروني أول ما يدخل خلفية متحركة وبانر إعلاني', notes: 'بانر إعلاني وخلفية متحركة وانيميشن قوي', usp: 'أسرع وأرخص موفر قطع الباتيناج', items: 'Yy|1|', color: '#2433ff', style: 'modern' };
+  const fxHtml = await h.page.evaluate((b) => genSite(b), royal);
+  const fp = await h.context.newPage(); await fp.setViewportSize({ width: 1280, height: 800 }); await fp.setContent(fxHtml); await fp.waitForTimeout(1500);
+  check('promo banner is the first thing on the page', await fp.evaluate(() => document.body.firstElementChild.id === 'promo-banner'));
+  check('animated background layer present (data-animated-bg)', (await fp.locator('.hero [data-animated-bg="aurora"]').count()) === 1 && /@keyframes gs/.test(fxHtml));
+  check('floating WhatsApp button', (await fp.locator('#wa-float').count()) === 1);
+  check('store: products come right after the hero (before about)', await fp.evaluate(() => document.querySelector('#items').compareDocumentPosition(document.querySelector('#about')) & Node.DOCUMENT_POSITION_FOLLOWING));
+  check('selling point shown as a card', (await fp.locator('#about .card').first().innerText()).includes('الباتيناج'));
+  await fp.screenshot({ path: out + '/fx-hero.png' });
+  await fp.evaluate(() => window.scrollTo(0, 900)); await fp.waitForTimeout(900); await fp.screenshot({ path: out + '/fx-scroll.png' });
+  check('scroll reveal adds .in to cards', (await fp.locator('.rv.in').count()) > 0);
+  for (const bg of ['particles', 'waves']) {
+    const hh = await h.page.evaluate(([b, g]) => genSite({ ...b, bg: g }), [royal, bg]);
+    await fp.setContent(hh); await fp.waitForTimeout(500);
+    check(bg + ' background renders', (await fp.locator(bg === 'particles' ? '.bg-anim canvas' : '.bg-anim svg').count()) >= 1);
+  }
+  const off = await h.page.evaluate((b) => genSite({ ...b, bg: 'none', motion: 'none', banner: '', notes: '', desc: 'x', type: 'company', float: '0' }), royal);
+  check('everything can be switched off', !/id="promo-banner"/.test(off) && !/data-animated-bg="/.test(off) && !/id="wa-float"/.test(off));
+  const own = await h.page.evaluate((b) => genSite({ ...b, banner: 'خصم 20% هذا الأسبوع' }), royal);
+  check('custom banner text is used', /خصم 20% هذا الأسبوع/.test(own));
+  await fp.close();
   // SEO: items + JSON-LD are present without running any JavaScript
   const html = await h.page.evaluate(() => genSite({ name: 'ملكي', type: 'store', lang: 'ar', phone: '0912345678', desc: 'متجر', logo: 'https://x.supabase.co/storage/v1/object/public/site-assets/s/l.webp', color: '#2433ff', style: 'modern' }));
   const ctx = await h.browser.newContext({ javaScriptEnabled: false }); const np = await ctx.newPage(); await np.setContent(html);

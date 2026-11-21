@@ -305,3 +305,37 @@ Deno.test("failures are explained with the provider's own answer AND recorded wi
   const c = await call("admin", { action: "connect", curl: "not a curl" });
   assert(c.json.error === "curl_not_found", "bad curl explained");
 });
+
+// ---- Expo app chat ----
+const APP_CODE = "import React, { useState } from 'react';\nimport { View, Text } from 'react-native';\nimport { StatusBar } from 'expo-status-bar';\nimport { Ionicons } from '@expo/vector-icons';\nexport default function App() { const [n] = useState(0); return (<View><Text>مرحبا {n}</Text><StatusBar /><Ionicons name=\"home\" /></View>); }";
+const reply = (code: string) => "بنيت لك الشاشة الرئيسية مع شريط تبويب.\n\n```jsx\n" + code + "\n```";
+function appSite() { T.websites.push({ id: "app1", owner_id: "admin", org_id: null, name: "تطبيق", site_type: "app", config: {} }); }
+
+Deno.test("app_chat: super admin only; code extracted, validated, saved with the chat", async () => {
+  reset(); appSite(); providerBehavior = anthropicFake({ text: reply(APP_CODE) });
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const deny = await call("cust", { action: "app_chat", website_id: "app1", messages: [{ role: "user", content: "تطبيق حجوزات" }] });
+  assert(deny.status === 403, "customer refused");
+  const r = await call("admin", { action: "app_chat", website_id: "app1", messages: [{ role: "user", content: "تطبيق حجوزات لعيادة" }] });
+  assert(r.json.ok === true && r.json.code.includes("export default") && /بنيت/.test(r.json.reply) && !r.json.reply.includes("```"), "reply split: " + JSON.stringify(r.json).slice(0, 150));
+  const saved = T.websites.find((w) => w.id === "app1").config.app;
+  assert(saved.code === APP_CODE && saved.chat.length === 2 && saved.chat[0].role === "user", "chat + code saved");
+  assert(T.website_versions.some((v) => v.snapshot?.app?.code === APP_CODE), "version recorded");
+});
+
+Deno.test("app_chat: imports outside the allow-list and unsafe code are rejected; an edit receives the current code", async () => {
+  reset(); appSite();
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" }).catch(() => {});
+  for (const bad of [APP_CODE.replace("expo-status-bar", "expo-file-system"), APP_CODE + "\neval('1')", "```jsx\nconst x = 1;\n```", "no code block here"]) {
+    providerBehavior = anthropicFake({ text: bad.startsWith("```") || bad === "no code block here" ? bad : reply(bad) });
+    if (!T.ai_providers.length) await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+    const r = await call("admin", { action: "app_chat", website_id: "app1", messages: [{ role: "user", content: "x" }] });
+    assert(r.json.error === "invalid_output", "rejected: " + JSON.stringify(r.json).slice(0, 120));
+  }
+  T.websites.find((w) => w.id === "app1").config = { app: { code: APP_CODE, chat: [] } };
+  let sent = "";
+  const base = anthropicFake({ text: reply(APP_CODE) });
+  providerBehavior = (q) => { if (q.url.includes("/v1/messages") && q.body.max_tokens > 16) sent = JSON.stringify(q.body.system); return base(q); };
+  const ok = await call("admin", { action: "app_chat", website_id: "app1", messages: [{ role: "user", content: "غيّر اللون" }] });
+  assert(ok.json.ok === true && sent.includes("export default function App"), "current code sent as context");
+});
