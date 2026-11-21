@@ -338,7 +338,7 @@ body.dr-open .dr-bg{opacity:1;pointer-events:auto}
 .dr-i.out{color:var(--er)}
 .dr-x{margin-inline-start:auto}
 body.dr-open{overflow:hidden}
-body.appmode #pubdr,body.appmode #pubbg{display:none}
+body.appmode #pubdr,body.appmode #pubbg,body.appmode #pubbtm{display:none}
 @media(min-width:1024px){
   .menu-btn{display:none!important}
   #pubdr,#pubbg{display:none}
@@ -349,7 +349,14 @@ body.appmode #pubdr,body.appmode #pubbg{display:none}
   .tb .bell{display:none}.tb .logo{display:none}
   .tb{padding:12px 28px}.ct{padding:20px 28px 44px}
 }
-@media(max-width:1023px){nav .links{display:none}}
+@media(max-width:1023px){nav .links{display:none}.menu-btn{display:none}body{padding-bottom:calc(60px + env(safe-area-inset-bottom))}html{scroll-padding-bottom:calc(64px + env(safe-area-inset-bottom))}.ct{padding-bottom:calc(64px + env(safe-area-inset-bottom))}footer{padding-bottom:calc(64px + env(safe-area-inset-bottom))}}
+.btm-nav{display:none;position:fixed;top:auto;inset-inline:0;bottom:0;height:auto;z-index:60;background:var(--card);border-top:1px solid var(--bd);padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around;align-items:center;gap:2px}
+@media(max-width:1023px){.btm-nav{display:flex}body.appmode .btm-nav{display:flex}}
+.btm-nav .bn-i{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--tx2);font-size:11px;font-weight:500;flex:1;min-width:0;border:0;background:none;cursor:pointer;padding:6px 2px;border-radius:12px;position:relative;text-decoration:none}
+.btm-nav .bn-i svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.btm-nav .bn-i span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.btm-nav .bn-i.on{color:var(--ac)}
+.btm-nav .bn-i em{position:absolute;top:2px;inset-inline-end:14%;background:var(--er);color:#fff;font-size:10px;font-style:normal;border-radius:99px;min-width:16px;height:16px;display:grid;place-items:center;padding:0 3px;line-height:1}
 @media(max-width:639px){#langbtn,#auth .btn.s{display:none}.tb .logo{display:none}}
 
 /* ----- landing ----- */
@@ -460,7 +467,7 @@ body.dark::before{opacity:.9}body.dark::after{background-image:radial-gradient(r
 /* ===================== v6: dark glass + vivid gradients (new identity) ===================== */
 :root{--ac:#6d5cff;--ac2:#5b4ae0;--ac3:#19d3c5;--warm:#ff6fd8;--navy:#07060f;--bd:rgba(109,92,255,.18);--card:rgba(255,255,255,.72);--sh:0 16px 36px -18px rgba(76,61,196,.32);--r:22px;--g:linear-gradient(120deg,#6d5cff 0%,#8b5cf6 45%,#19d3c5 100%)}
 body.dark{--ac:#8b7bff;--ac2:#6d5cff;--ac3:#22e6d6;--warm:#ff8fe0;--bg:#07060f;--bg2:#0b0a1f;--card:rgba(255,255,255,.055);--bd:rgba(255,255,255,.1);--tx:#f1f0ff;--tx2:#aaa6cf;--navy:#040410;--sh:0 22px 54px -22px rgba(0,0,0,.68)}
-.card{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--bd);position:relative;isolation:isolate}
+.card{border:1px solid var(--bd);position:relative;isolation:isolate}
 .card::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,0) 55%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;opacity:.55}
 body.dark .card::before{opacity:.22}
 nav,.dr-l,.dr-t,.dr-f,.bo-c,.lp-mock,.pricecard,.plan,.banner,#bar{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
@@ -493,7 +500,7 @@ body::before{background:radial-gradient(32vmax 32vmax at 18% 12%,rgba(109,92,255
   <button class="btn s sm" data-act="lang" id="langbtn">EN</button>
   <span id="auth"></span>
 </div></nav>
-<aside class="dr" id="pubdr"></aside><div class="dr-bg" id="pubbg" data-act="menu"></div>
+<aside class="dr" id="pubdr"></aside><div class="dr-bg" id="pubbg" data-act="menu"></div><nav class="btm-nav" id="pubbtm"></nav>
 <main id="v"></main>
 <footer><div class="wrap" id="foot"></div></footer>
 <div id="toast"></div>
@@ -582,6 +589,8 @@ Object.assign(T.ar,{upg_t:'حدّث تصميم موقعك',upg_d:'تصميم م�
 Object.assign(T.en,{upg_t:'Refresh your site design',upg_d:'Your site uses the older design. We can update it now with a promo banner, animated background, strong motion and a floating WhatsApp button, keeping your items and details.',upg_btn:'Refresh design now',upg_ai:'or rebuild with AI'});
 Object.assign(T.ar,{contract_pending:'بانتظار إرسال العقد وتوقيعه من الإدارة',ctr_pending_tip:'لا يمكن النشر حتى يرسل لك فريقنا عقداً وتوقّعه',ctr_pending_note:'موقعك جاهز، لكنه لن يُنشر حتى يرسل لك فريقنا عقد الاشتراك وتوقّعه إلكترونياً. سنتواصل معك قريباً.',bo_ctr_t:'موقعك جاهز!',bo_ctr_d:'سيرسل لك فريقنا عقد الاشتراك قريباً، وبمجرد توقيعه سيُنشر موقعك تلقائياً.',ctr_website:'الموقع المرتبط',ctr_nosite:'بلا موقع محدد',ctr_storage:'مساحة الصور',ctr_storage_of:'من 20 ميقا',ctr_storage_full:'اكتملت مساحة الصور المتاحة لهذا الموقع (20 ميقا). احذف صورة قديمة لتضيف صورة جديدة.'});
 Object.assign(T.en,{contract_pending:'Awaiting the contract to be sent and signed by our team',ctr_pending_tip:'Publishing is blocked until our team sends you a contract and you sign it',ctr_pending_note:'Your site is ready, but it will not publish until our team sends you a service contract and you sign it electronically. We will be in touch soon.',bo_ctr_t:'Your site is ready!',bo_ctr_d:'Our team will send you the contract soon, and your site will publish automatically once it is signed.',ctr_website:'Linked website',ctr_nosite:'No website selected',ctr_storage:'Image storage',ctr_storage_of:'of 20 MB',ctr_storage_full:'This site has used its full image storage (20 MB). Remove an old image to add a new one.'});
+Object.assign(T.ar,{contract_ready:'لديك عقد ينتظر توقيعك',contract_approved:'تم اعتماد عقدك',contract_received:'استلمنا عقدك الموقّع، بانتظار اعتماد الإدارة',ctr_tap_sign:'اضغط لعرض العقد وتوقيعه',ctr_tap_view:'اضغط لعرض عقودك',admin_viewing:'تتصفّح موقع: ',admin_viewing_s:' — بصفتك أدمن',admin_back:'كل المواقع',more:'المزيد'});
+Object.assign(T.en,{contract_ready:'You have a contract waiting for your signature',contract_approved:'Your contract has been approved',contract_received:'We received your signed contract, awaiting admin approval',ctr_tap_sign:'Tap to view and sign the contract',ctr_tap_view:'Tap to view your contracts',admin_viewing:'Browsing website: ',admin_viewing_s:' — as admin',admin_back:'All websites',more:'More'});
 Object.assign(T.en,{slow:'The connection is slow or stalled.',retry:'Try again',resetsession:'Clear session and reload',timeout:'Request timed out, please try again',network:'Could not reach the network',session_timeout:'Session is slow, please retry',not_signed_in:'Please sign in first',verify_failed:'Could not verify the publish',bo_tpl_note:'Published with a basic design because the AI was unavailable'});
 let L=localStorage.getItem('lang')||'ar';
 const t=k=>T[L][k]??k;
@@ -614,6 +623,7 @@ function chrome(){
   $('#links').innerHTML=[['#/',t('home')],['#/pricing',t('pricing')],['#/apps',t('apps')]].map(([a,n])=>`<a href="${a}" class="${h===a?'on':''}">${n}</a>`).join('');
   $('#mbtn').innerHTML=ic('menu');
   $('#pubdr').innerHTML=drawer([['#/',t('home')],['#/pricing',t('pricing')],['#/apps',t('apps')],...(me?[['#/app',t('dash')],...(isAdm()?[['#/admin',t('admin')]]:[])]:[['#/login',t('login')],['#/signup',t('signup')]])],h,null,true);
+  $('#pubbtm').innerHTML=bottomTabs([['#/',t('home'),'home'],['#/pricing',t('pricing'),'price'],['#/apps',t('apps'),'phone'],me?['#/app',t('dash'),'grid']:['#/login',t('login'),'login']],h,false);
   $('#auth').innerHTML=me?`<a class="btn s sm" href="#/app">${t('dash')}</a> ${isAdm()?`<a class="btn s sm" href="#/admin">${t('admin')}</a>`:''} <button class="btn s sm" data-act="logout">${t('logout')}</button>`
     :`<a class="btn p sm" href="#/login">${t('login')}</a>`;
   $('nav .logo').innerHTML=LOGO+'<span>ابتكار<small>IBTIKAR</small></span>';
@@ -644,7 +654,10 @@ function fxAfter(v){
   const RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
   if(FXIO)FXIO.disconnect();
   const lazy=[...v.querySelectorAll('[data-demo],[data-thumb]')];
-  const load=fr=>{if(fr._m)return;fr._m=1;if(fr.dataset.demo){const b=DEMOS()[fr.dataset.demo];if(b)mountFrame(fr,genSite(b),true)}else{const h=THUMBS[fr.dataset.thumb];if(h)mountFrame(fr,h,false)}};
+  // المعاينات (أمثلة حيّة + صور مواقعي) ثابتة بلا جافاسكربت: الحركات البصرية (CSS) تبقى، لكن لا مؤقّتات
+  // ولا مستمعات ولا مراقبين تعمل داخلها إلى الأبد — هذا ما كان يسبّب تجمّد الصفحة عند التمرير.
+  let pending=0;
+  const load=fr=>{if(fr._m)return;fr._m=1;const i=pending++;setTimeout(()=>{if(fr.dataset.demo){const b=DEMOS()[fr.dataset.demo];if(b)mountFrame(fr,genSite(b),false)}else{const h=THUMBS[fr.dataset.thumb];if(h)mountFrame(fr,h,false)}},i*70)};
   const rv=RM?[]:[...v.querySelectorAll('.lp-sec h2,.lp-sec .sub,.lp-card,.lp-why>div,.steps>.card,.plan,.demo,.lp-sec details,.cta')];
   rv.forEach((el,i)=>{el.classList.add('prv');el.style.setProperty('--d',((i%4)*90)+'ms')});
   if(!('IntersectionObserver' in window)){lazy.forEach(load);rv.forEach(el=>el.classList.add('in'));return}
@@ -754,9 +767,16 @@ function topbar(){
   return `<header class="tb"><button class="ib menu-btn" data-act="menu" aria-label="${t('sections')}">${ic('menu')}</button><a class="logo" href="#/app">${LOGO}<span>ابتكار<small>IBTIKAR</small></span></a><div class="search">${ic('search')}<input id="gs" placeholder="${t('searchph')}" autocomplete="off"><div id="sres" class="sres" hidden></div></div><span class="sp"></span>
   <a class="ib bell" href="#/app/notes" aria-label="${t('notes')}">${ic('bell')}${UNREAD?`<em>${UNREAD}</em>`:''}</a></header>`;
 }
+function bottomTabs(items,cur,more){
+  const a=(h,n,i,em)=>`<a class="bn-i${cur===h?' on':''}" href="${h}">${ic(i)}${em?`<em>${em}</em>`:''}<span>${n}</span></a>`;
+  return items.map(([h,n,i,em])=>a(h,n,i,em)).join('')+(more?`<button class="bn-i" data-act="menu">${ic('menu')}<span>${t('more')}</span></button>`:'');
+}
 function shell(side,cur,body){
   const ex=SHEET_EXTRA;SHEET_EXTRA=null;
-  return `<div class="app"><aside class="dr" id="drawer">${drawer(side,cur,ex,false)}</aside><div class="dr-bg" data-act="menu"></div><div class="mn">${topbar()}<div class="ct">${body}</div></div></div>`;
+  const adm=(cur||'').startsWith('#/admin');
+  const btm=adm?bottomTabs([['#/admin',t('dashT'),'grid'],['#/admin/sites',t('allsites'),'globe'],['#/admin/users',t('users'),'users'],['#/admin/contracts',t('contracts'),'card']],cur,true)
+    :bottomTabs([['#/app',t('dashT'),'grid'],['#/app/sites',t('mysites'),'globe'],['#/app/new',t('newsite'),'plus'],['#/app/notes',t('notes'),'bell',UNREAD||'']],cur,true);
+  return `<div class="app"><aside class="dr" id="drawer">${drawer(side,cur,ex,false)}</aside><div class="dr-bg" data-act="menu"></div><div class="mn">${topbar()}<div class="ct">${body}</div></div></div><nav class="btm-nav">${btm}</nav>`;
 }
 /* ----- build / publish overlay ----- */
 function boOpen(title,sub,stages){let el=$('#bo');if(!el){el=document.createElement('div');el.id='bo';document.body.append(el)}
@@ -870,7 +890,7 @@ async function vAAnalytics(){
   ${E.length?analyticsBlock(E):`<div class="empty">${t('nodata')}</div>`}<div class="card" style="margin-top:18px"><h3>${t('topsites')}</h3><br>${topList(Object.fromEntries(top.map(([k,c])=>[names[k]||k,c])))}</div>`);
 }
 async function vSites(){
-  const {data}=await sb.from('websites').select('*').neq('site_type','app').order('created_at',{ascending:false});
+  const {data}=await sb.from('websites').select('*').neq('site_type','app').order('created_at',{ascending:false}).limit(60);
   return shell(SIDE_C(),'#/app/sites',`<div class="ph"><h1>${t('mysites')}</h1><span class="sp"></span><a class="btn p" href="#/app/new">${t('newsite')}</a></div>`+(data&&data.length?`<div class="grid sgrid">${data.map(w=>{if(w.config&&w.config.html)THUMBS[w.id]=w.config.html;return `<a class="card h scard" href="#/app/site/${w.id}"><div class="sthumb">${w.config&&w.config.html?`<div class="fr" data-thumb="${w.id}"></div>`:`<div class="noth">${ic('globe')}</div>`}</div><div class="row2"><h3>${esc(w.name)}</h3><span class="sp"></span>${stChip(w.status)}</div><p>${esc(w.site_type||'')}</p><p style="font-size:12px;margin-top:10px">${fmtD(w.updated_at)}</p></a>`}).join('')}</div>`:`<div class="empty">${t('nosites')}<br><br><a class="btn p" href="#/app/new">${t('newsite')}</a></div>`));
 }
 async function vCRequests(){
@@ -1055,6 +1075,12 @@ async function vSite(id,tab){
   const {data:w}=await sb.from('websites').select('*').eq('id',id).maybeSingle();
   const S=SIDE_C();
   if(!w)return shell(S,'#/app/sites',`<div class="empty">404</div>`);
+  const asAdmin=isAdm()&&w.owner_id!==me.id;
+  let adminBanner='';
+  if(asAdmin){
+    const {data:op}=await sb.from('profiles').select('full_name').eq('id',w.owner_id).maybeSingle();
+    adminBanner=`<div class="card" style="margin-bottom:14px;border-color:var(--ac);display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span>${t('admin_viewing')}<b>${esc(w.name)}${op?.full_name?' — '+esc(op.full_name):''}</b>${t('admin_viewing_s')}</span><span class="sp"></span><a class="btn s sm" href="#/admin/sites">${t('admin_back')}</a></div>`;
+  }
   const tabs=['overview','items','details','analytics','versions','requests','domains'].filter(x=>!(w.site_type==='app'&&x==='items')),html=w.config?.html||'';
   const TI={overview:'globe',items:'shop',details:'list',analytics:'chart',versions:'pulse',requests:'chat',domains:'server'};SHEET_EXTRA={title:w.name,cur:'#/app/site/'+id+'/'+tab,items:tabs.map(x=>['#/app/site/'+id+'/'+x,t('tab_'+x),TI[x]])};
   const {data:pss}=await sb.from('platform_settings').select('key,value').in('key',['public.sites_base_url','public.sites_root_domain']);const root=((pss||[]).find(x=>x.key==='public.sites_root_domain')||{}).value||'',pbase=((pss||[]).find(x=>x.key==='public.sites_base_url')||{}).value||'';const hostOk=!!(pss&&pss.length);
@@ -1103,7 +1129,7 @@ async function vSite(id,tab){
     b=`<p style="color:var(--tx2);margin-bottom:14px">${t('domnote')}</p><form data-form="domain" data-id="${id}" class="card row2" style="margin-bottom:16px"><input name="host" required placeholder="example.com" pattern="[A-Za-z0-9.-]+\\.[A-Za-z]{2,}" style="width:280px;direction:ltr"><button class="btn p">${t('adddom')}</button></form>`+
     tbl([t('domain'),t('status'),''],(data||[]).map(d=>`<tr><td dir="ltr" style="text-align:start">${esc(d.hostname)}</td><td><span class="chip wa">${esc(d.status)}</span></td><td><button class="btn d sm" data-act="deldom" data-id="${d.id}">${t('del')}</button></td></tr>`));
   }
-  return shell(S,'#/app/sites',head+b);
+  return shell(S,'#/app/sites',adminBanner+head+b);
 }
 
 
@@ -1271,7 +1297,7 @@ footer .fw{font:700 clamp(46px,11vw,150px)/1 'Readex Pro',sans-serif;color:trans
 #cart .cf{padding:16px 20px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--bd);display:grid;gap:10px}#cart .tot{display:flex;justify-content:space-between;font-size:17px}#cart .tot b{color:var(--c)}#cart input,#cart textarea{width:100%;padding:10px 14px;border-radius:14px;border:1px solid var(--bd);background:var(--card);color:var(--ink);font:inherit;font-size:14.5px;resize:vertical}#cart-send{justify-content:center;background:#25d366;border-color:#25d366;color:#fff;margin:0;width:100%}#cart-send svg{width:20px;height:20px;fill:#fff}#cart-send.off{opacity:.5;pointer-events:none}.lnk{border:0;background:none;color:var(--mut);font-size:13px;cursor:pointer;text-decoration:underline}
 @media(max-width:820px){.hgrid{grid-template-columns:1fr}.menu{grid-template-columns:1fr}.svcg,.bento{grid-template-columns:1fr}.bento .item:nth-child(4n+1),.bento .item:nth-child(4n){grid-column:auto}.row .tp{flex-direction:row}.row .bd,.svc .bd{padding:0}.tl{grid-template-columns:1fr}.tl::before{display:none}.tl li{display:grid;grid-template-columns:48px 1fr;column-gap:14px;text-align:start}.tl li span{margin:0;grid-row:span 2}.mqc{margin:12px 12px 0}#cart-btn{bottom:78px;inset-inline-end:18px;width:56px;height:56px}#totop{display:none}.cats.mt{top:56px}.hero.big{min-height:480px}}
 .hd{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:${rgba(st.cls==='dark'?'#000000':'#ffffff',.72)}}
-[data-theme=dark] .card,[data-theme=dark] .item{background:${rgba('#ffffff',.045)};backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+[data-theme=dark] .card,[data-theme=dark] .item{background:${rgba('#ffffff',.045)}}
 .card::before,.item::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;background:linear-gradient(180deg,${rgba('#ffffff',.5)},${rgba('#ffffff',0)} 55%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;opacity:.35}
 [data-theme=dark] .card::before,[data-theme=dark] .item::before{opacity:.16}
 .card,.item{isolation:isolate}
@@ -1521,7 +1547,12 @@ async function vApp(sub){
   if(sub==='notes'){
     const {data}=await sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(50);
     return shell(S,'#/app/notes',`<div class="row2"><h2>${t('notes')}</h2><span class="sp"></span><button class="btn s sm" data-act="readall">${t('readall')}</button></div><br>`+
-      (data&&data.length?`<div style="display:grid;gap:10px">${data.map(n=>`<div class="card" style="${n.read_at?'opacity:.6':''}"><b>${esc(t(n.title))}</b> ${n.body?'· '+esc(n.body):''}<br><small style="color:var(--tx2)">${fmtD(n.created_at)}</small></div>`).join('')}</div>`:`<div class="empty">${t('nonotes')}</div>`));
+      (data&&data.length?`<div style="display:grid;gap:10px">${data.map(n=>{
+        const href=n.type==='contract_ready'?'#/c/'+n.body:n.type==='contract_approved'?'#/app/contracts':null;
+        const bodyTxt=n.type==='contract_ready'?t('ctr_tap_sign'):n.type==='contract_approved'?t('ctr_tap_view'):(n.body?esc(n.body):'');
+        const inner=`<b>${esc(t(n.title))}</b> ${bodyTxt?'· '+bodyTxt:''}<br><small style="color:var(--tx2)">${fmtD(n.created_at)}</small>`;
+        return href?`<a class="card" style="display:block;${n.read_at?'opacity:.6':''}" href="${href}">${inner}</a>`:`<div class="card" style="${n.read_at?'opacity:.6':''}">${inner}</div>`;
+      }).join('')}</div>`:`<div class="empty">${t('nonotes')}</div>`));
   }
   if(sub==='billing'){
     const {data}=await sb.from('invoices').select('*').order('created_at',{ascending:false});
@@ -1790,8 +1821,8 @@ document.addEventListener('click',async e=>{
     if(a==='quote'){b.textContent=t('pricing_now');const j=await gw({action:'quote',request_id:id});if(!j.ok)throw new Error(j.error||t('err'))}
     if(a==='paid'){const r=await sb.from('invoices').update({status:'paid'}).eq('id',id);if(r.error)throw r.error;await audit('invoice.paid','invoices',{id})}
     if(a==='runcheck'){const j=await fx('uptime-check',{},120000);if(j.error)throw new Error(errText(j.error)||t('err'));toast(t('checked')+': '+j.checked);render({keep:true});return}
-    if(a==='ctrsend'){const r=await sb.from('contracts').update({status:'sent',sent_at:new Date().toISOString()}).eq('id',id).eq('status','draft');if(r.error)throw r.error;await audit('contract.send','contracts',{id})}
-    if(a==='ctrapprove'){const r=await sb.from('contracts').update({status:'approved',approved_at:new Date().toISOString(),approved_by:me.id}).eq('id',id).eq('status','received_signed');if(r.error)throw r.error;await audit('contract.approve','contracts',{id})}
+    if(a==='ctrsend'){const r=await sb.from('contracts').update({status:'sent',sent_at:new Date().toISOString()}).eq('id',id).eq('status','draft').select('customer_id,share_token').single();if(r.error)throw r.error;await audit('contract.send','contracts',{id});if(r.data)try{await sb.from('notifications').insert({user_id:r.data.customer_id,type:'contract_ready',title:'contract_ready',body:r.data.share_token})}catch(e){}}
+    if(a==='ctrapprove'){const r=await sb.from('contracts').update({status:'approved',approved_at:new Date().toISOString(),approved_by:me.id}).eq('id',id).eq('status','received_signed').select('customer_id').single();if(r.error)throw r.error;await audit('contract.approve','contracts',{id});if(r.data)try{await sb.from('notifications').insert({user_id:r.data.customer_id,type:'contract_approved',title:'contract_approved'})}catch(e){}}
     if(a==='ctrcopy'){try{await navigator.clipboard.writeText(b.dataset.link)}catch(e){}toast(t('ctr_linkcopied'));b.disabled=false;return}
     if(a==='ctrfile'){
       const which=b.dataset.which;

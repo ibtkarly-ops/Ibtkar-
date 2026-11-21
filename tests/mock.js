@@ -110,8 +110,14 @@ async function launch(opts = {}) {
     if (url.pathname.startsWith('/rest/v1/')) {
       const table = url.pathname.split('/')[3];
       const accept = req.headers()['accept'] || '';
-      const rows = T[table] || [];
+      let rows = T[table] || [];
       if (method === 'GET' || method === 'HEAD') {
+        // minimal PostgREST-style filtering: ?col=eq.value (ignored params still return everything, as before)
+        for (const [k, v] of url.searchParams) {
+          if (['select', 'order', 'limit', 'offset'].includes(k)) continue;
+          const m = /^eq\.(.*)$/.exec(v);
+          if (m) rows = rows.filter((r) => String(r[k]) === m[1]);
+        }
         const range = { 'content-range': `0-${Math.max(rows.length - 1, 0)}/${rows.length}` };
         if (method === 'HEAD') return route.fulfill({ status: 200, headers: { ...CORS, ...range } });
         if (accept.includes('vnd.pgrst.object')) return json(rows.length ? 200 : 406, rows[0] || { code: 'PGRST116', message: 'no rows' }, range);
