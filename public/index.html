@@ -25,7 +25,7 @@
 <style>
 .skip-link{position:absolute;inset-inline-start:-9999px;top:auto;background:var(--ac);color:#fff;padding:10px 18px;border-radius:0 0 12px 12px;z-index:100;font-weight:500}
 .skip-link:focus{inset-inline-start:12px;top:0}
-:root{--bg:#fff;--bg2:#F7F8FA;--tx:#171717;--tx2:#6b7280;--bd:#EAECEF;--ac:#2433ff;--ac2:#00c2a8;--ok:#16a34a;--wa:#f59e0b;--er:#dc2626;--g:linear-gradient(115deg,#2433ff 0%,#5b4bff 48%,#00c2a8 100%);--sh:0 1px 2px rgba(23,23,23,.04),0 14px 34px -18px rgba(23,23,23,.22)}
+:root{--bg:#fff;--bg2:#F7F8FA;--tx:#171717;--tx2:#6b7280;--bd:#EAECEF;--ac:#2433ff;--ac2:#00c2a8;--navy:#0f1b4c;--ok:#16a34a;--wa:#f59e0b;--er:#dc2626;--g:linear-gradient(115deg,#2433ff 0%,#5b4bff 48%,#00c2a8 100%);--sh:0 1px 2px rgba(23,23,23,.04),0 14px 34px -18px rgba(23,23,23,.22)}
 *{box-sizing:border-box;margin:0}
 html{scroll-behavior:smooth}
 body{font:400 15px/1.75 'IBM Plex Sans Arabic',system-ui,sans-serif;color:var(--tx);background:var(--bg);-webkit-font-smoothing:antialiased}
@@ -35,7 +35,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .wrap{max-width:1180px;margin:auto;padding:0 22px}
 nav{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.78);backdrop-filter:saturate(1.6) blur(16px);border-bottom:1px solid rgba(234,236,239,.8)}
 nav .wrap{display:flex;align-items:center;gap:16px;height:68px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:-.01em}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:-.01em;color:var(--navy)}
 .logo i{width:34px;height:34px;border-radius:11px;background:var(--g);display:grid;place-items:center;color:#fff;font-style:normal;font-size:18px;box-shadow:0 8px 18px -8px var(--ac)}
 nav .links{display:flex;gap:2px;margin-inline-start:18px}
 nav .links a{padding:7px 14px;border-radius:10px;color:var(--tx2);font-weight:500;transition:.2s}
@@ -194,7 +194,7 @@ body.appmode nav,body.appmode footer,body.appmode #bar{display:none}
 .plan{position:relative}.plan.pop{border-color:var(--ac);box-shadow:0 26px 48px -24px rgba(36,51,255,.4);transform:translateY(-6px)}.plan.pop:hover{transform:translateY(-10px)}
 .pill-pop{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--g);color:#fff;font-size:12px;font-weight:700;padding:4px 14px;border-radius:99px;box-shadow:0 8px 16px -6px var(--ac);white-space:nowrap}
 .fcols{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px}.fcols a{display:block;padding:3px 0}.fcols a:hover{color:var(--ac)}.fcols b{color:var(--tx);display:block;margin-bottom:6px}
-body.dark{--bg:#0f1330;--bg2:#0b0e24;--tx:#eef0ff;--tx2:#9aa0c0;--bd:#232850;--sh:none}
+body.dark{--bg:#0f1330;--bg2:#0b0e24;--tx:#eef0ff;--tx2:#9aa0c0;--bd:#232850;--navy:#eef0ff;--sh:none}
 body.dark .card,body.dark .sb,body.dark .tw,body.dark input,body.dark select,body.dark textarea,body.dark .btn.s,body.dark .ib,body.dark .sres,body.dark .pills span,body.dark .btn.d,body.dark .mock,body.dark .rg .on,body.dark .empty{background:#151a3d}
 body.dark .tb{background:rgba(11,14,36,.85)}body.dark th{background:#0f1330}body.dark .chip{background:#1b2150}body.dark .ico{background:#1b2150}
 body.dark nav{background:rgba(15,19,48,.8)}body.dark footer{background:#0b0e24}body.dark .svc{background:#151a3d}body.dark tbody tr:hover{background:#1a2048}
@@ -270,7 +270,7 @@ body.dark .pricecard{background:#1b2150;border-color:#2a3170}
 <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#2433ff"/><stop offset="1" stop-color="#00c2a8"/></linearGradient></defs></svg>
 <div id="bar" hidden></div>
 <nav><div class="wrap">
-  <a class="logo" href="#/"><i>ا</i><span>ابتكار</span></a>
+  <a class="logo" href="#/"><svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><path d="M3 3 33 3 24 13 3 13Z" fill="var(--ac)"/><path d="M3 16 25 16 16 26 3 26Z" fill="var(--ac)"/><path d="M3 29 19 29 10 39 3 39Z" fill="var(--ac)" opacity=".82"/></svg><span>ابتكار</span></a>
   <div class="links" id="links"></div><div class="sp"></div>
   <button class="btn s sm" data-act="lang" id="langbtn">EN</button>
   <span id="auth"></span>
@@ -406,7 +406,7 @@ const SIDE_C=()=>[['#/app',t('dashT')],['#/app/sites',t('mysites')],['#/app/new'
 const ICP={grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',globe:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',plus:'M12 5v14M5 12h14',chat:'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z',bell:'M18 16v-5a6 6 0 1 0-12 0v5l-2 2h16zM10 20a2 2 0 0 0 4 0',card:'M3 6h18v12H3zM3 10h18',users:'M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M21 20v-2a4 4 0 0 0-3-3.9',flag:'M4 4v17M4 4h12l-2 4 2 4H4',price:'M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',bolt:'M13 2L4 14h7l-1 8 9-12h-7z',pulse:'M3 12h4l3-8 4 16 3-8h4',list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',chart:'M4 20V10M10 20V4M16 20v-7M22 20H2',server:'M3 4h18v6H3zM3 14h18v6H3zM7 7h.01M7 17h.01',gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1',moon:'M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z',search:'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3'};
 const ICH={'#/app':'grid','#/app/sites':'globe','#/app/new':'plus','#/app/analytics':'chart','#/app/requests':'list','#/app/support':'chat','#/app/notes':'bell','#/app/billing':'card','#/app/contracts':'card','#/app/settings':'gear','#/admin':'grid','#/admin/analytics':'chart','#/admin/users':'users','#/admin/sites':'globe','#/admin/requests':'list','#/admin/tickets':'chat','#/admin/invoices':'card','#/admin/contracts':'card','#/admin/banners':'flag','#/admin/plans':'price','#/admin/servers':'server','#/admin/monitor':'pulse','#/admin/engine':'bolt','#/admin/audit':'list','#/admin/settings':'gear','#/admin/prompts':'list'};
 const DAY=864e5;let ST={},UNREAD=0;
-const LOGO=`<svg viewBox="0 0 40 40" width="34" height="34"><path d="M3 35 17 7q3-5 6 0l14 28h-8L20 17 11 35z" fill="url(#lg)"/><path d="m14 35 6-11 6 11z" fill="url(#lg)" opacity=".5"/></svg>`;
+const LOGO=`<svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><path d="M3 3 33 3 24 13 3 13Z" fill="var(--ac)"/><path d="M3 16 25 16 16 26 3 26Z" fill="var(--ac)"/><path d="M3 29 19 29 10 39 3 39Z" fill="var(--ac)" opacity=".82"/></svg>`;
 const ic=n=>`<svg viewBox="0 0 24 24" class="ics"><path d="${ICP[n]}"/></svg>`;
 let SHEET_EXTRA=null;
 const TYPE4=[['company','🏢'],['store','🛍️'],['landing','✨'],['restaurant','🍽️']];
