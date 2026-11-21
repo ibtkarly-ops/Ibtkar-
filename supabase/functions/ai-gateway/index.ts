@@ -28,7 +28,16 @@ const BASES: Record<string, string> = {
   gemini: "https://generativelanguage.googleapis.com",
 };
 
-async function callProvider(kind: string, endpoint: string | null, key: string, model: string, messages: Msg[], maxTokens = 4096, timeoutMs = 45_000): Promise<Out> {
+// Rough token estimate for budgeting a request (Arabic packs fewer characters per token than English).
+export const estTokens = (messages: Msg[]) => Math.ceil(messages.reduce((a, m) => a + m.content.length, 0) / 2.6) + 40 * messages.length;
+
+/** Free open-model hosts reject a request whose input + max_tokens exceeds their per-minute token limit. */
+export function fitMaxTokens(kind: string, messages: Msg[], want: number, cap: number): number {
+  if (kind !== "custom" || !cap) return want;
+  return Math.max(900, Math.min(want, cap - estTokens(messages)));
+}
+
+async function callProvider(kind: string, endpoint: string | null, key: string, model: string, messages: Msg[], maxTokens = 4096, timeoutMs = 45_000, jsonMode = false): Promise<Out> {
   const base = (endpoint || BASES[kind] || "").replace(/\/+$/, "");
   if (!base.startsWith("https://")) throw new Error("provider endpoint must be https");
   const system = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
@@ -55,7 +64,7 @@ async function callProvider(kind: string, endpoint: string | null, key: string, 
       body: JSON.stringify({
         systemInstruction: system ? { parts: [{ text: system }] } : undefined,
         contents: turns.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
-        generationConfig: { maxOutputTokens: Math.max(maxTokens, 8192), ...(/flash/i.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}) },
+        generationConfig: { maxOutputTokens: Math.max(maxTokens, 8192), ...(jsonMode ? { responseMimeType: "application/json" } : {}), ...(/flash/i.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}) },
       }),
     });
     if (!r.ok) throw new Error(`provider status ${r.status}: ${(await r.text()).slice(0, 300)}`);
@@ -65,14 +74,33 @@ async function callProvider(kind: string, endpoint: string | null, key: string, 
       tin: d.usageMetadata?.promptTokenCount ?? 0, tout: d.usageMetadata?.candidatesTokenCount ?? 0,
     };
   }
-  const r = await fetch(`${base}/chat/completions`, {
+  const payload: Record<string, unknown> = { model, max_tokens: maxTokens, messages: [...(system ? [{ role: "system", content: system }] : []), ...turns] };
+  if (jsonMode) payload.response_format = { type: "json_object" };
+  if (/gpt-oss/i.test(model)) payload.reasoning_effort = "low";   // reasoning tokens count against the same per-minute budget
+  const send = () => fetch(`${base}/chat/completions`, {
     method: "POST", signal,
     headers: { Authorization: `Bearer ${key}`, "content-type": "application/json" },
-    body: JSON.stringify({ model, messages: [...(system ? [{ role: "system", content: system }] : []), ...turns] }),
+    body: JSON.stringify(payload),
   });
-  if (!r.ok) throw new Error(`provider status ${r.status}: ${(await r.text()).slice(0, 300)}`);
+  let r = await send();
+  if (!r.ok && r.status === 400 && jsonMode) {
+    const t = await r.text();
+    if (!/response_format|json/i.test(t)) throw new Error(`provider status 400: ${t.slice(0, 300)}`);
+    delete payload.response_format;                                  // host without JSON mode: the prompt still asks for JSON
+    r = await send();
+  }
+  if (!r.ok) {
+    const ra = Number(r.headers.get("retry-after") ?? 0);
+    throw new Error(`provider status ${r.status}${ra ? ` retry-after ${ra}` : ""}: ${(await r.text()).slice(0, 300)}`);
+  }
   const d = await r.json();
   return { text: d.choices?.[0]?.message?.content ?? "", tin: d.usage?.prompt_tokens ?? 0, tout: d.usage?.completion_tokens ?? 0 };
+}
+
+/** Groq-style "Request too large ... Limit 8000, Requested 9500": how many tokens to take off max_tokens to fit. */
+export function overBy(msg: string): number {
+  const m = /Limit\s+(\d+),\s*Requested\s+(\d+)/i.exec(msg);
+  return m ? Number(m[2]) - Number(m[1]) : 0;
 }
 
 function cleanMessages(input: unknown): Msg[] | null {
@@ -156,10 +184,11 @@ async function candidates(task: string) {
 // Model router. Tries enabled providers/models best-first and moves on automatically when one fails
 // (overloaded 503/429, timeout, bad model). A rejected key (401/403) skips that provider's remaining models.
 // Hard deadline so the edge function always answers before its own wall-clock limit (the browser also has a timeout).
-async function runAI(opts: { task: string; messages: Msg[]; userId: string; siteId: string | null; maxTokens?: number }) {
+async function runAI(opts: { task: string; messages: Msg[]; userId: string; siteId: string | null; maxTokens?: number; json?: boolean; deadlineMs?: number }) {
   const cand = await candidates(opts.task);
   if (!cand.length) throw new AIError("service_not_configured", 503);
-  const deadline = Date.now() + 135_000;
+  const cap = Number(await setting("ai.request_token_cap") ?? 7500) || 0;
+  const deadline = Date.now() + (opts.deadlineMs ?? 135_000);
   let tried = 0, lastErr = "";
   const dead = new Set<string>(), touched = new Set<string>();   // touched = we flagged it degraded earlier in THIS run, reset it on success
   for (const { provider: p, model } of cand) {
@@ -171,7 +200,18 @@ async function runAI(opts: { task: string; messages: Msg[]; userId: string; site
     if (!key) continue;
     tried++;
     try {
-      const out = await callProvider(p.kind, p.endpoint, key, model.model_id, opts.messages, opts.maxTokens ?? 4096, Math.min(105_000, deadline - Date.now()));
+      let mt = fitMaxTokens(p.kind, opts.messages, opts.maxTokens ?? 4096, cap);
+      const attempt = () => callProvider(p.kind, p.endpoint, key, model.model_id, opts.messages, mt, Math.min(105_000, deadline - Date.now()), !!opts.json);
+      let out: Out;
+      try { out = await attempt(); }
+      catch (e1) {
+        // the same model usually works a moment later (per-minute limit) or with a smaller output budget
+        const m1 = String((e1 as Error).message), s1 = Number(m1.match(/status (\d{3})/)?.[1] ?? 0);
+        const wait = Number(m1.match(/retry-after (\d+)/)?.[1] ?? 0), over = overBy(m1);
+        if (s1 === 429 && !/insufficient_quota|billing|credit/i.test(m1) && wait > 0 && wait <= 20 && Date.now() + wait * 1000 < deadline - 20_000) { await new Promise((r) => setTimeout(r, wait * 1000)); out = await attempt(); }
+        else if ((s1 === 413 || s1 === 400 || s1 === 429) && over > 0 && mt - over - 200 >= 900) { mt = mt - over - 200; out = await attempt(); }
+        else throw e1;
+      }
       const cost = (out.tin * Number(model.cost_in_per_1m) + out.tout * Number(model.cost_out_per_1m)) / 1_000_000;
       await db.from("ai_usage").insert({ user_id: opts.userId, website_id: opts.siteId, provider_id: p.id, model: model.model_id, tokens_in: out.tin, tokens_out: out.tout, cost, status: "ok" });
       if (p.health !== "healthy" || p.last_error || touched.has(p.id)) await db.from("ai_providers").update({ health: "healthy", checked_at: new Date().toISOString(), last_error: null }).eq("id", p.id);

@@ -29,7 +29,7 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
     if (n === 'store') {
       check('store: no invented prices', sd.sample === true && sd.items.every((i) => !i.p));
       check('store: add-to-cart buttons + cart button', (await p.locator('#items-list .add').count()) === sd.items.length && (await p.locator('#cart-btn').isVisible()));
-      check('store: template version mark', /name="ibtikar-tpl" content="5"/.test(html) && sd.layout === 'cards');
+      check('store: template version mark', /name="ibtikar-tpl" content="6"/.test(html) && sd.layout === 'cards');
       await p.click('#filters button:nth-child(2)'); await p.waitForTimeout(100);
       check('store: category filter works', (await p.locator('#items-list .item').count()) < sd.items.length);
     }

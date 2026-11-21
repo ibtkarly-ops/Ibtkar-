@@ -92,6 +92,15 @@ Deno.test("groq model list: chat models ranked, whisper/guard/tts dropped, insta
   eq(r.find((x) => x.role === "primary")?.tier === 3 || r.find((x) => x.role === "primary")?.tier === 4, true, "primary is a big model");
 });
 
+Deno.test("groq live list: the strongest open model is primary, tiny/tts models are never auto-enabled", () => {
+  const ids = ["allam-2-7b", "canopylabs/orpheus-arabic-saudi", "canopylabs/orpheus-v1-english", "openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b", "groq/compound"];
+  const r = rk("custom", ids.map((id) => ({ id, created: 1 })));
+  eq(r.find((x) => x.role === "primary")?.id, "openai/gpt-oss-120b", "120b is primary");
+  eq(r.filter((x) => x.selected).map((x) => x.id).includes("allam-2-7b"), false, "7b not enabled");
+  for (const bad of ["canopylabs/orpheus-arabic-saudi", "canopylabs/orpheus-v1-english", "groq/compound"]) eq(r.some((x) => x.id === bad), false, bad + " excluded");
+  eq(orderModels("ui", "custom", ["allam-2-7b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"].map((model_id) => ({ model_id }))).map((m) => m.model_id), ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "allam-2-7b"], "runtime chain: strongest first");
+});
+
 Deno.test("curl: OpenAI, Anthropic, Gemini, Groq and an unknown OpenAI-compatible host are understood", () => {
   const groq = parseCurl(`curl https://api.groq.com/openai/v1/chat/completions \\
   -H "Content-Type: application/json" \\

@@ -55,15 +55,24 @@ export function parseModels(kind: Kind, data: any): Found[] {
 const NOT_TEXT = /(embed|tts|whisper|audio|realtime|transcribe|image|imagen|veo|video|speech|moderation|dall-e|aqa|learnlm|robotics|computer-use|\blive\b|guard|rerank|search|davinci|babbage|instruct|^ft:|gemma)/i;
 const DATED = /-(\d{8}|\d{4}-\d{2}-\d{2})$/;
 // OpenAI-compatible third parties (Groq, Mistral, OpenRouter, ...): their ids are free-form, so only drop what clearly cannot chat.
-const NOT_CHAT_COMPAT = /(embed|tts|whisper|audio|transcribe|speech|moderation|guard|rerank|image|diffusion|flux|stable|dall|ocr|vision-preview)/i;
+const NOT_CHAT_COMPAT = /(embed|tts|whisper|audio|transcribe|speech|moderation|guard|rerank|image|diffusion|flux|stable|dall|ocr|vision-preview|orpheus|playai|compound)/i;
+
+/** Parameter count in billions from an open-model id ("gpt-oss-120b" -> 120, "qwen3.8-27b" -> 27), 0 when unknown. */
+export function sizeOf(id: string): number {
+  return Math.max(0, ...[...id.toLowerCase().matchAll(/(\d+(?:\.\d+)?)b(?![a-z])/g)].map((m) => Number(m[1])));
+}
 
 /** 0 = unusable for writing a page, 1..4 = tier (see Ranked.tier). */
 export function tierOf(kind: Kind, id: string): number {
   const s = id.toLowerCase();
   if (kind === "custom") {
+    // free/open hosts (Groq, Cerebras, OpenRouter...): size decides; small models write broken JSON/code
     if (NOT_CHAT_COMPAT.test(s)) return 0;
-    if (/(405b|120b|opus|\bpro\b|ultra|large-?\d*$)/.test(s)) return 4;
-    if (/(nano|tiny|mini|small|instant|lite|flash|haiku|[^0-9.]([1-9]|1[0-4])b\b)/.test(s)) return 2;
+    const b = sizeOf(s);
+    if (b >= 60 || /(kimi|maverick|opus|\bpro\b|ultra|large-?\d*$)/.test(s)) return 4;
+    if (b >= 15) return 3;
+    if (/(instant|flash|lite|haiku|mini)/.test(s)) return 2;
+    if (b > 0 || /(nano|tiny|small)/.test(s)) return 1;
     return 3;
   }
   if (NOT_TEXT.test(s)) return 0;
@@ -128,15 +137,29 @@ export function rankModels(kind: Kind, found: Found[]): Ranked[] {
     [...list].sort((a, b) => Number(a.pre) - Number(b.pre) || cmpVersion(b.ver, a.ver) || b.created - a.created)[0];
 
   const byTier = (t: number) => usable.filter((u) => u.tier === t);
-  const primary = best(byTier(3)) ?? best(byTier(4)) ?? best(byTier(2)) ?? best(byTier(1));
-  // up to two automatic fallbacks: the best fast model, then the next-best balanced one
   const fallbacks: typeof usable = [];
-  if (primary) {
-    const rest = usable.filter((u) => u.id !== primary.id);
-    const f1 = best(rest.filter((u) => u.tier === 2)) ?? best(rest.filter((u) => u.tier === 1));
-    if (f1) fallbacks.push(f1);
-    const f2 = best(rest.filter((u) => u.tier === 3 && (!f1 || u.id !== f1.id)));
-    if (f2) fallbacks.push(f2);
+  let primary: (typeof usable)[number] | undefined;
+  if (kind === "custom") {
+    // open models cost nothing extra per size on these hosts: strongest first, then the next big one, then a fast one
+    primary = best(byTier(4)) ?? best(byTier(3)) ?? best(byTier(2)) ?? best(byTier(1));
+    if (primary) {
+      const rest = usable.filter((u) => u.id !== primary!.id);
+      const f1 = best(rest.filter((u) => u.tier >= 3)) ?? best(rest.filter((u) => u.tier === 2));
+      if (f1) fallbacks.push(f1);
+      const left = rest.filter((u) => u.id !== f1?.id);
+      const f2 = best(left.filter((u) => u.tier === 2)) ?? best(left.filter((u) => u.tier >= 3));
+      if (f2) fallbacks.push(f2);
+    }
+  } else {
+    primary = best(byTier(3)) ?? best(byTier(4)) ?? best(byTier(2)) ?? best(byTier(1));
+    // up to two automatic fallbacks: the best fast model, then the next-best balanced one
+    if (primary) {
+      const rest = usable.filter((u) => u.id !== primary!.id);
+      const f1 = best(rest.filter((u) => u.tier === 2)) ?? best(rest.filter((u) => u.tier === 1));
+      if (f1) fallbacks.push(f1);
+      const f2 = best(rest.filter((u) => u.tier === 3 && (!f1 || u.id !== f1.id)));
+      if (f2) fallbacks.push(f2);
+    }
   }
   const fbIds = new Set(fallbacks.map((f) => f.id));
   const role = (id: string): Ranked["role"] => (primary && id === primary.id ? "primary" : fbIds.has(id) ? "fallback" : "extra");
@@ -190,6 +213,11 @@ export function orderModels<T extends { model_id: string }>(task: string, kind: 
   const desc = (a: { ver: number[] }, b: { ver: number[] }) => cmpVersion(b.ver, a.ver);
   const tier = (t: number) => withInfo.filter((x) => x.tier === t).sort(desc);
   const t3 = tier(3), t2 = tier(2), t4 = tier(4), t1 = tier(1), other = withInfo.filter((x) => x.tier === 0);
+  if (kind === "custom") {
+    const big = [...t4, ...t3];
+    const chain = task === "classify" ? [...t3, ...t2, ...t4, ...t1] : [...big.slice(0, 1), ...big.slice(1, 2), ...t2.slice(0, 1), ...big.slice(2), ...t2.slice(1), ...t1];
+    return [...chain, ...other].map((x) => x.m);
+  }
   const chain = task === "classify"
     ? [...t2.slice(0, 1), ...t3.slice(0, 1), ...t2.slice(1), ...t3.slice(1), ...t1, ...t4]
     : [...t3.slice(0, 1), ...t2.slice(0, 1), ...t3.slice(1), ...t2.slice(1), ...t4, ...t1];
