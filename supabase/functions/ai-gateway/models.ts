@@ -54,11 +54,19 @@ export function parseModels(kind: Kind, data: any): Found[] {
 
 const NOT_TEXT = /(embed|tts|whisper|audio|realtime|transcribe|image|imagen|veo|video|speech|moderation|dall-e|aqa|learnlm|robotics|computer-use|\blive\b|guard|rerank|search|davinci|babbage|instruct|^ft:|gemma)/i;
 const DATED = /-(\d{8}|\d{4}-\d{2}-\d{2})$/;
+// OpenAI-compatible third parties (Groq, Mistral, OpenRouter, ...): their ids are free-form, so only drop what clearly cannot chat.
+const NOT_CHAT_COMPAT = /(embed|tts|whisper|audio|transcribe|speech|moderation|guard|rerank|image|diffusion|flux|stable|dall|ocr|vision-preview)/i;
 
 /** 0 = unusable for writing a page, 1..4 = tier (see Ranked.tier). */
 export function tierOf(kind: Kind, id: string): number {
   const s = id.toLowerCase();
-  if (kind !== "custom" && NOT_TEXT.test(s)) return 0;
+  if (kind === "custom") {
+    if (NOT_CHAT_COMPAT.test(s)) return 0;
+    if (/(405b|120b|opus|\bpro\b|ultra|large-?\d*$)/.test(s)) return 4;
+    if (/(nano|tiny|mini|small|instant|lite|flash|haiku|[^0-9.]([1-9]|1[0-4])b\b)/.test(s)) return 2;
+    return 3;
+  }
+  if (NOT_TEXT.test(s)) return 0;
   switch (kind) {
     case "anthropic": return s.includes("haiku") ? 2 : s.includes("sonnet") ? 3 : s.includes("opus") ? 4 : 0;
     case "gemini": return s.includes("lite") ? 2 : s.includes("flash") ? 3 : s.includes("pro") ? 4 : 0;
@@ -186,4 +194,108 @@ export function orderModels<T extends { model_id: string }>(task: string, kind: 
     ? [...t2.slice(0, 1), ...t3.slice(0, 1), ...t2.slice(1), ...t3.slice(1), ...t1, ...t4]
     : [...t3.slice(0, 1), ...t2.slice(0, 1), ...t3.slice(1), ...t2.slice(1), ...t4, ...t1];
   return [...chain, ...other].map((x) => x.m);
+}
+
+// ---------------------------------------------------------------------------
+// Presets: OpenAI-compatible providers are stored as kind="custom" + endpoint (the DB kind check only knows 6 kinds).
+// ---------------------------------------------------------------------------
+export const PRESETS: Record<string, { name: string; endpoint: string; host: string }> = {
+  groq: { name: "Groq", endpoint: "https://api.groq.com/openai/v1", host: "api.groq.com" },
+  mistral: { name: "Mistral", endpoint: "https://api.mistral.ai/v1", host: "api.mistral.ai" },
+  openrouter: { name: "OpenRouter", endpoint: "https://openrouter.ai/api/v1", host: "openrouter.ai" },
+  together: { name: "Together", endpoint: "https://api.together.xyz/v1", host: "api.together.xyz" },
+  fireworks: { name: "Fireworks", endpoint: "https://api.fireworks.ai/inference/v1", host: "api.fireworks.ai" },
+  cerebras: { name: "Cerebras", endpoint: "https://api.cerebras.ai/v1", host: "api.cerebras.ai" },
+};
+
+export interface Target { kind: Kind; endpoint: string | null; name: string }
+
+/** Turn what the admin picked (a DB kind or a preset id) into the row we store. */
+export function resolveTarget(pick: string): Target | null {
+  if ((KINDS as string[]).includes(pick) && pick !== "custom") return { kind: pick as Kind, endpoint: null, name: DISPLAY[pick] };
+  const pr = PRESETS[pick];
+  if (pr) return { kind: "custom", endpoint: pr.endpoint, name: pr.name };
+  return null;
+}
+
+/** Recognise the provider from the key's own prefix (the usual mistake is a Groq key pasted under OpenAI, etc.). */
+export function detectPick(key: string): string | null {
+  const k = key.trim();
+  if (k.startsWith("sk-ant-")) return "anthropic";
+  if (k.startsWith("AIza")) return "gemini";
+  if (k.startsWith("gsk_")) return "groq";
+  if (k.startsWith("xai-")) return "xai";
+  if (k.startsWith("sk-or-")) return "openrouter";
+  if (k.startsWith("csk-")) return "cerebras";
+  if (k.startsWith("fw_")) return "fireworks";
+  return null;
+}
+
+/** Strip the usual paste noise: quotes, "Bearer ", line breaks. */
+export function cleanKey(raw: string): string {
+  return String(raw ?? "").trim().replace(/^["'`]+|["'`]+$/g, "").replace(/^Bearer\s+/i, "").trim();
+}
+
+/** Minimal shell-like tokenizer for pasted curl commands (quotes, backslash/caret line continuations). */
+export function shellSplit(input: string): string[] {
+  const src = input.replace(/\\\r?\n/g, " ").replace(/\^\r?\n/g, " ");
+  const out: string[] = [];
+  let cur = "", q: string | null = null, has = false;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (q) {
+      if (c === q) q = null;
+      else if (c === "\\" && q === '"' && i + 1 < src.length && '"\\$`'.includes(src[i + 1])) cur += src[++i];
+      else cur += c;
+    } else if (c === "'" || c === '"') { q = c; has = true; }
+    else if (/\s/.test(c)) { if (cur || has) { out.push(cur); cur = ""; has = false; } }
+    else if (c === "\\" && i + 1 < src.length) cur += src[++i];
+    else cur += c;
+  }
+  if (cur || has) out.push(cur);
+  return out;
+}
+
+export interface CurlInfo { url: URL; headers: Record<string, string>; body: any; key: string; model: string }
+
+export function parseCurl(text: string): CurlInfo | { error: string } {
+  const t = shellSplit(String(text ?? ""));
+  if (!t.length || !/^curl(\.exe)?$/i.test(t[0])) return { error: "curl_not_found" };
+  let url = "", body: string | null = null;
+  const headers: Record<string, string> = {};
+  for (let i = 1; i < t.length; i++) {
+    const a = t[i];
+    if (a === "-H" || a === "--header") { const h = t[++i] ?? ""; const k = h.indexOf(":"); if (k > 0) headers[h.slice(0, k).trim().toLowerCase()] = h.slice(k + 1).trim(); }
+    else if (/^(-d|--data|--data-raw|--data-binary|--data-ascii|--json)$/.test(a)) body = t[++i] ?? "";
+    else if (/^(-X|--request|-u|--user|-A|--user-agent|--url|-o|--output|-m|--max-time|--connect-timeout|-e|--referer)$/.test(a)) { const v = t[++i] ?? ""; if (a === "--url") url = v; if (a === "-u" || a === "--user") headers["authorization"] ??= "Basic " + btoa(v); }
+    else if (/^https?:\/\//i.test(a)) url = a;
+  }
+  if (!url) return { error: "curl_no_url" };
+  let u: URL;
+  try { u = new URL(url); } catch { return { error: "curl_bad_url" }; }
+  let parsed: any = null;
+  if (body) { try { parsed = JSON.parse(body); } catch { /* not json */ } }
+  let key = "";
+  const auth = headers["authorization"] ?? "";
+  if (/^bearer\s+/i.test(auth)) key = auth.replace(/^bearer\s+/i, "").trim();
+  else if (headers["x-api-key"]) key = headers["x-api-key"];
+  else if (headers["x-goog-api-key"]) key = headers["x-goog-api-key"];
+  else if (u.searchParams.get("key")) key = u.searchParams.get("key")!;
+  const gm = /\/models\/([^/:?]+)(?::|$)/.exec(u.pathname);
+  const model = String(parsed?.model ?? (gm && !u.pathname.endsWith("/models") ? gm[1] : "") ?? "");
+  return { url: u, headers, body: parsed, key: cleanKey(key), model };
+}
+
+/** Decide which provider a curl targets. Unknown hosts are treated as OpenAI-compatible (Bearer token). */
+export function targetFromCurl(c: CurlInfo): Target | { error: string } {
+  const h = c.url.hostname.toLowerCase();
+  const known: Record<string, string> = { "api.openai.com": "openai", "api.anthropic.com": "anthropic", "generativelanguage.googleapis.com": "gemini", "api.deepseek.com": "deepseek", "api.x.ai": "xai" };
+  if (known[h]) return resolveTarget(known[h])!;
+  for (const [id, p] of Object.entries(PRESETS)) if (h === p.host) return resolveTarget(id)!;
+  const usesBearer = /^bearer\s+/i.test(c.headers["authorization"] ?? "");
+  if (!usesBearer) return { error: "curl_unsupported_auth" };
+  const base = c.url.origin + c.url.pathname.replace(/\/(chat\/completions|completions|responses|models)\/?$/, "").replace(/\/+$/, "");
+  const safe = safeEndpoint(base);
+  if (!safe) return { error: "endpoint_required" };
+  return { kind: "custom", endpoint: safe, name: h.replace(/^(api|www)\./, "").split(".")[0].replace(/^./, (x) => x.toUpperCase()).slice(0, 40) };
 }

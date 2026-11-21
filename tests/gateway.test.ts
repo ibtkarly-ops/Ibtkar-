@@ -255,3 +255,53 @@ Deno.test("build: items the customer edited (and logo/currency) are handed to th
   await call("cust", { action: "build", website_id: "site1" });
   assert(sent.includes("existing_items") && sent.includes("عطر") && sent.includes("currency"), "existing items passed: " + sent.slice(0, 200));
 });
+
+// ---- Groq (OpenAI-compatible) + curl paste + diagnostics ----
+const GROQ_MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "whisper-large-v3", "meta-llama/llama-guard-4-12b"].map((id) => ({ id, created: 1 }));
+function groqFake(goodKey = "gsk_GOODKEY123", listStatus = 200) {
+  return ({ url, headers }: { url: string; headers: Headers; body: any }) => {
+    const good = headers.get("authorization") === "Bearer " + goodKey;
+    if (url.endsWith("/models")) return !good ? { status: 401, body: { error: { message: "Invalid API Key" } } } : listStatus !== 200 ? { status: listStatus, body: {} } : { status: 200, body: { data: GROQ_MODELS } };
+    if (url.endsWith("/chat/completions")) return good ? { status: 200, body: { choices: [{ message: { content: "pong" } }], usage: { prompt_tokens: 1, completion_tokens: 1 } } } : { status: 401, body: {} };
+    return { status: 404, body: {} };
+  };
+}
+
+Deno.test("groq: a key pasted under the wrong provider is auto-switched to Groq; stored as custom + endpoint; whisper/guard dropped", async () => {
+  reset(); providerBehavior = groqFake();
+  const r = await call("admin", { action: "connect", kind: "openai", key: "gsk_GOODKEY123" });
+  assert(r.json.ok === true && r.json.switched === "groq", "switched to groq: " + JSON.stringify(r.json));
+  const p = T.ai_providers[0];
+  assert(p.name === "Groq" && p.kind === "custom" && p.endpoint === "https://api.groq.com/openai/v1", "stored as custom groq");
+  assert(r.json.models.every((m: any) => !/whisper|guard/.test(m.id)), "non-chat models dropped");
+  assert(T.ai_models.some((m) => m.model_id === "llama-3.3-70b-versatile" && m.enabled), "primary enabled");
+});
+
+Deno.test("curl: a full curl command is enough (url + key + model are taken from it)", async () => {
+  reset(); providerBehavior = groqFake();
+  const curl = `curl https://api.groq.com/openai/v1/chat/completions \\\n -H "Authorization: Bearer gsk_GOODKEY123" -H "Content-Type: application/json" \\\n -d '{"model":"llama-3.3-70b-versatile","messages":[{"role":"user","content":"hi"}]}'`;
+  const r = await call("admin", { action: "connect", curl });
+  assert(r.json.ok === true && r.json.tested.ok === true, "curl connect ok " + JSON.stringify(r.json));
+  assert(T.ai_providers[0].name === "Groq", "recognised as Groq");
+  assert(T.ai_models.some((m) => m.model_id === "llama-3.3-70b-versatile" && m.enabled), "model from the curl enabled");
+});
+
+Deno.test("curl: unknown host without a model list endpoint still connects using the model named in the curl", async () => {
+  reset();
+  providerBehavior = ({ url, headers }) => url.endsWith("/models") ? { status: 404, body: {} } : url.endsWith("/chat/completions") && headers.get("authorization") === "Bearer k-123456789" ? { status: 200, body: { choices: [{ message: { content: "pong" } }] } } : { status: 401, body: {} };
+  const r = await call("admin", { action: "connect", curl: `curl https://api.myhost.ai/v1/chat/completions -H "Authorization: Bearer k-123456789" -d '{"model":"my-model-1"}'` });
+  assert(r.json.ok === true && r.json.tested.ok === true, "connected via curl model " + JSON.stringify(r.json));
+  assert(T.ai_providers[0].endpoint === "https://api.myhost.ai/v1" && T.ai_models[0].model_id === "my-model-1", "custom endpoint + model stored");
+});
+
+Deno.test("failures are explained with the provider's own answer AND recorded without the key", async () => {
+  reset(); providerBehavior = groqFake();
+  const r = await call("admin", { action: "connect", kind: "groq", key: "gsk_WRONGKEY123" });
+  assert(r.json.ok === false && r.json.error === "invalid_key" && r.json.status === 401 && /Invalid API Key/.test(r.json.detail), "provider answer shown " + JSON.stringify(r.json));
+  const log = T.audit_logs.find((a) => a.action === "ai_provider.connect_failed");
+  assert(log && log.meta.status === 401 && log.meta.key_len === 15 && log.meta.key_head === "gsk_", "failure recorded");
+  assert(!JSON.stringify(T.audit_logs).includes("WRONGKEY"), "the key itself is never logged");
+  assert(T.ai_providers.length === 0, "nothing saved");
+  const c = await call("admin", { action: "connect", curl: "not a curl" });
+  assert(c.json.error === "curl_not_found", "bad curl explained");
+});

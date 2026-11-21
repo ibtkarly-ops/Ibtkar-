@@ -18,7 +18,7 @@ const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  ' + n); if (!c)
   };
   let last;
   const h = await launch({ role: 'super_admin', tables, viewport: { width: 1000, height: 900 }, functions: {
-    'ai-gateway': (b) => { last = b; return b.key === 'bad' ? { ok: false, error: 'invalid_key', hint: 'wrong_key_for_claude' } : { ok: true, provider: { id: 'p1' }, models: [], tested: { ok: true } }; },
+    'ai-gateway': (b) => { last = b; return b.key === 'bad' ? { ok: false, error: 'invalid_key', hint: 'wrong_key_for_claude', status: 401, provider: 'Claude', detail: '{"error":"invalid x-api-key"}' } : { ok: true, provider: { id: 'p1' }, models: [], tested: { ok: true } }; },
   } });
   const { page } = h;
   await h.open('#/admin/engine');
@@ -41,9 +41,17 @@ const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  ' + n); if (!c)
   await page.waitForTimeout(300);
   const toast = await page.locator('#toast').innerText();
   check('error explained in Arabic (' + toast.replace(/\n/g, ' ') + ')', /المفتاح غير صالح/.test(toast));
+  check('provider answer (HTTP status + detail) is shown under the form', /401/.test(await page.locator('#cres').innerText()) && /invalid x-api-key/.test(await page.locator('#cres').innerText()));
   await page.click('[data-act="mtoggle"][data-id="m3"]');
   await page.waitForTimeout(300);
   check('toggle model writes ai_models', h.calls.some((c) => c.method === 'PATCH' && /ai_models/.test(c.url)));
+  // curl mode + visible provider error
+  await page.click('[data-act="cmode"][data-mode="curl"]');
+  check('curl tab shows the textarea', await page.locator('#cm-curl textarea').isVisible() && await page.locator('#cm-key').isHidden());
+  await page.fill('#cm-curl textarea', 'curl https://api.groq.com/openai/v1/chat/completions -H "Authorization: Bearer gsk_x"');
+  await page.click('#cm-curl button.btn.p'); await page.waitForTimeout(400);
+  check('curl sent as-is to the gateway', last && last.action === 'connect' && /api\.groq\.com/.test(last.curl));
+  check('groq is one of the provider chips', (await page.locator('[data-act="pickkind"][data-kind="groq"]').count()) === 1);
   await page.click('[data-act="pmodels"]');
   await page.waitForTimeout(300);
   check('refresh calls action=models', last && last.action === 'models' && last.provider_id === 'p1');

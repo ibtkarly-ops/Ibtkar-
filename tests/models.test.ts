@@ -72,3 +72,51 @@ Deno.test("orderModels: balanced -> best fast -> other balanced; classify starts
   eq(orderModels("classify", "anthropic", pool).map((m) => m.model_id)[0], "claude-haiku-5-5", "classify starts fast");
   eq(orderModels("ui", "gemini", ["gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.5-flash"].map((model_id) => ({ model_id }))).map((m) => m.model_id), ["gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.5-flash"], "gemini chain avoids retrying the same backend first");
 });
+
+import { cleanKey, detectPick, parseCurl, rankModels as rk, resolveTarget, targetFromCurl } from "../supabase/functions/ai-gateway/models.ts";
+
+Deno.test("presets: groq is stored as custom + endpoint; key prefix detects the real provider", () => {
+  eq(resolveTarget("groq"), { kind: "custom", endpoint: "https://api.groq.com/openai/v1", name: "Groq" }, "groq target");
+  eq(resolveTarget("openai"), { kind: "openai", endpoint: null, name: "OpenAI" }, "openai target");
+  eq(resolveTarget("nope"), null, "unknown pick");
+  eq(detectPick("gsk_abc"), "groq", "gsk_"); eq(detectPick("sk-ant-x"), "anthropic", "sk-ant"); eq(detectPick("AIzaSyX"), "gemini", "AIza"); eq(detectPick("sk-or-v1-x"), "openrouter", "sk-or"); eq(detectPick("sk-proj-1"), null, "openai is ambiguous");
+  eq(cleanKey('  "Bearer gsk_abc"\n'), "gsk_abc", "paste noise removed");
+});
+
+Deno.test("groq model list: chat models ranked, whisper/guard/tts dropped, instant is the fallback", () => {
+  const ids = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "whisper-large-v3", "whisper-large-v3-turbo", "meta-llama/llama-guard-4-12b", "playai-tts", "openai/gpt-oss-120b", "meta-llama/llama-4-scout-17b-16e-instruct"];
+  const r = rk("custom", ids.map((id) => ({ id, created: 1 })));
+  for (const bad of ["whisper-large-v3", "whisper-large-v3-turbo", "meta-llama/llama-guard-4-12b", "playai-tts"]) eq(r.some((x) => x.id === bad), false, bad + " excluded");
+  eq(r.some((x) => x.id === "llama-3.3-70b-versatile"), true, "70b kept");
+  eq(r.find((x) => x.id === "llama-3.1-8b-instant")?.tier, 2, "instant is the fast tier");
+  eq(r.find((x) => x.role === "primary")?.tier === 3 || r.find((x) => x.role === "primary")?.tier === 4, true, "primary is a big model");
+});
+
+Deno.test("curl: OpenAI, Anthropic, Gemini, Groq and an unknown OpenAI-compatible host are understood", () => {
+  const groq = parseCurl(`curl https://api.groq.com/openai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer gsk_TESTKEY123" \\
+  -d '{"model": "llama-3.3-70b-versatile", "messages": [{"role": "user", "content": "hi"}]}'`);
+  if ("error" in groq) throw new Error(groq.error);
+  eq([groq.key, groq.model], ["gsk_TESTKEY123", "llama-3.3-70b-versatile"], "groq key+model");
+  eq(targetFromCurl(groq), { kind: "custom", endpoint: "https://api.groq.com/openai/v1", name: "Groq" }, "groq preset");
+  const an = parseCurl(`curl https://api.anthropic.com/v1/messages --header "x-api-key: sk-ant-abc" --header "anthropic-version: 2023-06-01" --data '{"model":"claude-sonnet-5-5","max_tokens":10,"messages":[]}'`);
+  if ("error" in an) throw new Error(an.error);
+  eq([an.key, an.model, (targetFromCurl(an) as any).kind], ["sk-ant-abc", "claude-sonnet-5-5", "anthropic"], "anthropic");
+  const gm = parseCurl(`curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaXYZ" -H 'Content-Type: application/json' -d '{"contents":[]}'`);
+  if ("error" in gm) throw new Error(gm.error);
+  eq([gm.key, gm.model, (targetFromCurl(gm) as any).kind], ["AIzaXYZ", "gemini-2.5-flash", "gemini"], "gemini");
+  const oa = parseCurl(`curl https://api.openai.com/v1/chat/completions -H "Authorization: Bearer sk-proj-1" -d '{"model":"gpt-5"}'`);
+  if ("error" in oa) throw new Error(oa.error);
+  eq((targetFromCurl(oa) as any).kind, "openai", "openai");
+  const cu = parseCurl(`curl https://api.myhost.ai/v1/chat/completions -H "Authorization: Bearer k-123456789" -d '{"model":"m1"}'`);
+  if ("error" in cu) throw new Error(cu.error);
+  eq(targetFromCurl(cu), { kind: "custom", endpoint: "https://api.myhost.ai/v1", name: "Myhost" }, "unknown host");
+  const bad = parseCurl(`curl http://127.0.0.1/v1/chat/completions -H "Authorization: Bearer abcdefgh1"`);
+  if ("error" in bad) throw new Error(bad.error);
+  eq((targetFromCurl(bad) as any).error, "endpoint_required", "internal address refused");
+  eq((parseCurl("echo hi") as any).error, "curl_not_found", "not a curl");
+  const nonb = parseCurl(`curl https://x.ai-host.com/v1/chat/completions -H "x-token: abc"`);
+  if ("error" in nonb) throw new Error(nonb.error);
+  eq((targetFromCurl(nonb) as any).error, "curl_unsupported_auth", "unsupported auth header at unknown host");
+});

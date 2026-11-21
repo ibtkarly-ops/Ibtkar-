@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { DISPLAY, KINDS, keyHint, listError, modelsRequest, orderModels, parseModels, rankModels, safeEndpoint, type Found, type Kind, type Ranked } from "./models.ts";
+import { DISPLAY, KINDS, cleanKey, detectPick, keyHint, listError, modelsRequest, orderModels, parseCurl, parseModels, rankModels, resolveTarget, safeEndpoint, targetFromCurl, type Found, type Kind, type Ranked, type Target } from "./models.ts";
 
 // Public publishable key (same one shipped in the browser app). Used only as the `apikey` header when we act
 // *as the signed-in admin* (their JWT goes in Authorization), e.g. to call admin_set_provider_key.
@@ -282,23 +282,38 @@ Deno.serve(async (req) => {
     //      "models" does the same for an already-connected provider (re-detect after a provider releases new models).
     if (body.action === "connect" || body.action === "models") {
       if (prof.role !== "super_admin") return json({ error: "forbidden" }, 403);
-      let kind: Kind, key: string, endpoint: string | null = null, provider: any = null;
+      let target: Target, key = "", provider: any = null, curlModel = String(body.model ?? "").trim().slice(0, 120), switched: string | null = null;
+      // every failure is explained to the admin AND recorded (without the key) so it can be diagnosed afterwards
+      const fail = async (error: string, extra: Record<string, unknown> = {}) => {
+        try { await db.from("audit_logs").insert({ actor_id: user.id, action: "ai_provider.connect_failed", entity: "ai_providers", meta: { error, ...extra, kind: body.kind ?? null, via: body.curl ? "curl" : "key", key_len: key.length, key_head: key.slice(0, 4) } }); } catch { /* never block the answer */ }
+        return json({ ok: false, error, ...extra });
+      };
       if (body.action === "models") {
         const { data: p } = await db.from("ai_providers").select("*").eq("id", body.provider_id).maybeSingle();
         if (!p || !p.secret_id) return json({ ok: false, error: "provider_or_key_missing" });
         const { data: k } = await db.rpc("get_provider_key", { p_provider: p.id });
         if (!k) return json({ ok: false, error: "provider_or_key_missing" });
-        provider = p; kind = p.kind as Kind; key = k; endpoint = p.endpoint;
+        provider = p; target = { kind: p.kind as Kind, endpoint: p.endpoint, name: p.name }; key = k;
+      } else if (typeof body.curl === "string" && body.curl.trim()) {
+        // the admin pasted a full curl command: take the URL, key and model from it
+        const c = parseCurl(body.curl.slice(0, 20_000));
+        if ("error" in c) return fail(c.error);
+        const tg = targetFromCurl(c);
+        if ("error" in tg) return fail(tg.error);
+        target = tg; key = c.key; curlModel = c.model || curlModel;
+        if (key.length < 8 || key.length > 500 || /\s/.test(key)) return fail("curl_no_key");
       } else {
-        kind = String(body.kind ?? "") as Kind;
-        if (!KINDS.includes(kind)) return json({ ok: false, error: "bad_kind" });
-        key = String(body.key ?? "").trim();
-        if (key.length < 8 || key.length > 500 || /\s/.test(key)) return json({ ok: false, error: "invalid_key_format" });
-        if (kind === "custom") {
-          endpoint = safeEndpoint(String(body.endpoint ?? ""));
-          if (!endpoint) return json({ ok: false, error: "endpoint_required" });
-        }
+        key = cleanKey(body.key);
+        if (key.length < 8 || key.length > 500 || /\s/.test(key)) return fail("invalid_key_format");
+        let pick = String(body.kind ?? "");
+        const seen = detectPick(key);
+        if (seen && seen !== pick) { switched = seen; pick = seen; }   // e.g. a Groq key pasted under OpenAI: use the right provider
+        const tg = pick === "custom" ? ({ kind: "custom", endpoint: safeEndpoint(String(body.endpoint ?? "")), name: String(body.name ?? "").trim().slice(0, 40) || "Custom" } as Target) : resolveTarget(pick);
+        if (!tg) return fail("bad_kind");
+        if (tg.kind === "custom" && !tg.endpoint) return fail("endpoint_required");
+        target = tg;
       }
+      const kind = target.kind, endpoint = target.endpoint;
 
       // 1) ask the provider which models this key can really use
       const rq = modelsRequest(kind, endpoint, key);
@@ -308,12 +323,16 @@ Deno.serve(async (req) => {
         if (!r.ok) {
           const detail = (await r.text()).slice(0, 300);
           if (provider) await db.from("ai_providers").update({ health: "down", checked_at: new Date().toISOString(), last_error: `models status ${r.status}: ${detail}`.slice(0, 500) }).eq("id", provider.id);
-          return json({ ok: false, error: listError(r.status), status: r.status, hint: keyHint(kind, key), detail });
-        }
-        found = parseModels(kind, await r.json());
-      } catch { return json({ ok: false, error: "unreachable" }); }
+          // some providers have no model-list endpoint: when the curl named a model, trust it and let the real test call decide
+          if (curlModel && [400, 404, 405, 422, 501].includes(r.status)) found = [{ id: curlModel, created: 0 }];
+          else return fail(listError(r.status), { status: r.status, hint: keyHint(kind, key), detail, provider: target.name });
+        } else found = parseModels(kind, await r.json());
+      } catch (e) { return fail("unreachable", { detail: String((e as Error).message).slice(0, 200), provider: target.name }); }
+      if (curlModel && !found.some((f) => f.id === curlModel)) found.push({ id: curlModel, created: 0 });
       const ranked = rankModels(kind, found);
-      if (!ranked.length) return json({ ok: false, error: "no_models" });
+      if (!ranked.length) return fail("no_models", { provider: target.name });
+      // the model named in the curl is always enabled
+      if (curlModel) { const m = ranked.find((x) => x.id === curlModel); if (m) m.selected = true; }
 
       // 2) one provider per kind (no more duplicates); store the key as the signed-in super admin
       if (!provider) {
@@ -322,8 +341,7 @@ Deno.serve(async (req) => {
         const { data: ex } = await q;
         provider = ex?.[0] ?? null;
         if (!provider) {
-          const name = kind === "custom" ? (String(body.name ?? "").trim().slice(0, 40) || "Custom") : DISPLAY[kind];
-          const ins = await db.from("ai_providers").insert({ name, kind, endpoint, priority: 100, enabled: true }).select().single();
+          const ins = await db.from("ai_providers").insert({ name: target.name, kind, endpoint, priority: 100, enabled: true }).select().single();
           if (ins.error) return json({ ok: false, error: "save_failed", detail: ins.error.message });
           provider = ins.data;
         }
@@ -354,7 +372,7 @@ Deno.serve(async (req) => {
 
       const { data: all } = await db.from("ai_models").select("model_id,enabled").eq("provider_id", provider.id);
       const en = new Map((all ?? []).map((m: any) => [m.model_id, !!m.enabled]));
-      return json({ ok: true, provider: { id: provider.id, name: provider.name, kind }, models: ranked.map((m: Ranked) => ({ id: m.id, role: m.role, tier: m.tier, enabled: en.get(m.id) ?? false })), tested });
+      return json({ ok: true, switched, provider: { id: provider.id, name: provider.name, kind }, models: ranked.map((m: Ranked) => ({ id: m.id, role: m.role, tier: m.tier, enabled: en.get(m.id) ?? false })), tested });
     }
 
     // ---- Admin: test a provider's real connection ----
