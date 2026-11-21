@@ -872,6 +872,7 @@ async function uploadAsset(sid,file,max){
   const r=await sb.storage.from('site-assets').upload(path,blob,{contentType:'image/webp',cacheControl:'31536000'});if(r.error)throw r.error;
   return SB_URL+'/storage/v1/object/public/site-assets/'+path;
 }
+const pubLabel=(slug,root,base)=>!slug?'—':root?slug+'.'+root:base?base.replace(/^https?:\/\//,'').replace(/\/$/,'')+'/'+slug:'—';
 const itemRow=i=>`<div class="irow card"><div class="irh"><label class="ipw" title="${esc(t('it_img_add'))}"><img class="ip" alt="" ${i.img?`src="${esc(i.img)}"`:'hidden'}><span class="ipp"${i.img?' hidden':''}>${ic('plus')}</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-up="item" hidden></label><input type="hidden" data-k="img" value="${esc(i.img||'')}"><div class="fg" style="flex:1"><div><label>${t('it_name')}</label><input data-k="n" value="${esc(i.n)}" maxlength="80"></div><div><label>${t('it_cat')}</label><input data-k="c" value="${esc(i.c)}" maxlength="40"></div><div><label>${t('it_price')}</label><input data-k="p" value="${esc(i.p)}" maxlength="30" placeholder="${esc(t('it_price_ph'))}"></div></div></div><label>${t('it_desc')}</label><textarea data-k="d" maxlength="300" style="min-height:64px">${esc(i.d)}</textarea><div class="row2" style="margin-top:10px"><button type="button" class="btn s sm" data-act="itemup" aria-label="${esc(t('it_up'))}">&uarr;</button><button type="button" class="btn s sm" data-act="itemdown" aria-label="${esc(t('it_down'))}">&darr;</button><button type="button" class="btn s sm" data-act="itemdup">${t('it_dup')}</button><button type="button" class="btn s sm" data-act="itemrmimg">${t('it_img_rm')}</button><span class="sp"></span><button type="button" class="btn d sm" data-act="itemdel">${t('del')}</button></div></div>`;
 async function vSite(id,tab){
   const {data:w}=await sb.from('websites').select('*').eq('id',id).maybeSingle();
@@ -879,14 +880,14 @@ async function vSite(id,tab){
   if(!w)return shell(S,'#/app/sites',`<div class="empty">404</div>`);
   const tabs=['overview','items','details','analytics','versions','requests','domains'].filter(x=>!(w.site_type==='app'&&x==='items')),html=w.config?.html||'';
   const TI={overview:'globe',items:'shop',details:'list',analytics:'chart',versions:'pulse',requests:'chat',domains:'server'};SHEET_EXTRA={title:w.name,cur:'#/app/site/'+id+'/'+tab,items:tabs.map(x=>['#/app/site/'+id+'/'+x,t('tab_'+x),TI[x]])};
-  const {data:pss}=await sb.from('platform_settings').select('key,value').in('key',['public.sites_base_url','public.sites_root_domain']);const root=((pss||[]).find(x=>x.key==='public.sites_root_domain')||{}).value||'';const hostOk=!!(pss&&pss.length);
+  const {data:pss}=await sb.from('platform_settings').select('key,value').in('key',['public.sites_base_url','public.sites_root_domain']);const root=((pss||[]).find(x=>x.key==='public.sites_root_domain')||{}).value||'',pbase=((pss||[]).find(x=>x.key==='public.sites_base_url')||{}).value||'';const hostOk=!!(pss&&pss.length);
   const head=`<div class="ph"><div><h1>${esc(w.name)}</h1><p>${esc(w.site_type||'')}</p></div>${stChip(w.status)}<span class="sp"></span>${w.status==='published'&&w.url?`<a class="btn s" href="${esc(w.url)}" target="_blank" rel="noopener">${t('openlive')}</a><button class="btn d" data-act="unpublish" data-id="${id}">${t('unpublish')}</button>`:''}<button class="btn p" data-act="publish" data-id="${id}" ${hostOk&&html?'':'disabled'} title="${esc(hostOk?'':t('hostna'))}">${t('publish')}</button></div>
   <div class="tabs">${tabs.map(x=>`<a href="#/app/site/${id}/${x}" class="${x===tab?'on':''}">${t('tab_'+x)}</a>`).join('')}</div>`;
   let b='';
   if(tab==='overview'){
     const {data:dps}=await sb.from('deployments').select('*').eq('website_id',id).order('created_at',{ascending:false}).limit(5);
     b=`${hostOk?'':`<p style="color:var(--tx2);margin-bottom:16px">${t('hostna')}</p>`}
-    <div class="card row2"><span style="color:var(--tx2)">${t('yoursite')}</span><b dir="ltr">${w.slug&&root?esc(w.slug)+'.'+esc(root):'—'}</b><span class="sp"></span><a class="btn s" href="#/app/site/${id}/details">${t('tab_details')}</a></div>
+    <div class="card row2"><span style="color:var(--tx2)">${t('yoursite')}</span><b dir="ltr">${esc(pubLabel(w.slug,root,pbase))}</b><span class="sp"></span><a class="btn s" href="#/app/site/${id}/details">${t('tab_details')}</a></div>
     <br><h3>${t('preview')}</h3><br>${html?`<iframe sandbox srcdoc="${esc(html)}"></iframe>`:w.stack?`<div class="empty">PHP/Node</div>`:`<div class="empty">—</div>`}
     ${w.stack&&w.config?.admin_password?`<br><h3>${t('adminpanel')}</h3><div class="card" style="margin-top:12px"><p style="color:var(--tx2);font-size:13px;margin-bottom:10px">${t('adminnote')}</p><div class="row2"><span style="color:var(--tx2)">${t('adminuser')}</span><b dir="ltr">${esc(w.config.admin_user||'admin')}</b></div><div class="row2" style="margin-top:6px"><span style="color:var(--tx2)">${t('adminpass')}</span><b dir="ltr" data-adminpass="${esc(w.config.admin_password)}" style="filter:blur(4px);cursor:pointer" title="${esc(t('showpass'))}" onclick="this.style.filter='none'">${esc(w.config.admin_password)}</b></div></div>`:''}
     <br><h3>${t('settings')}</h3><form data-form="rename" data-id="${id}" class="card row2" style="margin:12px 0"><input name="name" value="${esc(w.name)}" required maxlength="80" style="width:260px"><button class="btn s">${t('rename')}</button><button type="button" class="btn d" data-act="delsite" data-id="${id}">${t('delsite')}</button></form><br><h3>${t('deploys')}</h3><br>${tbl([t('status'),t('message'),t('when')],(dps||[]).map(x=>`<tr><td><span class="chip ${x.status==='live'?'ok':x.status==='failed'?'er':'wa'}">${t(x.status)}</span></td><td>${esc(x.log||'')}</td><td>${fmtD(x.created_at)}</td></tr>`))}`;
@@ -898,7 +899,7 @@ async function vSite(id,tab){
   }
   if(tab==='details'){
     const bf=(w.config&&w.config.brief)||{name:w.name,type:w.site_type};
-    b=`<form data-form="details" data-id="${id}" class="card fcard" style="max-width:900px"><div class="row2"><span style="color:var(--tx2)">${t('f_sub')}</span><b dir="ltr">${w.slug&&root?esc(w.slug)+'.'+esc(root):'—'}</b></div>${briefFields(bf)}<p style="color:var(--tx2);font-size:13px;margin-top:18px">${t('rebuildw')}</p><br><button class="btn p">${t('rebuild')}</button></form>`;
+    b=`<form data-form="details" data-id="${id}" class="card fcard" style="max-width:900px"><div class="row2"><span style="color:var(--tx2)">${t('f_sub')}</span><b dir="ltr">${esc(pubLabel(w.slug,root,pbase))}</b></div>${briefFields(bf)}<p style="color:var(--tx2);font-size:13px;margin-top:18px">${t('rebuildw')}</p><br><button class="btn p">${t('rebuild')}</button></form>`;
   }
   if(tab==='analytics'){
     const {data}=await sb.from('site_events').select(EVSEL).eq('website_id',id).gte('created_at',since(90)).limit(10000);
@@ -1052,10 +1053,10 @@ let LAST_AI_ERR='';
 
 async function vNewSite(){
   const {data:rt}=await sb.from('platform_settings').select('value').eq('key','public.sites_root_domain').maybeSingle();
-  const root=rt&&rt.value||'';
+  const root=rt&&rt.value||'';const {data:bt}=await sb.from('platform_settings').select('value').eq('key','public.sites_base_url').maybeSingle();const pbase=(bt&&bt.value||'').replace(/\/$/,'');
   return shell(SIDE_C(),'#/app/new',`<div class="ph"><div><h1>${t('wiz_title')}</h1><p>${t('wiz_sub')}</p></div></div>
   <form data-form="wizard" class="card fcard" style="max-width:1000px"><h3>${t('f_sub')}</h3><div class="dom"><input id="sl" name="sub" required minlength="3" maxlength="30" pattern="[a-z0-9\\-]{3,30}" placeholder="royal" autocomplete="off" autocapitalize="off"><span>${root?'.'+esc(root):''}</span></div>
-  <div id="slst" style="font-size:13px;margin:6px 0 0;color:var(--tx2)">${t('sub_hint')}</div><div style="font-size:13px;margin-top:4px;color:var(--tx2)" dir="ltr">https://<b id="slp">royal</b>${root?'.'+esc(root):''}</div>
+  <div id="slst" style="font-size:13px;margin:6px 0 0;color:var(--tx2)">${t('sub_hint')}</div><div style="font-size:13px;margin-top:4px;color:var(--tx2)" dir="ltr">${root?`https://<b id="slp">royal</b>.${esc(root)}`:`${esc(pbase)}/<b id="slp">royal</b>`}</div>
   ${briefFields({lang:L})}<br><br><button class="btn p lg">${t('createSite')}</button></form>`);
 }
 
@@ -1168,14 +1169,23 @@ async function vAContracts(){
 
 /* ---------- public site host: the same app serves <name>.ibtkar.ly ---------- */
 const ROOT_DOMAIN='ibtkar.ly';
-async function showSite(slug){
+async function showSite(slug,boxed){
   const r=await sb.rpc('get_published_site',{p_slug:slug}),row=r.data&&r.data[0];
   if(!row){document.open();document.write('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font:18px system-ui;display:grid;place-items:center;min-height:100vh;margin:0">404</body>');document.close();return}
+  const hit=()=>{try{if(navigator.doNotTrack!=="1")fetch(SB_URL+'/functions/v1/track',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({site:row.website_id,path:location.pathname,ref:document.referrer}),keepalive:true})}catch(e){}};
+  if(boxed){
+    /* وضع المسار (…/اسم-الموقع): الصفحة تعمل على أصل المنصة نفسه، فتُعرض داخل iframe معزول بلا allow-same-origin
+       حتى لا يصل كود موقع العميل إلى جلسة المنصة أو بياناتها. */
+    const tm=/<title[^>]*>([\s\S]*?)<\/title>/i.exec(row.html);
+    document.open();document.write('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(tm?tm[1].trim():'')+'</title><body style="margin:0"><iframe id="sf" title="site" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-to-custom-protocols" style="border:0;width:100vw;height:100vh;height:100dvh;display:block"></iframe></body>');document.close();
+    document.getElementById('sf').srcdoc=row.html;hit();return;
+  }
   const tr='<script>try{if(navigator.doNotTrack!=="1"){fetch('+JSON.stringify(SB_URL+'/functions/v1/track')+',{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({site:'+JSON.stringify(row.website_id)+',path:location.pathname,ref:document.referrer}),keepalive:true})}}catch(e){}<\/script>';
   let h=row.html;h=/<\/body>/i.test(h)?h.replace(/<\/body>/i,tr+'</body>'):h+tr;
   document.open();document.write(h);document.close();
 }
 const HOSTED=(()=>{const m=location.hostname.match(/^([a-z0-9-]+)\.ibtkar\.ly$/);return m&&!['app','www'].includes(m[1])?m[1]:null})();
+const PATH_SLUG=(()=>{if(HOSTED)return null;const m=location.pathname.match(/^\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])\/?$/);return m&&!['app','admin','vendor','assets','s','c'].includes(m[1])?m[1]:null})();
 
 /* ---------- public contract signing page: #/c/<share_token> ---------- */
 async function ctrGet(token,which){
@@ -1229,7 +1239,7 @@ async function render(opts){
   if(!keep)v.innerHTML=`<div class="wrap sec">${skel()}</div>`;
   /* عدّاد الإشعارات يجري بالتوازي مع تحميل الصفحة (لا ينتظرها ولا تنتظره) */
   const unreadP=am?sb.from('notifications').select('*',{count:'exact',head:true}).is('read_at',null).then(c=>{UNREAD=c.count||0}).catch(()=>{}):Promise.resolve();
-  if(a==='s'){await showSite(sub.split('/')[0]);return}
+  if(a==='s'){await showSite(sub.split('/')[0],true);return}
   let html;
   try{
     const view=a===''?vHome():a==='pricing'?vPricing():a==='apps'?vApps():a==='login'?vAuth('login'):a==='signup'?vAuth('signup'):a==='app'?vApp(sub):a==='admin'?vAdmin(sub):a==='c'?vContract(sub.split('/')[0]):vHome();
@@ -1501,6 +1511,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('.search')){const b=$
 if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark');
 (async()=>{
   if(HOSTED){await showSite(HOSTED);return}
+  if(PATH_SLUG){await showSite(PATH_SLUG,true);return}
   await loadMe();
   /* مهم: callback غير async ولا يستدعي Supabase مباشرةً. supabase-js يمسك قفل المصادقة أثناء إطلاق الأحداث
      (SIGNED_IN عند الرجوع للتطبيق، TOKEN_REFRESHED عند التجديد)، وأي await لدالة Supabase هنا = deadlock

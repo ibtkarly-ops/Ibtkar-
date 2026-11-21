@@ -1,0 +1,10 @@
+{
+  // Static hosting of the IBTIKAR app (public/). Any path falls back to index.html, which renders
+  // the platform, or a published site when the path is /<site-slug>.
+  "name": "ibtikar-sites-staging",
+  "compatibility_date": "2025-01-01",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "single-page-application"
+  }
+}
