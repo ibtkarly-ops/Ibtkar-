@@ -349,9 +349,10 @@ Deno.test("build reports which customer-requested features are missing; repair a
   const base = anthropicFake({ text: HTML });
   providerBehavior = (q) => { if (q.url.includes("/v1/messages") && q.body.max_tokens > 16) sent = JSON.stringify(q.body.messages); return base(q); };
   const r = await call("cust", { action: "build", website_id: "site1" });
-  assert(r.json.ok === true && ["banner", "bg", "motion", "float"].every((x) => r.json.missing.includes(x)), "missing reported: " + JSON.stringify(r.json));
+  assert(r.json.ok === true && ["banner", "bg", "motion", "float", "cart"].every((x) => r.json.missing.includes(x)), "missing reported: " + JSON.stringify(r.json));
   assert(sent.includes("promo-banner") && sent.includes("خصم على كل القطع") && sent.includes("must_have"), "requirements sent to the AI with the customer's own banner text");
-  const FIXED = HTML.replace("<body>", `<body><div id="promo-banner">x</div><div data-animated-bg="aurora"></div><style>@keyframes a{}</style><script>new IntersectionObserver(()=>{})</script><a id="wa-float" href="https://wa.me/218912345678"></a>`);
+  assert(sent.includes("cart-btn") && sent.includes("أرسل الطلب عبر واتساب"), "cart requirement sent for a store with WhatsApp");
+  const FIXED = HTML.replace("<body>", `<body><div id="promo-banner">x</div><div data-animated-bg="aurora"></div><style>@keyframes a{}</style><script>new IntersectionObserver(()=>{})</script><a id="wa-float" href="https://wa.me/218912345678"></a><button id="cart-btn"></button><aside id="cart"></aside><script>encodeURIComponent("x")</script>`);
   providerBehavior = anthropicFake({ text: FIXED });
   const f = await call("cust", { action: "repair", website_id: "site1" });
   assert(f.json.ok === true && f.json.missing.length === 0, "repaired: " + JSON.stringify(f.json));

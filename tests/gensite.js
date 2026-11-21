@@ -28,11 +28,15 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
     check(n + ': no page errors', errs.length === 0);
     if (n === 'store') {
       check('store: no invented prices', sd.sample === true && sd.items.every((i) => !i.p));
-      check('store: order via whatsapp', (await p.locator('#items-list .go a').first().getAttribute('href')).startsWith('https://wa.me/218912345678'));
+      check('store: add-to-cart buttons + cart button', (await p.locator('#items-list .add').count()) === sd.items.length && (await p.locator('#cart-btn').isVisible()));
+      check('store: template version mark', /name="ibtikar-tpl" content="5"/.test(html) && sd.layout === 'cards');
       await p.click('#filters button:nth-child(2)'); await p.waitForTimeout(100);
       check('store: category filter works', (await p.locator('#items-list .item').count()) < sd.items.length);
     }
     if (n === 'own-items') check('own items kept (no sample flag)', !sd.sample && sd.items[0].p === '50 د.ل');
+    if (n === 'rest-both') check('restaurant: menu layout (rows + category headings)', sd.layout === 'menu' && (await p.locator('#items-list .item.row').count()) === sd.items.length && (await p.locator('#items-list .mcat').count()) >= 2);
+    if (n === 'own-items') check('company: service cards with icons + timeline + CTA band', sd.layout === 'svc' && (await p.locator('#items-list .svc .sic svg').count()) >= 1 && (await p.locator('.tl li').count()) === 3 && (await p.locator('.band').count()) === 1);
+    if (n === 'own-items') check('company with prices also gets the cart (phone doubles as WhatsApp)', (await p.locator('#items-list .add').count()) === sd.items.length);
     // editing the JSON block is picked up by the renderer
     const html2 = await h.page.evaluate(([x]) => writeSD(x, { items: [{ n: 'جديد </script>', c: '', p: '5', d: '' }] }), [html]);
     await p.setContent(html2); await p.waitForTimeout(200);

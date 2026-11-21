@@ -1,0 +1,53 @@
+"use strict";
+// WhatsApp order cart in generated sites: add / quantity / remove / total / message link / persistence / when it is hidden.
+const { launch } = require('./mock');
+let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  ' + n); if (!c) fails++; };
+(async () => {
+  const h = await launch({ role: 'customer', viewport: { width: 1280, height: 800 } });
+  await h.open('#/'); await h.page.waitForTimeout(400);
+  const gen = (b) => h.page.evaluate((b) => genSite(b), b);
+  const store = await gen({ name: 'متجر', type: 'store', lang: 'ar', wa: '0912345678', desc: 'x', items: 'عجلات|45|مقاس\nحذاء|150|للمبتدئين\nحقيبة||', cur: 'د.ل' });
+  const p = await h.context.newPage(); const errs = []; p.on('pageerror', (e) => errs.push(e.message));
+  await p.route('https://shop.test/**', (r) => r.fulfill({ body: store, contentType: 'text/html; charset=utf-8' }));
+  await p.goto('https://shop.test/royal'); await p.waitForTimeout(500);
+  check('cart button visible, badge hidden while empty', await p.locator('#cart-btn').isVisible() && !(await p.locator('#cart-n').isVisible()));
+  await p.locator('#items-list .add').nth(0).click(); await p.locator('#items-list .add').nth(0).click(); await p.locator('#items-list .add').nth(1).click();
+  check('badge counts 3', (await p.locator('#cart-n').innerText()) === '3');
+  check('card button shows it is in the cart', /2/.test(await p.locator('#items-list .add').nth(0).innerText()) && await p.locator('#items-list .add.ok').count() === 2);
+  await p.click('#cart-btn'); await p.waitForTimeout(500);
+  check('cart drawer opens with 2 lines', await p.locator('#cart.on').count() === 1 && await p.locator('#cart-list .ci').count() === 2);
+  check('total = 2×45 + 150 = 240 د.ل', (await p.locator('#cart-total').innerText()) === '240 د.ل');
+  await p.fill('#cart-name', 'أحمد'); await p.fill('#cart-note', 'سوق الجمعة');
+  let href = await p.locator('#cart-send').getAttribute('href');
+  const txt = decodeURIComponent(href.split('?text=')[1] || '');
+  check('send link goes to the WhatsApp number', href.startsWith('https://wa.me/218912345678?text='));
+  check('message lists items, quantities, total, name and note', /عجلات × 2 — 45 د.ل/.test(txt) && /حذاء × 1 — 150 د.ل/.test(txt) && /المجموع: 240 د.ل/.test(txt) && /الاسم: أحمد/.test(txt) && /ملاحظات: سوق الجمعة/.test(txt));
+  await p.locator('#cart-list .qt button[data-q="1"]').nth(1).click();
+  check('+ raises quantity and total', (await p.locator('#cart-total').innerText()) === '390 د.ل');
+  await p.locator('#cart-list .rm').nth(0).click();
+  check('remove drops the line', await p.locator('#cart-list .ci').count() === 1 && (await p.locator('#cart-total').innerText()) === '300 د.ل');
+  await p.keyboard.press('Escape'); await p.waitForTimeout(450);
+  check('Escape closes the drawer', await p.locator('#cart.on').count() === 0);
+  await p.reload(); await p.waitForTimeout(500);
+  check('cart survives a reload', (await p.locator('#cart-n').innerText()) === '2');
+  await p.click('#cart-btn'); await p.waitForTimeout(300); await p.click('#cart-clear');
+  check('clear empties the cart and disables sending', await p.locator('#cart-list .ce').count() === 1 && /off/.test(await p.locator('#cart-send').getAttribute('class')));
+  check('no page errors', errs.length === 0);
+  // An item called "</script>" must stay text everywhere.
+  const evil = await gen({ name: 'x', type: 'store', lang: 'ar', wa: '0912345678', desc: 'x', items: '</script><img src=x onerror=alert(1)>|5|' });
+  const q = await h.context.newPage(); let alerted = false; q.on('dialog', (d) => { alerted = true; d.dismiss(); });
+  await q.setContent(evil); await q.waitForTimeout(300); await q.locator('#items-list .add').first().click(); await q.click('#cart-btn'); await q.waitForTimeout(300);
+  check('item names are escaped in the cart', !alerted && (await q.locator('#cart-list .cn b').innerText()).includes('</script>'));
+  // English labels + no cart for a company with no prices; no WhatsApp at all => no cart markup.
+  const en = await gen({ name: 'Co', type: 'store', lang: 'en', wa: '0912345678', desc: 'x', items: 'Wheel|10|' });
+  await q.setContent(en); await q.waitForTimeout(300);
+  check('English labels', (await q.locator('#items-list .add').first().innerText()).includes('Add to cart'));
+  const co = await gen({ name: 'Co', type: 'company', lang: 'ar', wa: '0912345678', desc: 'x' });
+  await q.setContent(co); await q.waitForTimeout(300);
+  check('company without prices: request link, cart hidden', (await q.locator('#items-list .add').count()) === 0 && !(await q.locator('#cart-btn').isVisible()) && (await q.locator('#items-list .go a').first().getAttribute('href')).startsWith('https://wa.me/218912345678'));
+  const nowa = await gen({ name: 'Co', type: 'store', lang: 'ar', email: 'a@b.ly', desc: 'x', items: 'A|5|' });
+  check('no WhatsApp number: no cart markup', !/id="cart"/.test(nowa));
+  await h.browser.close();
+  console.log(fails ? `\n${fails} FAILED` : '\nall passed');
+  process.exit(fails ? 2 : 0);
+})();
