@@ -20,8 +20,10 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ابتكار | IBTIKAR">
 <meta name="twitter:description" content="ابتكر موقعك بمحادثة: صف ما تريد بكلماتك، ونجهّز لك موقعاً كاملاً تعدّله وتنشره وتتابعه من مكان واحد.">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap"></noscript>
+<script src="vendor/supabase.js"></script>
 <style>
 .skip-link{position:absolute;inset-inline-start:-9999px;top:auto;background:var(--ac);color:#fff;padding:10px 18px;border-radius:0 0 12px 12px;z-index:100;font-weight:500}
 .skip-link:focus{inset-inline-start:12px;top:0}
@@ -282,7 +284,14 @@ body.dark .pricecard{background:#1b2150;border-color:#2a3170}
 <script>
 const SB_URL='https://ppegbmqkcdwopakewetl.supabase.co';
 const SB_KEY='sb_publishable_5Ch9XW29qSLTxPuqvVVBnA_jjHsHtu0';
-const sb=supabase.createClient(SB_URL,SB_KEY);
+/* ---- مهلات: لا طلب يبقى معلقاً للأبد (سبب "الموقع يعلق") ---- */
+const withTimeout=(p,ms,label)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(label||'timeout')),ms))]);
+function fetchT(u,o,ms){
+  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),ms);
+  if(o&&o.signal){if(o.signal.aborted)ac.abort();else o.signal.addEventListener('abort',()=>ac.abort(),{once:true})}
+  return fetch(u,{...(o||{}),signal:ac.signal}).finally(()=>clearTimeout(to));
+}
+const sb=supabase.createClient(SB_URL,SB_KEY,{global:{fetch:(u,o)=>fetchT(u,o,/\/storage\/v1\//.test(String(u&&u.url||u))?90000:20000)}});
 
 const T={
 ar:{home:'الرئيسية',pricing:'الباقات',apps:'التطبيقات',login:'دخول',signup:'إنشاء حساب',logout:'خروج',dash:'لوحتي',admin:'الإدارة',
@@ -324,7 +333,9 @@ Object.assign(T.ar,{tpl_title:'اختر القالب',tpl_sub:'اضغط على �
 Object.assign(T.en,{tpl_title:'Choose a template',tpl_sub:'Tap the design you like. You can change everything after creating.',designed:'Your website was custom designed for your business',designed_tpl:'Your website was created from the chosen template',tn_shop:'Modern store',tn_shopdark:'Dark store',tn_food:'Restaurant and cafe',tn_clinic:'Clinic and medical center',tn_corp:'Company',tn_port:'Portfolio',tn_land:'Landing page',lasterr:'Failure reason'});
 Object.assign(T.ar,{sections:'الأقسام',bo_building:'موقعك قيد البناء',bo_building_s:'نجهّز موقعك الآن، لحظات فقط...',bo_s1:'حفظ بياناتك',bo_s2:'تصميم موقعك',bo_s3:'المراجعة النهائية',bo_ready:'موقعك جاهز',bo_ready_ai:'تم تصميم موقعك. اضغط إرسال لنشره.',bo_ready_tpl:'موقعك جاهز بتصميم أساسي. اضغط إرسال لنشره.',bo_live:'تم النشر',bo_manage:'إدارة الموقع',bo_publishing:'جارٍ نشر موقعك...',mr_ask:'ماذا تريد أن نغيّر في موقعك؟',mr_ph:'مثال: غيّر رقم الهاتف، أضف قسماً للعروض...',mr_send:'إرسال الطلب',mr_price:'السعر',mr_accept:'موافق، نفّذ',mr_getprice:'احسب السعر',mr_apply:'نفّذ التعديل',mr_analyzing:'جارٍ تحليل طلبك وتسعيره...',mr_priced:'تم تسعير طلبك',mr_wait:'استلمنا طلبك وسيصلك السعر قريباً',mr_applying:'جارٍ تنفيذ التعديل',mr_applying_s:'لحظات ويكون جاهزاً...',mr_done:'تم التعديل',mr_done_s:'راجع موقعك. يمكنك الرجوع لأي نسخة سابقة من قسم النسخ.',budget_exceeded:'وصلت لحد الاستخدام لهذا الشهر. رقّ باقتك للمتابعة.',service_not_configured:'الخدمة غير جاهزة حالياً',all_providers_failed:'تعذّر التنفيذ الآن، حاول بعد قليل',invalid_output:'لم تكتمل النتيجة بالجودة المطلوبة، حاول مرة أخرى',not_pending:'تم تسعير هذا الطلب مسبقاً',not_approved:'يجب الموافقة على السعر أولاً',page_too_large_for_edit:'الصفحة كبيرة على التعديل الآلي',pick_type:'ما نوع موقعك؟',tyd_company:'موقع رسمي لشركتك',tyd_store:'اعرض منتجاتك واستقبل الطلبات',tyd_landing:'صفحة تعريفية بك أو بمشروعك',tyd_restaurant:'منيو إلكتروني لمطعمك',prompts:'التعليمات',prompts_h:'التعليمات الأساسية التي تُرسل مع كل موقع، وتعليمات كل نوع. يمكنك لصق النسخة الكاملة هنا وحفظها.',aicfg:'حدود الاستهلاك والتسعير',freeb:'ميزانية الباقة المجانية بالدولار',bounds:'حدود أسعار التعديل لكل مستوى (JSON)',markup:'معامل الربح فوق تكلفة التوكن (مثال: 4 يعني أربعة أضعاف)',aireq:'التسعير آلي بالكامل من الذكاء الاصطناعي حسب تكلفة التوكن الفعلية ضرب هذا المعامل. لا يوجد تسعير يدوي.',retryprice:'إعادة التسعير آلياً',pricing_now:'جارٍ التسعير...',appsSuperOnly:'مرئي للمدير العام فقط حالياً',preset_t:'ربط مزود بنقرة واحدة',preset_k:'المفتاح السري',preset_cin:'تكلفة الإدخال لكل مليون توكن (اختياري)',preset_cout:'تكلفة الإخراج لكل مليون توكن (اختياري)',preset_btn:'حفظ وتفعيل واختبار',preset_ok:'تم الربط والمزود يعمل',preset_note:'أدخل التكلفة حتى يحسب النظام ميزانية كل موقع بدقة.',contracts:'العقود',contractsT:'عقود العملاء',ctr_new:'عقد جديد',ctr_customer:'العميل',ctr_title:'عنوان العقد (اختياري)',ctr_file:'صورة أو PDF العقد المعتمد',ctr_create:'إنشاء ورفع',ctr_number:'رقم العقد',ctr_status:'الحالة',ctr_send:'إرسال',ctr_copylink:'نسخ الرابط',ctr_wa:'إرسال واتساب',ctr_approve:'اعتماد',ctr_viewsigned:'فتح النسخة الموقعة',ctr_viewesign:'فتح التوقيع الإلكتروني',ctr_vieworig:'فتح العقد الأصلي',ctr_none:'لا توجد عقود حتى الآن',ctr_draft:'مسودة',ctr_sent:'مرسل',ctr_awaiting_signature:'بانتظار التوقيع',ctr_received_signed:'مستلم وموقّع',ctr_approved:'معتمد',ctr_void:'ملغى',ctr_linkcopied:'تم نسخ الرابط',ctr_openlink:'رابط العقد الخاص بك',ctr_sign_title:'توقيع العقد',ctr_sign_sub:'افتح العقد، اقرأه بعناية، ثم وقّع بإحدى الطريقتين أدناه',ctr_notfound:'الرابط غير صحيح أو انتهت صلاحيته',ctr_already:'تم استلام هذا العقد موقّعاً من قبل، شكراً لك',ctr_upload_signed:'رفع نسخة موقعة (صورة أو PDF)',ctr_upload_btn:'رفع النسخة الموقعة',ctr_esign_h:'أو وقّع إلكترونياً هنا',ctr_esign_name:'الاسم الكامل',ctr_esign_clear:'مسح',ctr_esign_btn:'تأكيد التوقيع',ctr_thanks:'تم استلام توقيعك بنجاح. سيتواصل معك فريق ابتكار عند الاعتماد.',ctr_yourcopy:'نسخة PDF/صورة العقد الأصلي متاحة لك دائماً من هذه الصفحة.'});Object.assign(T.en,{sections:'Sections',bo_building:'Your website is being built',bo_building_s:'Preparing your site, just a moment...',bo_s1:'Saving your details',bo_s2:'Designing your site',bo_s3:'Final review',bo_ready:'Your website is ready',bo_ready_ai:'Your site is designed. Press Send to publish it.',bo_ready_tpl:'Your site is ready with a basic design. Press Send to publish it.',bo_live:'Published',bo_manage:'Manage site',bo_publishing:'Publishing your site...',mr_ask:'What would you like us to change on your site?',mr_ph:'Example: change the phone number, add an offers section...',mr_send:'Send request',mr_price:'Price',mr_accept:'Agree, do it',mr_getprice:'Get price',mr_apply:'Apply the change',mr_analyzing:'Analyzing and pricing your request...',mr_priced:'Your request is priced',mr_wait:'We got your request and the price will reach you soon',mr_applying:'Applying the change',mr_applying_s:'Almost ready...',mr_done:'Change applied',mr_done_s:'Check your site. You can roll back to any earlier version from the Versions section.',budget_exceeded:'You reached this month usage limit. Upgrade your plan to continue.',service_not_configured:'The service is not ready yet',all_providers_failed:'Could not complete now, try again shortly',invalid_output:'The result did not meet the quality bar, please try again',not_pending:'This request was already priced',not_approved:'Approve the price first',page_too_large_for_edit:'The page is too large for automatic edits',pick_type:'What kind of website?',tyd_company:'An official site for your company',tyd_store:'Show your products and take orders',tyd_landing:'An intro page for you or your project',tyd_restaurant:'An online menu for your restaurant',prompts:'Instructions',prompts_h:'The core instructions sent with every site, and the instructions for each type. Paste the full versions here and save.',aicfg:'Usage and pricing limits',freeb:'Free plan budget in USD',bounds:'Modification price bounds per level (JSON)',markup:'Markup over raw token cost (e.g. 4 = four times)',aireq:'Pricing is fully automatic from the AI, from real token cost times this markup. No manual pricing.',retryprice:'Re-price automatically',pricing_now:'Pricing...',appsSuperOnly:'Visible to the super admin only for now',preset_t:'Connect a provider in one click',preset_k:'Secret key',preset_cin:'Input cost per 1M tokens (optional)',preset_cout:'Output cost per 1M tokens (optional)',preset_btn:'Save, enable and test',preset_ok:'Connected and working',preset_note:'Enter the costs so the system can budget each site accurately.',contracts:'Contracts',contractsT:'Customer contracts',ctr_new:'New contract',ctr_customer:'Customer',ctr_title:'Contract title (optional)',ctr_file:'Approved contract image or PDF',ctr_create:'Create & upload',ctr_number:'Contract #',ctr_status:'Status',ctr_send:'Send',ctr_copylink:'Copy link',ctr_wa:'Send via WhatsApp',ctr_approve:'Approve',ctr_viewsigned:'Open signed copy',ctr_viewesign:'Open e-signature',ctr_vieworig:'Open original contract',ctr_none:'No contracts yet',ctr_draft:'Draft',ctr_sent:'Sent',ctr_awaiting_signature:'Awaiting signature',ctr_received_signed:'Received & signed',ctr_approved:'Approved',ctr_void:'Void',ctr_linkcopied:'Link copied',ctr_openlink:'Your contract link',ctr_sign_title:'Sign contract',ctr_sign_sub:'Open the contract, read it carefully, then sign using one of the options below',ctr_notfound:'This link is invalid or has expired',ctr_already:'This contract was already received signed, thank you',ctr_upload_signed:'Upload a signed copy (image or PDF)',ctr_upload_btn:'Upload signed copy',ctr_esign_h:'Or sign electronically here',ctr_esign_name:'Full name',ctr_esign_clear:'Clear',ctr_esign_btn:'Confirm signature',ctr_thanks:'Your signature was received. The IBTIKAR team will contact you once approved.',ctr_yourcopy:'A copy of the original contract is always available to you on this page.'});
 Object.assign(T.ar,{adminpanel:'لوحة إدارة الموقع',adminuser:'اسم المستخدم',adminpass:'كلمة المرور',adminnote:'بيانات دخول لوحة الطلبات/الحجوزات داخل موقعك نفسه (ليست لوحة ابتكار). احفظها في مكان آمن.',showpass:'إظهار',popular:'الأكثر شيوعاً'});
+Object.assign(T.ar,{slow:'الاتصال بطيء أو متوقف.',retry:'إعادة المحاولة',resetsession:'تنظيف الجلسة وإعادة التحميل',timeout:'انتهت مهلة الاتصال، حاول مجدداً',network:'تعذّر الاتصال بالإنترنت',session_timeout:'الجلسة بطيئة، أعد المحاولة',not_signed_in:'سجّل الدخول أولاً',verify_failed:'تعذّر التحقق من النشر',bo_tpl_note:'نُشر بتصميم أساسي لأن الذكاء الاصطناعي لم يعمل الآن'});
 Object.assign(T.en,{adminpanel:'Site admin panel',adminuser:'Username',adminpass:'Password',adminnote:"Login for your own site's orders/bookings page (not the IBTIKAR dashboard). Keep it safe.",showpass:'Show',popular:'Most popular'});
+Object.assign(T.en,{slow:'The connection is slow or stalled.',retry:'Try again',resetsession:'Clear session and reload',timeout:'Request timed out, please try again',network:'Could not reach the network',session_timeout:'Session is slow, please retry',not_signed_in:'Please sign in first',verify_failed:'Could not verify the publish',bo_tpl_note:'Published with a basic design because the AI was unavailable'});
 let L=localStorage.getItem('lang')||'ar';
 const t=k=>T[L][k]??k;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -341,8 +352,10 @@ const fmtD=d=>new Date(d).toLocaleString(L==='ar'?'ar':'en',{dateStyle:'medium',
 const stChip=s=>`<span class="chip ${s==='published'?'ok':s==='stopped'?'er':'wa'}">${t(s==='building'?'building_':s)}</span>`;
 
 async function loadMe(){
-  const {data}=await sb.auth.getSession();me=data.session?.user||null;prof=null;
-  if(me){const r=await sb.from('profiles').select('*').eq('id',me.id).maybeSingle();prof=r.data}
+  try{
+    const {data}=await withTimeout(sb.auth.getSession(),10000,'session');me=data.session?.user||null;prof=null;
+    if(me){const r=await sb.from('profiles').select('*').eq('id',me.id).maybeSingle();prof=r.data}
+  }catch(e){/* جلسة بطيئة: نكمل كزائر ولا نعلّق الصفحة */}
 }
 const isAdm=()=>prof&&STAFF_ADMIN.includes(prof.role);
 const isSuper=()=>prof&&prof.role==='super_admin';
@@ -437,14 +450,13 @@ function boDone(title,sub,btns,err){const el=$('#bo');if(!el)return;el.className
 function boClose(){const el=$('#bo');if(el)el.remove()}
 async function runApply(id,sid){
   boOpen(t('mr_applying'),t('mr_applying_s'),[]);
-  try{const j=await fnPost('ai-gateway',{action:'apply',request_id:id});if(!j.ok)throw new Error(t(j.error||'err'));
-    if(sid){try{
-      const r=await sb.rpc('request_publish',{p_site:sid});if(r.error)throw new Error(t(r.error.message));
-      const pj=await fnPost('verify-publish',{deployment_id:r.data});if(!pj.ok)throw new Error(t('pubfail')+': '+(pj.error||''));
-      boDone(t('mr_done'),t('mr_done_s')+' · '+t('pubok'),[`<a class="btn p lg" href="${esc(pj.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`]);return
-    }catch(pe){}}
-    boDone(t('mr_done'),t('mr_done_s'),[`<button class="btn p lg" data-act="boview" data-id="${sid||''}">${t('preview')}</button>`,`<button class="btn s lg" data-act="boclose">${t('close')||'×'}</button>`])}
-  catch(x){boDone(t('pubfail').replace(/.*/,t('err')),x.message,[`<button class="btn p lg" data-act="aiapply" data-id="${id}" data-site="${sid||''}">${t('mr_apply')}</button>`,`<button class="btn s lg" data-act="boclose">×</button>`],true)}
+  const j=await fnPost('ai-gateway',{action:'apply',request_id:id},{ms:120000});
+  if(!j.ok){boDone(t('err'),errText(j.error)||t('err'),[`<button class="btn p lg" data-act="aiapply" data-id="${id}" data-site="${sid||''}">${t('mr_apply')}</button>`,`<button class="btn s lg" data-act="boclose">×</button>`],true);return}
+  if(sid){
+    const pub=await autoPublish(sid);
+    if(pub.ok){boDone(t('mr_done'),t('mr_done_s')+' · '+t('pubok'),[`<a class="btn p lg" href="${esc(pub.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`]);return}
+  }
+  boDone(t('mr_done'),t('mr_done_s'),[`<button class="btn p lg" data-act="boview" data-id="${sid||''}">${t('preview')}</button>`,`<button class="btn s lg" data-act="boclose">×</button>`]);
 }
 /* ----- chart helpers ----- */
 function series(rows,n,val,key){key=key||'created_at';const out=Array(n).fill(0),t0=Date.now();
@@ -664,18 +676,36 @@ async function saveHtml(id,html,note){
   const vv=await sb.from('website_versions').select('version').eq('website_id',id).order('version',{ascending:false}).limit(1);
   const ins=await sb.from('website_versions').insert({website_id:id,version:(vv.data?.[0]?.version||0)+1,snapshot:{html},note:(note||'').slice(0,200),created_by:me.id});if(ins.error)throw ins.error;
 }
-async function gw(body){
-  const {data:s}=await sb.auth.getSession();
-  const r=await fetch(SB_URL+'/functions/v1/ai-gateway',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+s.session.access_token,apikey:SB_KEY},body:JSON.stringify(body)});
-  const j=await r.json();
-  if(!r.ok)throw new Error(j.error==='service_not_configured'?t('nosvc'):j.error==='quota_exceeded'?t('quota'):(j.error||t('err')));
+/* استدعاء دالة Edge بمهلة. لا يرمي أبداً: عند الفشل يرجع {ok:false,error:'timeout'|'network'|...} */
+async function fx(name,body,ms){
+  let tok;
+  try{const {data:s}=await withTimeout(sb.auth.getSession(),8000,'session');tok=s.session&&s.session.access_token}catch(e){return{ok:false,error:'session_timeout'}}
+  if(!tok)return{ok:false,error:'not_signed_in'};
+  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),ms||25000);
+  try{
+    const r=await fetch(SB_URL+'/functions/v1/'+name,{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok,apikey:SB_KEY},body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok&&!j.error)j.error='http_'+r.status;
+    j._status=r.status;
+    return j;
+  }catch(e){return{ok:false,error:e&&e.name==='AbortError'?'timeout':'network'}}
+  finally{clearTimeout(to)}
+}
+const fnPost=(name,body,opts)=>fx(name,body,opts&&opts.ms);
+async function gw(body,opts){
+  const j=await fx('ai-gateway',body,(opts&&opts.ms)||90000);
+  if(!j._status||j._status>=400)throw new Error(j.error==='service_not_configured'?t('nosvc'):j.error==='quota_exceeded'?t('quota'):(j.error||t('err')));
   return j;
 }
-async function fnPost(name,body){
-  const {data:s}=await sb.auth.getSession();
-  const r=await fetch(SB_URL+'/functions/v1/'+name,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+s.session.access_token,apikey:SB_KEY},body:JSON.stringify(body)});
-  return r.json().catch(()=>({}));
+/* نشر تلقائي بمهلات: لا يعلق أبداً، ويرجع {ok,url} أو {ok:false,error} */
+async function autoPublish(sid){
+  let r;
+  try{r=await withTimeout(sb.rpc('request_publish',{p_site:sid}),15000,'timeout')}catch(e){return{ok:false,error:'timeout'}}
+  if(r.error)return{ok:false,error:r.error.message};
+  const pj=await fnPost('verify-publish',{deployment_id:r.data},{ms:40000});
+  return pj.ok?{ok:true,url:pj.url}:{ok:false,error:pj.error||'verify_failed'};
 }
+const errText=c=>T[L][c]||c;
 const cleanHtml=x=>(x||'').replace(/^```html?\s*/i,'').replace(/```\s*$/,'').trim();
 async function vSite(id,tab){
   const {data:w}=await sb.from('websites').select('*').eq('id',id).maybeSingle();
@@ -800,9 +830,13 @@ function tplGallery(){
 const intlNum=x=>{let q=String(x||'').trim().replace(/[^\d+]/g,'');if(!q)return'';if(q[0]==='+')return q.slice(1);if(q.startsWith('00'))return q.slice(2);if(q[0]==='0')return '218'+q.slice(1);return q.length<=9?'218'+q:q};
 async function buildSite(id,b,note){
   await saveHtml(id,genSite(b),note||'initial');           // a working page always exists first
-  try{const j=await fnPost('ai-gateway',{action:'build',website_id:id});if(j&&j.ok)return'ai'}catch(e){}
+  LAST_AI_ERR='';
+  const j=await fnPost('ai-gateway',{action:'build',website_id:id},{ms:120000});
+  if(j&&j.ok)return'ai';
+  LAST_AI_ERR=(j&&j.error)||'';
   return'tpl';
 }
+let LAST_AI_ERR='';
 
 async function vNewSite(){
   const {data:rt}=await sb.from('platform_settings').select('value').eq('key','public.sites_root_domain').maybeSingle();
@@ -931,12 +965,12 @@ const HOSTED=(()=>{const m=location.hostname.match(/^([a-z0-9-]+)\.ibtkar\.ly$/)
 
 /* ---------- public contract signing page: #/c/<share_token> ---------- */
 async function ctrGet(token,which){
-  const r=await fetch(SB_URL+'/functions/v1/contract-file?token='+encodeURIComponent(token)+'&which='+which,{headers:{apikey:SB_KEY}});
+  const r=await fetchT(SB_URL+'/functions/v1/contract-file?token='+encodeURIComponent(token)+'&which='+which,{headers:{apikey:SB_KEY}},25000);
   return r.json();
 }
 async function ctrPost(body){
-  const r=await fetch(SB_URL+'/functions/v1/contract-file',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY},body:JSON.stringify(body)});
-  return r.json().catch(()=>({}));
+  try{const r=await fetchT(SB_URL+'/functions/v1/contract-file',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY},body:JSON.stringify(body)},60000);
+  return await r.json().catch(()=>({}))}catch(e){return{ok:false,error:e&&e.name==='AbortError'?'timeout':'network'}}
 }
 async function vContract(token){
   const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -971,6 +1005,7 @@ function wireSignPad(cv){
 
 /* ---------- router ---------- */
 let busy=0;
+function paintUnread(){const a=document.querySelector('a.ib[href="#/app/notes"]');if(!a)return;let em=a.querySelector('em');if(UNREAD){if(!em){em=document.createElement('em');a.append(em)}em.textContent=UNREAD}else if(em)em.remove()}
 async function render(opts){
   opts=opts||{};const keep=!!opts.keep;const sy=keep?window.scrollY:0;
   const n=++busy;chrome();const v=$('#v');
@@ -978,15 +1013,18 @@ async function render(opts){
   const am=!!me&&!!prof&&(a==='app'||(a==='admin'&&isAdm()));
   document.body.classList.toggle('appmode',am);
   if(!keep)v.innerHTML=`<div class="wrap sec">${skel()}</div>`;
-  if(am){const c=await sb.from('notifications').select('*',{count:'exact',head:true}).is('read_at',null);UNREAD=c.count||0}
+  /* عدّاد الإشعارات يجري بالتوازي مع تحميل الصفحة (لا ينتظرها ولا تنتظره) */
+  const unreadP=am?sb.from('notifications').select('*',{count:'exact',head:true}).is('read_at',null).then(c=>{UNREAD=c.count||0}).catch(()=>{}):Promise.resolve();
   if(a==='s'){await showSite(sub.split('/')[0]);return}
   let html;
   try{
-    html=a===''?await vHome():a==='pricing'?await vPricing():a==='apps'?await vApps():a==='login'?vAuth('login'):a==='signup'?vAuth('signup'):a==='app'?await vApp(sub):a==='admin'?await vAdmin(sub):a==='c'?await vContract(sub.split('/')[0]):await vHome();
-  }catch(e){html=`<div class="wrap sec">${t('err')}</div>`}
+    const view=a===''?vHome():a==='pricing'?vPricing():a==='apps'?vApps():a==='login'?vAuth('login'):a==='signup'?vAuth('signup'):a==='app'?vApp(sub):a==='admin'?vAdmin(sub):a==='c'?vContract(sub.split('/')[0]):vHome();
+    /* حارس: لو لم تكتمل الصفحة خلال 20 ثانية نعرض إعادة المحاولة بدل هيكل رمادي عالق */
+    [html]=await withTimeout(Promise.all([view,unreadP]),20000,'slow');
+  }catch(e){html=`<div class="wrap sec"><div class="empty">${e&&e.message==='slow'?t('slow'):t('err')}<br><br><button class="btn p" data-act="retry">${t('retry')}</button> <button class="btn s" data-act="resetsession">${t('resetsession')}</button></div></div>`}
   if(n!==busy)return;
   if(!keep){v.style.animation='none';v.offsetHeight;v.style.animation=''}
-  v.innerHTML=html;
+  v.innerHTML=html;paintUnread();
   v.querySelectorAll('[data-count]').forEach(el=>{const to=+el.dataset.count,t0=performance.now();(function f(now){const p=Math.min((now-t0)/700,1);el.textContent=Math.round(to*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)})(t0)});
   const cv=$('#esigncv');if(cv&&!cv._wired){cv._wired=true;wireSignPad(cv)}
   if(keep)scrollTo(0,sy);else scrollTo(0,0);
@@ -1011,16 +1049,18 @@ document.addEventListener('click',async e=>{
     if(a==='pdel'){if(!confirm(t('del')+'?'))return;const dm=await sb.from('ai_models').delete().eq('provider_id',id);if(dm.error)throw dm.error;const r=await sb.from('ai_providers').delete().eq('id',id);if(r.error)throw r.error;await audit('provider.delete','ai_providers',{id});toast(t('saved'));render({keep:true});return}
     if(a==='addmodel'){const v=$('#m'+id).value.trim();if(!v)throw new Error(t('model'));const r=await sb.from('ai_models').insert({provider_id:id,model_id:v});if(r.error)throw r.error}
     if(a==='setkey'){const el=$('#k'+id),v=el.value.trim();const r=await sb.rpc('admin_set_provider_key',{p_provider:id,p_key:v});el.value='';if(r.error)throw r.error}
-    if(a==='ptest'){const {data:s}=await sb.auth.getSession();const r=await fetch(SB_URL+'/functions/v1/ai-gateway',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+s.session.access_token,apikey:SB_KEY},body:JSON.stringify({action:'test',provider_id:id})});const j=await r.json();if(!j.ok)throw new Error(j.error||t('err'));}
-    if(a==='publish'){const r=await sb.rpc('request_publish',{p_site:id});if(r.error)throw new Error(t(r.error.message));toast(t('publishing'));const j=await fnPost('verify-publish',{deployment_id:r.data});if(!j.ok)throw new Error(t('pubfail')+': '+(j.error||''));toast(t('pubok'));render({keep:true});return}
+    if(a==='ptest'){const j=await fx('ai-gateway',{action:'test',provider_id:id},60000);if(!j.ok)throw new Error(errText(j.error)||t('err'));toast(t('preset_ok'))}
+    if(a==='publish'){toast(t('publishing'));const r=await autoPublish(id);if(!r.ok)throw new Error(t('pubfail')+': '+errText(r.error));toast(t('pubok'));render({keep:true});return}
     if(a==='unpublish'){if(!confirm(t('unpublish')+'?'))return;const r=await sb.rpc('unpublish_website',{p_site:id});if(r.error)throw new Error(t(r.error.message))}
+    if(a==='retry'){render();return}
+    if(a==='resetsession'){try{await withTimeout(sb.auth.signOut({scope:'local'}),3000)}catch(e){}Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k));location.hash='#/';location.reload();return}
     if(a==='menu'){const sh=$('#sheet');if(sh){sh.hidden=!sh.hidden;document.body.classList.toggle('noscroll',!sh.hidden)}b.disabled=false;return}
     if(a==='boclose'){boClose();render({keep:true});return}
     if(a==='boview'){boClose();const hh='#/app/site/'+id+'/overview';if(!id){location.hash='#/app/sites';render({keep:true});return}if(location.hash===hh)render({keep:true});else location.hash=hh;return}
     if(a==='bopublish'){const sid=id;boOpen(t('bo_publishing'),'',[]);
-      try{const r=await sb.rpc('request_publish',{p_site:sid});if(r.error)throw new Error(t(r.error.message));const j=await fnPost('verify-publish',{deployment_id:r.data});if(!j.ok)throw new Error(t('pubfail')+': '+(j.error||''));
-        boDone(t('bo_live'),j.url,[`<a class="btn p lg" href="${esc(j.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`])}
-      catch(x){boDone(t('pubfail'),x.message,[`<button class="btn p lg" data-act="bopublish" data-id="${sid}">${t('send')}</button>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`],true)}
+      const r=await autoPublish(sid);
+      if(r.ok)boDone(t('bo_live'),r.url,[`<a class="btn p lg" href="${esc(r.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`]);
+      else boDone(t('pubfail'),errText(r.error),[`<button class="btn p lg" data-act="bopublish" data-id="${sid}">${t('send')}</button>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`],true);
       return}
     if(a==='aiquote'){const j=await fnPost('ai-gateway',{action:'quote',request_id:id});if(!j.ok)throw new Error(t(j.error||'err'))}
     if(a==='aiaccept'){const r=await sb.rpc('respond_quote',{p_id:id,p_accept:true});if(r.error)throw r.error;await runApply(id,b.dataset.site);return}
@@ -1040,7 +1080,7 @@ document.addEventListener('click',async e=>{
     if(a==='respond'){const r=await sb.rpc('respond_quote',{p_id:id,p_accept:b.dataset.to==='true'});if(r.error)throw r.error}
     if(a==='quote'){b.textContent=t('pricing_now');const j=await gw({action:'quote',request_id:id});if(!j.ok)throw new Error(j.error||t('err'))}
     if(a==='paid'){const r=await sb.from('invoices').update({status:'paid'}).eq('id',id);if(r.error)throw r.error;await audit('invoice.paid','invoices',{id})}
-    if(a==='runcheck'){const {data:s}=await sb.auth.getSession();const r=await fetch(SB_URL+'/functions/v1/uptime-check',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+s.session.access_token,apikey:SB_KEY},body:'{}'});const j=await r.json();if(!r.ok)throw new Error(j.error||t('err'));toast(t('checked')+': '+j.checked);render({keep:true});return}
+    if(a==='runcheck'){const j=await fx('uptime-check',{},120000);if(j.error)throw new Error(errText(j.error)||t('err'));toast(t('checked')+': '+j.checked);render({keep:true});return}
     if(a==='ctrsend'){const r=await sb.from('contracts').update({status:'sent',sent_at:new Date().toISOString()}).eq('id',id).eq('status','draft');if(r.error)throw r.error;await audit('contract.send','contracts',{id})}
     if(a==='ctrapprove'){const r=await sb.from('contracts').update({status:'approved',approved_at:new Date().toISOString(),approved_by:me.id}).eq('id',id).eq('status','received_signed');if(r.error)throw r.error;await audit('contract.approve','contracts',{id})}
     if(a==='ctrcopy'){try{await navigator.clipboard.writeText(b.dataset.link)}catch(e){}toast(t('ctr_linkcopied'));b.disabled=false;return}
@@ -1144,21 +1184,19 @@ document.addEventListener('submit',async e=>{
       const ins=await sb.from('websites').insert({owner_id:me.id,name:d.name,site_type:d.type,slug,config:{brief}}).select().single();if(ins.error)throw ins.error;
       const sid=ins.data.id;boOpen(t('bo_building'),t('bo_building_s'),[t('bo_s1'),t('bo_s2'),t('bo_s3')]);boStage(0);
       try{await saveHtml(sid,genSite(brief),'initial');boStage(1);let how='tpl',why='';
-        try{const j=await fnPost('ai-gateway',{action:'build',website_id:sid});if(j&&j.ok)how='ai';else why=(j&&j.error)||''}catch(e){}
-        boStage(2);await new Promise(x=>setTimeout(x,400));
-        try{
-          const r=await sb.rpc('request_publish',{p_site:sid});if(r.error)throw new Error(t(r.error.message));
-          const pj=await fnPost('verify-publish',{deployment_id:r.data});if(!pj.ok)throw new Error(t('pubfail')+': '+(pj.error||''));
-          boDone(t('bo_live'),pj.url,[`<a class="btn p lg" href="${esc(pj.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`]);
-        }catch(pe){
-          boDone(t('bo_ready'),how==='ai'?t('bo_ready_ai'):t('bo_ready_tpl')+(why&&why!=='service_not_configured'?' ('+t(why)+')':''),[`<button class="btn p lg" data-act="bopublish" data-id="${sid}">${t('send')}</button>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('preview')}</button>`]);
-        }
+        const j=await fnPost('ai-gateway',{action:'build',website_id:sid},{ms:120000});
+        if(j&&j.ok)how='ai';else why=(j&&j.error)||'';
+        boStage(2);
+        const pub=await autoPublish(sid);
+        const note=how==='ai'?'':t('bo_tpl_note')+(why&&why!=='service_not_configured'?' ('+errText(why)+')':'');
+        if(pub.ok)boDone(t('bo_live'),(note?note+' · ':'')+pub.url,[`<a class="btn p lg" href="${esc(pub.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`]);
+        else boDone(t('bo_ready'),(how==='ai'?t('bo_ready_ai'):t('bo_ready_tpl'))+(note&&how!=='ai'?' ('+note+')':'')+' · '+t('pubfail')+': '+errText(pub.error),[`<button class="btn p lg" data-act="bopublish" data-id="${sid}">${t('send')}</button>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('preview')}</button>`]);
       }catch(x){boClose();throw x}
       return}
     if(k==='details'){
       const w=await sb.from('websites').select('config').eq('id',f.dataset.id).single();
       const up=await sb.from('websites').update({name:d.name,site_type:d.type,config:{...(w.data&&w.data.config||{}),brief:{...d,tpl:(((w.data&&w.data.config)||{}).brief||{}).tpl}}}).eq('id',f.dataset.id);if(up.error)throw up.error;
-      const how=await buildSite(f.dataset.id,{...d,tpl:(((w.data&&w.data.config)||{}).brief||{}).tpl},'rebuild');toast(how==='ai'?t('designed'):t('designed_tpl'));
+      const how=await buildSite(f.dataset.id,{...d,tpl:(((w.data&&w.data.config)||{}).brief||{}).tpl},'rebuild');toast(how==='ai'?t('designed'):t('designed_tpl')+(LAST_AI_ERR?' ('+errText(LAST_AI_ERR)+')':''));
       const h='#/app/site/'+f.dataset.id+'/overview';if(location.hash===h)render({keep:true});else location.hash=h;return}
     if(k==='preset'){const P={openai:['OpenAI','gpt-6-luna'],gemini:['Gemini','gemini-flash-latest'],anthropic:['Claude','claude-sonnet-5-5'],deepseek:['DeepSeek','deepseek-chat']}[d.kind];if(!P)throw new Error(t('err'));
       let {data:pv}=await sb.from('ai_providers').select('id').eq('name',P[0]).maybeSingle();
@@ -1207,7 +1245,21 @@ let sT;document.addEventListener('input',e=>{
   },250)});
 document.addEventListener('click',e=>{if(!e.target.closest('.search')){const b=$('#sres');if(b)b.hidden=true}});
 if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark');
-(async()=>{if(HOSTED){await showSite(HOSTED);return}await loadMe();sb.auth.onAuthStateChange(async()=>{await loadMe();chrome()});await banner();render()})();
+(async()=>{
+  if(HOSTED){await showSite(HOSTED);return}
+  await loadMe();
+  /* مهم: callback غير async ولا يستدعي Supabase مباشرةً. supabase-js يمسك قفل المصادقة أثناء إطلاق الأحداث
+     (SIGNED_IN عند الرجوع للتطبيق، TOKEN_REFRESHED عند التجديد)، وأي await لدالة Supabase هنا = deadlock
+     تتجمد به كل الطلبات حتى إعادة التحميل. لذلك نؤجّل العمل خارج الـcallback. */
+  sb.auth.onAuthStateChange((ev,sess)=>{
+    const uid=sess&&sess.user&&sess.user.id||null;
+    if(ev==='TOKEN_REFRESHED'||ev==='INITIAL_SESSION')return;
+    if(ev==='SIGNED_IN'&&uid&&me&&uid===me.id)return;        // رجوع للتبويب بنفس المستخدم: لا حاجة لإعادة التحميل
+    setTimeout(()=>{loadMe().then(()=>{chrome();if(ev==='SIGNED_OUT')render()})},0);
+  });
+  banner().catch(()=>{});
+  render();
+})();
 </script>
 </body>
 </html>
