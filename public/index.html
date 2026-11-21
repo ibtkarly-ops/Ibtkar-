@@ -104,7 +104,11 @@ main{animation:in .4s cubic-bezier(.2,.7,.2,1) both}
 .cta .btn{background:#fff;color:var(--ac)}
 .price{font-size:38px;font-weight:700;letter-spacing:-.03em}.price small{font-size:14px;color:var(--tx2);font-weight:400}
 .chip{display:inline-block;padding:2px 11px;border-radius:99px;font-size:12px;font-weight:500;background:var(--bg2);border:1px solid var(--bd)}
-[hidden]{display:none!important}.irh{display:flex;gap:12px;align-items:flex-start}.ipw{flex:none;width:76px;height:76px;border:1.5px dashed var(--bd);border-radius:12px;display:grid;place-items:center;cursor:pointer;overflow:hidden;margin:14px 0 0!important;background:var(--bg2)}.ip{width:100%;height:100%;object-fit:cover}.ip[hidden],.ipp[hidden]{display:none}.ipp{color:var(--tx2)}.pk{cursor:pointer;font-family:inherit;color:inherit}.pk.on{background:var(--ac);color:#fff;border-color:var(--ac)}.chip.ok{background:#ecfdf3;color:var(--ok);border-color:#bbf7d0}.chip.wa{background:#fffbeb;color:#b45309;border-color:#fde68a}.chip.er{background:#fef2f2;color:var(--er);border-color:#fecaca}
+[hidden]{display:none!important}.irh{display:flex;gap:12px;align-items:flex-start}.ipw{flex:none;width:76px;height:76px;border:1.5px dashed var(--bd);border-radius:12px;display:grid;place-items:center;cursor:pointer;overflow:hidden;margin:14px 0 0!important;background:var(--bg2)}.ip{width:100%;height:100%;object-fit:cover}.ip[hidden],.ipp[hidden]{display:none}.ipp{color:var(--tx2)}.pwbox{position:relative}.pwbox input{padding-inline-end:46px}.pweye{position:absolute;inset-inline-end:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--tx2);width:36px;height:36px;cursor:pointer;display:grid;place-items:center}
+.auth h2{font-size:26px}.auth-links{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:13.5px}.auth-links a,.auth-alt a{color:var(--ac);font-weight:500}.auth-alt{text-align:center;margin-top:16px;font-size:14px}
+.auth-sep{display:flex;align-items:center;gap:12px;margin:22px 0 14px;color:var(--tx2);font-size:13.5px}.auth-sep::before,.auth-sep::after{content:"";flex:1;height:1px;background:var(--bd)}
+.help-code{font-size:46px;font-weight:700;letter-spacing:.18em;text-align:center;background:var(--bg2);border:1.5px dashed var(--ac);border-radius:14px;padding:14px 0;color:var(--ac)}
+.pk{cursor:pointer;font-family:inherit;color:inherit}.pk.on{background:var(--ac);color:#fff;border-color:var(--ac)}.chip.ok{background:#ecfdf3;color:var(--ok);border-color:#bbf7d0}.chip.wa{background:#fffbeb;color:#b45309;border-color:#fde68a}.chip.er{background:#fef2f2;color:var(--er);border-color:#fecaca}
 .soon{text-align:center;padding:90px 0}
 input,select,textarea{width:100%;padding:11px 14px;border:1px solid var(--bd);border-radius:12px;background:#fff;transition:border-color .2s,box-shadow .2s}
 input:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(36,51,255,.1);outline:0}
@@ -447,6 +451,8 @@ Object.assign(T.ar,{apps_f1:'تطبيق ويب يعمل على الجوال كأ
 Object.assign(T.en,{apps_f1:'A web app that feels like a real phone app',apps_f2:'Installs on the home screen, no app store needed',apps_f3:'We will tell you as soon as it is available',apps_admin_d:'Create a web app (PWA) with AI, publish it, and follow the people interested in apps.',apps_new:'New app',apps_name:'App name',apps_idea:'App idea',apps_idea_ph:'e.g. an appointment booking app for a dental clinic',apps_feat:'Required features (one per line)',apps_feat_ph:'Book an appointment\nServices list\nWhatsApp contact',apps_create:'Create the app',apps_mine:'My apps',apps_none:'No apps yet',apps_interest:'People interested in apps',apps_building:'Your app is being built'});
 Object.assign(T.ar,{site_up:'عاد موقعك للعمل',it_logo:'شعار الموقع',it_cur:'العملة (تُضاف للأسعار الرقمية)',it_img_add:'إضافة صورة',it_img_rm:'إزالة الصورة',it_up:'أعلى',it_down:'أسفل',it_dup:'نسخ',uploading:'جارٍ رفع الصورة…',img_type:'نوع الصورة غير مدعوم (PNG/JPG/WebP/GIF)',img_big:'الصورة كبيرة جداً (الحد 2 ميجابايت)',it_enable:'تفعيل الأصناف (قالب فوري)',it_enable_c:'سيُستبدل تصميم الموقع الحالي بالقالب الأساسي مع قسم أصناف قابل للتعديل. متابعة؟'});
 Object.assign(T.en,{site_up:'Your website is back online',it_logo:'Site logo',it_cur:'Currency (added to numeric prices)',it_img_add:'Add image',it_img_rm:'Remove image',it_up:'Up',it_down:'Down',it_dup:'Duplicate',uploading:'Uploading image…',img_type:'Unsupported image type (PNG/JPG/WebP/GIF)',img_big:'Image is too large (2 MB max)',it_enable:'Enable items (instant template)',it_enable_c:'The current design will be replaced by the basic template with an editable items section. Continue?'});
+Object.assign(T.ar,{login_d:'أهلاً بعودتك، سجّل دخولك للمتابعة',forgotpw:'نسيت كلمة المرور؟',forgotmail:'نسيت البريد الإلكتروني؟',signup_new:'إنشاء حساب جديد',showpw:'إظهار كلمة المرور',forgot_t:'استعادة كلمة المرور',forgot_d:'اكتب بريدك الإلكتروني وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.',forgot_btn:'إرسال الرابط',forgot_sent:'إن كان هذا البريد مسجّلاً لدينا فستصلك رسالة فيها رابط تعيين كلمة المرور. تحقق أيضاً من البريد غير الهام.',backlogin:'العودة لتسجيل الدخول',reset_t:'كلمة مرور جديدة',reset_d:'اختر كلمة مرور جديدة لحسابك (8 أحرف على الأقل).',reset_new:'كلمة المرور الجديدة',reset_btn:'حفظ ومتابعة',reset_ok:'تم تغيير كلمة المرور',help_t:'نسيت البريد الإلكتروني؟',help_d:'لا مشكلة. اضغط الزر أدناه لنفتح لك محادثة واتساب مع الدعم، وأرسل لهم هذا الرمز ليتعرفوا على طلبك ويساعدوك في استرجاع حسابك.',help_code:'رمز طلبك',help_wa:'تواصل مع الدعم عبر واتساب',help_nonum:'رقم واتساب الدعم لم يُضبط بعد. احتفظ بالرمز وحاول لاحقاً.',help_msg:'مرحباً، نسيت البريد الإلكتروني لحسابي في ابتكار. رمز الطلب:',support_wa:'رقم واتساب الدعم',support_wa_h:'يظهر في صفحة «نسيت البريد الإلكتروني» ويُفتح منه واتساب. اكتبه بالصيغة الدولية، مثل 218912345678.',help_reqs:'طلبات استرجاع الحساب',help_done:'تمت',help_mark:'تمت المعالجة'});
+Object.assign(T.en,{login_d:'Welcome back, sign in to continue',forgotpw:'Forgot password?',forgotmail:'Forgot your email?',signup_new:'Create a new account',showpw:'Show password',forgot_t:'Reset your password',forgot_d:'Enter your email and we will send you a link to set a new password.',forgot_btn:'Send link',forgot_sent:'If this email is registered you will receive a message with a link to set your password. Check your spam folder too.',backlogin:'Back to sign in',reset_t:'New password',reset_d:'Choose a new password for your account (8 characters minimum).',reset_new:'New password',reset_btn:'Save and continue',reset_ok:'Your password was changed',help_t:'Forgot your email?',help_d:'No problem. Tap the button below to open a WhatsApp chat with support, and send them this code so they can recognise your request and help you recover your account.',help_code:'Your request code',help_wa:'Contact support on WhatsApp',help_nonum:'The support WhatsApp number is not set yet. Keep the code and try again later.',help_msg:'Hello, I forgot the email of my IBTIKAR account. Request code:',support_wa:'Support WhatsApp number',support_wa_h:'Shown on the "Forgot your email" page and opens WhatsApp. Use the international format, e.g. 218912345678.',help_reqs:'Account recovery requests',help_done:'Done',help_mark:'Mark handled'});
 Object.assign(T.en,{slow:'The connection is slow or stalled.',retry:'Try again',resetsession:'Clear session and reload',timeout:'Request timed out, please try again',network:'Could not reach the network',session_timeout:'Session is slow, please retry',not_signed_in:'Please sign in first',verify_failed:'Could not verify the publish',bo_tpl_note:'Published with a basic design because the AI was unavailable'});
 let L=localStorage.getItem('lang')||'ar';
 const t=k=>T[L][k]??k;
@@ -480,7 +486,7 @@ function chrome(){
   $('#mbtn').innerHTML=ic('menu');
   $('#pubdr').innerHTML=drawer([['#/',t('home')],['#/pricing',t('pricing')],['#/apps',t('apps')],...(me?[['#/app',t('dash')],...(isAdm()?[['#/admin',t('admin')]]:[])]:[['#/login',t('login')],['#/signup',t('signup')]])],h,null,true);
   $('#auth').innerHTML=me?`<a class="btn s sm" href="#/app">${t('dash')}</a> ${isAdm()?`<a class="btn s sm" href="#/admin">${t('admin')}</a>`:''} <button class="btn s sm" data-act="logout">${t('logout')}</button>`
-    :`<a class="btn s sm" href="#/login">${t('login')}</a> <a class="btn p sm" href="#/signup">${t('signup')}</a>`;
+    :`<a class="btn p sm" href="#/login">${t('login')}</a>`;
   $('nav .logo').innerHTML=LOGO+'<span>ابتكار<small>IBTIKAR</small></span>';
   $('#foot').innerHTML=`<div class="fcols"><div><b>ابتكار IBTIKAR</b>${t('svcD')}</div><div><b>${t('colSite')}</b><a href="#/">${t('home')}</a><a href="#/pricing">${t('pricing')}</a><a href="#/apps">${t('apps')}</a></div><div><b>${t('colAcc')}</b><a href="#/login">${t('login')}</a><a href="#/signup">${t('signup')}</a></div></div><p style="margin-top:22px">© ${new Date().getFullYear()} ابتكار IBTIKAR — ${t('rights')}</p>`;
 }
@@ -500,7 +506,7 @@ async function vHome(){
   const {data:pl}=await sb.from('plans').select('*').eq('active',true).order('sort');
   const feat=[['bolt',1],['pulse',2],['chat',3]],types=[['company','build'],['store','shop'],['restaurant','food'],['landing','bolt']];
   return `<section class="lp-hero"><div class="wrap lp-hin"><div><span class="lp-tag">${t('topsvc')}</span><h1>${t('h1a')} <span>${t('h1b')}</span></h1><p class="lead">${t('sub')}</p>
-  <div class="row2"><a class="btn lg lp-c" href="#/signup">${t('start')}</a><a class="btn lg lp-g" href="#/pricing">${t('see')}</a></div>
+  <div class="row2"><a class="btn lg lp-c" href="#/login">${t('start')}</a><a class="btn lg lp-g" href="#/pricing">${t('see')}</a></div>
   <div class="pills">${[['bolt',1],['pulse',2],['chat',3],['grid',4]].map(([i,n])=>`<span>${ic(i)}${t('pill'+n)}</span>`).join('')}</div></div>
   <div class="lp-mock"><div class="top"><b></b><b></b><b></b><em>flowers.example</em></div><div class="bd"><div class="chat">${L==='ar'?'متجر ورد بسيط مع صفحة تواصل':'A small flower shop with a contact page'}</div><div class="blk" style="height:84px"></div><div class="blk" style="height:34px;width:62%"></div><div class="row"><div class="blk" style="height:60px"></div><div class="blk" style="height:60px"></div><div class="blk" style="height:60px"></div></div><span class="chip ok" style="justify-self:start">${t('published')}</span></div></div></div></section>
   <section class="lp-sec"><div class="wrap"><h2>${t('featT')}</h2><p class="sub">${t('svcD')}</p><div class="lp-grid">${feat.map(([i,n])=>`<div class="card lp-card"><div class="ico">${ic(i)}</div><h3>${t('sv'+n)}</h3><p>${t('sv'+n+'d')}</p></div>`).join('')}</div>
@@ -509,7 +515,7 @@ async function vHome(){
   <section class="lp-sec"><div class="wrap"><h2>${t('typesT')}</h2><p class="sub">${t('typesD')}</p><div class="lp-types">${types.map(([k,i])=>`<div class="card lp-card"><div class="ico">${ic(i)}</div><h3>${t('ty_'+k)}</h3><p>${t('tyd_'+k)}</p></div>`).join('')}<a class="card lp-card" href="#/apps"><span class="chip wa">${t('soon')}</span><div class="ico">${ic('phone')}</div><h3>${t('apps')}</h3><p>${t('appsD')}</p></a></div></div></section>
   <section class="lp-sec lp-alt"><div class="wrap"><h2>${t('plansT')}</h2><p class="sub">${t('plansD')}</p>${planCards(pl)}</div></section>
   <section class="lp-sec faq"><div class="wrap" style="max-width:820px"><h2>${t('faqT')}</h2><p class="sub"></p>${[1,2,3,4].map(i=>`<details><summary>${t('q'+i)}</summary><p>${t('a'+i)}</p></details>`).join('')}</div></section>
-  <div class="wrap"><section class="cta"><h2>${t('ctaT')}</h2><p>${t('ctaD')}</p><a class="btn lg" href="#/signup">${t('start')}</a></section></div>`;
+  <div class="wrap"><section class="cta"><h2>${t('ctaT')}</h2><p>${t('ctaD')}</p><a class="btn lg" href="#/login">${t('start')}</a></section></div>`;
 }
 async function vPricing(){
   const {data}=await sb.from('plans').select('*').eq('active',true).order('sort');
@@ -547,17 +553,33 @@ nav{position:fixed;bottom:0;inset-inline:0;background:#fff;border-top:1px solid 
 <script>document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){document.querySelectorAll("nav button,.s").forEach(function(x){x.classList.remove("on")});b.classList.add("on");document.getElementById("s"+b.dataset.t).classList.add("on")}})<\/script></body></html>`;
 }
 function vAuth(mode){
-  const su=mode==='signup';
-  return `<div class="auth card"><h2>${su?t('signup'):t('login')}</h2><form data-form="${mode}">
-  ${su?`<label>${t('name')}</label><input name="name" required>`:''}<label>${t('email')}</label><input type="email" name="email" required>
-  <label>${t('pass')}</label><input type="password" name="pass" required minlength="8"><br><br><button class="btn p" style="width:100%;justify-content:center">${su?t('signup'):t('login')}</button></form>
-  <p style="margin-top:14px;font-size:14px;color:var(--tx2)">${su?t('haveacc'):t('noacc')} <a style="color:var(--ac)" href="#/${su?'login':'signup'}">${su?t('login'):t('signup')}</a></p></div>`;
+  const su=mode==='signup',pwEye=`<button type="button" class="pweye" data-act="pweye" aria-label="${esc(t('showpw'))}">${ic('eye')}</button>`;
+  if(mode==='forgot')return `<div class="auth card"><h2>${t('forgot_t')}</h2><p style="color:var(--tx2);margin:6px 0 4px">${t('forgot_d')}</p><form data-form="forgot"><label>${t('email')}</label><input type="email" name="email" required autocomplete="email"><br><br><button class="btn p" style="width:100%;justify-content:center">${t('forgot_btn')}</button></form><div class="auth-alt"><a href="#/login">${t('backlogin')}</a></div></div>`;
+  if(mode==='reset')return `<div class="auth card"><h2>${t('reset_t')}</h2><p style="color:var(--tx2);margin:6px 0 4px">${t('reset_d')}</p><form data-form="reset"><label>${t('reset_new')}</label><div class="pwbox"><input type="password" name="pass" required minlength="8" autocomplete="new-password">${pwEye}</div><br><br><button class="btn p" style="width:100%;justify-content:center">${t('reset_btn')}</button></form></div>`;
+  return `<div class="auth card"><h2>${su?t('signup'):t('login')}</h2>${su?'':`<p style="color:var(--tx2);margin:4px 0 0">${t('login_d')}</p>`}<form data-form="${mode}">
+  ${su?`<label>${t('name')}</label><input name="name" required autocomplete="name">`:''}<label>${t('email')}</label><input type="email" name="email" required autocomplete="email">
+  <label>${t('pass')}</label><div class="pwbox"><input type="password" name="pass" required minlength="8" autocomplete="${su?'new-password':'current-password'}">${pwEye}</div>
+  ${su?'':`<div class="auth-links"><a href="#/forgot">${t('forgotpw')}</a><a href="#/help">${t('forgotmail')}</a></div>`}<br><button class="btn p lg" style="width:100%;justify-content:center">${su?t('signup'):t('login')}</button></form>
+  <div class="auth-sep"><span>${su?t('haveacc'):t('noacc')}</span></div>
+  <a class="btn s lg" style="width:100%;justify-content:center" href="#/${su?'login':'signup'}">${su?t('login'):t('signup_new')}</a></div>`;
+}
+const genCode=()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return String(100000+a[0]%900000)};
+async function vHelp(){
+  const code=genCode();
+  sb.from('account_help_requests').insert({code}).then(()=>{});
+  const {data}=await sb.from('platform_settings').select('value').eq('key','public.support_whatsapp').maybeSingle();
+  const num=intlNum(data&&data.value||'');
+  const msg=t('help_msg')+' '+code;
+  return `<div class="auth card"><h2>${t('help_t')}</h2><p style="color:var(--tx2);margin:6px 0 14px">${t('help_d')}</p>
+  <div class="help-code" dir="ltr" aria-label="${esc(t('help_code'))}">${code}</div><small style="display:block;text-align:center;color:var(--tx2);margin:6px 0 16px">${t('help_code')}</small>
+  ${num?`<a class="btn p lg" style="width:100%;justify-content:center;background:#16a34a" href="https://wa.me/${num}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${t('help_wa')}</a>`:`<div class="card" style="border-color:var(--wa)">${t('help_nonum')}</div>`}
+  <div class="auth-alt"><a href="#/login">${t('backlogin')}</a></div></div>`;
 }
 
 /* ---------- customer ---------- */
 const SIDE_C=()=>[['#/app',t('dashT')],['#/app/sites',t('mysites')],['#/app/new',t('newsite')],['#/app/apps',t('apps')],['#/app/analytics',t('navAnalytics')],['#/app/requests',t('requests')],['#/app/support',t('support')],['#/app/notes',t('notes')],['#/app/billing',t('billing')],['#/app/contracts',t('contracts')],['#/app/settings',t('profile')]];
 const ICP={grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',globe:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',plus:'M12 5v14M5 12h14',chat:'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z',bell:'M18 16v-5a6 6 0 1 0-12 0v5l-2 2h16zM10 20a2 2 0 0 0 4 0',card:'M3 6h18v12H3zM3 10h18',users:'M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M21 20v-2a4 4 0 0 0-3-3.9',flag:'M4 4v17M4 4h12l-2 4 2 4H4',price:'M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',bolt:'M13 2L4 14h7l-1 8 9-12h-7z',pulse:'M3 12h4l3-8 4 16 3-8h4',list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',chart:'M4 20V10M10 20V4M16 20v-7M22 20H2',server:'M3 4h18v6H3zM3 14h18v6H3zM7 7h.01M7 17h.01',gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1',moon:'M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z',search:'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3'};
-ICP.menu='M4 6h16M4 12h16M4 18h16';ICP.moon='M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z';ICP.home='M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10';ICP.login='M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3';ICP.logout='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9';ICP.x='M6 6l12 12M18 6L6 18';ICP.shop='M3 9l1-5h16l1 5M4 9v11h16V9M9 20v-6h6v6';ICP.food='M6 3v8a2 2 0 0 0 2 2v8M10 3v6M6 7h4M17 3c-2 2-3 5-3 8h3v10';ICP.build='M4 21V5l8-2v18M12 9h8v12M7 9h2M7 13h2M7 17h2M15 13h2M15 17h2';ICP.phone='M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM11 18h2';ICP.check='M5 13l4 4L19 7';
+ICP.eye='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z';ICP.menu='M4 6h16M4 12h16M4 18h16';ICP.moon='M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z';ICP.home='M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10';ICP.login='M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3';ICP.logout='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9';ICP.x='M6 6l12 12M18 6L6 18';ICP.shop='M3 9l1-5h16l1 5M4 9v11h16V9M9 20v-6h6v6';ICP.food='M6 3v8a2 2 0 0 0 2 2v8M10 3v6M6 7h4M17 3c-2 2-3 5-3 8h3v10';ICP.build='M4 21V5l8-2v18M12 9h8v12M7 9h2M7 13h2M7 17h2M15 13h2M15 17h2';ICP.phone='M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM11 18h2';ICP.check='M5 13l4 4L19 7';
 const ICH={'#/app/apps':'phone','#/admin/apps':'phone','#/':'home','#/pricing':'price','#/apps':'phone','#/login':'login','#/signup':'plus','#/app':'grid','#/app/sites':'globe','#/app/new':'plus','#/app/analytics':'chart','#/app/requests':'list','#/app/support':'chat','#/app/notes':'bell','#/app/billing':'card','#/app/contracts':'card','#/app/settings':'gear','#/admin':'grid','#/admin/analytics':'chart','#/admin/users':'users','#/admin/sites':'globe','#/admin/requests':'list','#/admin/tickets':'chat','#/admin/invoices':'card','#/admin/contracts':'card','#/admin/banners':'flag','#/admin/plans':'price','#/admin/servers':'server','#/admin/monitor':'pulse','#/admin/engine':'bolt','#/admin/audit':'list','#/admin/settings':'gear','#/admin/prompts':'list'};
 const DAY=864e5;let ST={},UNREAD=0;
 const LOGO=`<svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><path d="M3 3 33 3 24 13 3 13Z" fill="var(--ac)"/><path d="M3 16 25 16 16 26 3 26Z" fill="var(--ac)"/><path d="M3 29 19 29 10 39 3 39Z" fill="var(--ac)" opacity=".82"/></svg>`;
@@ -741,7 +763,7 @@ async function vAServers(){
   return shell(SIDE_A(),'#/admin/servers',`<div class="ph"><h1>${t('servers')}</h1></div><form data-form="server" class="card row2" style="margin-bottom:16px"><input name="name" required placeholder="${t('name')}" style="width:220px"><input name="region" placeholder="${t('region')}" style="width:160px"><button class="btn p sm">${t('addsrv')}</button></form>`+
     tbl([t('name'),t('region'),t('status'),''],(data||[]).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.region||'')}</td><td><span class="chip ${x.status==='online'?'ok':'wa'}">${x.status==='not_verified'?t('notverified'):esc(x.status)}</span></td><td><button class="btn d sm" data-act="delsrv" data-id="${x.id}">${t('del')}</button></td></tr>`)));
 }
-const planCards=d=>`<div class="grid">${(d||[]).map(p=>{const pop=p.code==='web';return `<div class="card h plan${pop?' pop':''}">${pop?`<span class="pill-pop">${t('popular')}</span>`:''}<h3>${esc(planName(p))}</h3><div class="price">${Number(p.price)===0?t('free'):'$'+Number(p.price)} ${Number(p.price)?`<small>${t('perMo')}</small>`:''}</div><ul><li>${p.websites_limit} ${t('sites')}</li><li>${p.storage_mb} ${t('storage')}</li><li>${p.ai_requests_limit} ${t('reqs')}</li></ul><a class="btn ${pop?'p':'s'}" href="#/signup" style="width:100%">${t('choose')}</a></div>`}).join('')}</div>`;
+const planCards=d=>`<div class="grid">${(d||[]).map(p=>{const pop=p.code==='web';return `<div class="card h plan${pop?' pop':''}">${pop?`<span class="pill-pop">${t('popular')}</span>`:''}<h3>${esc(planName(p))}</h3><div class="price">${Number(p.price)===0?t('free'):'$'+Number(p.price)} ${Number(p.price)?`<small>${t('perMo')}</small>`:''}</div><ul><li>${p.websites_limit} ${t('sites')}</li><li>${p.storage_mb} ${t('storage')}</li><li>${p.ai_requests_limit} ${t('reqs')}</li></ul><a class="btn ${pop?'p':'s'}" href="#/login" style="width:100%">${t('choose')}</a></div>`}).join('')}</div>`;
 
 async function vApp0(sub){
   if(!me)return `<div class="wrap sec">${t('loginreq')}</div>`;
@@ -1096,6 +1118,11 @@ async function vCContracts(){
   (data&&data.length?`<div style="display:grid;gap:10px">${data.map(c=>`<div class="card"><div class="row2"><b>${esc(c.contract_number)}</b><span class="sp"></span>${chip(c.status)}</div>${c.title?`<p>${esc(c.title)}</p>`:''}<small style="color:var(--tx2)">${fmtD(c.created_at)}</small><br><br>
   <div class="row2">${c.share_token&&['sent','awaiting_signature'].includes(c.status)?`<a class="btn p sm" href="#/c/${c.share_token}">${t('ctr_sign_title')}</a>`:''}${c.original_path?`<button class="btn s sm" data-act="ctrfile" data-id="${c.id}" data-which="original">${t('ctr_vieworig')}</button>`:''}${c.signed_path?`<button class="btn s sm" data-act="ctrfile" data-id="${c.id}" data-which="signed">${t('ctr_viewsigned')}</button>`:''}${c.esign_image_path?`<button class="btn s sm" data-act="ctrfile" data-id="${c.id}" data-which="esign">${t('ctr_viewesign')}</button>`:''}</div></div>`).join('')}</div>`:`<div class="empty">${t('ctr_none')}</div>`));
 }
+async function supportBlock(){
+  const [{data:n},{data:h}]=await Promise.all([sb.from('platform_settings').select('value').eq('key','public.support_whatsapp').maybeSingle(),sb.from('account_help_requests').select('*').order('created_at',{ascending:false}).limit(50)]);
+  return `<form data-form="support" class="card" style="max-width:640px;margin-top:18px"><h3>${t('support_wa')}</h3><p style="color:var(--tx2);font-size:13px;margin:6px 0 10px">${t('support_wa_h')}</p><input name="num" value="${esc(n&&n.value||'')}" placeholder="2189XXXXXXXX" dir="ltr"><br><br><button class="btn p">${t('save')}</button></form>
+  <h3 style="margin:24px 0 10px">${t('help_reqs')}</h3>${tbl([t('help_code'),t('when'),''],(h||[]).map(x=>`<tr><td dir="ltr" style="text-align:start;font-weight:700;letter-spacing:.1em">${esc(x.code)}</td><td>${fmtD(x.created_at)}</td><td>${x.handled?`<span class="chip ok">${t('help_done')}</span>`:`<button class="btn s sm" data-act="helpdone" data-id="${x.id}">${t('help_mark')}</button>`}</td></tr>`))}`;
+}
 async function vAdmin(sub){
   if(!me||!isAdm())return vAdmin0(sub);
   const S=SIDE_A();
@@ -1107,7 +1134,7 @@ async function vAdmin(sub){
   if(sub==='settings'){
     if(!isSuper())return `<div class="wrap sec">${t('noaccess')}</div>`;
     const {data}=await sb.from('platform_settings').select('value').eq('key','public.sites_base_url').maybeSingle();
-    return shell(S,'#/admin/settings',`<div class="ph"><h1>${t('settingsT')}</h1></div><form data-form="platform" class="card" style="max-width:640px"><label style="margin-top:0">${t('baseurl')}</label><input name="url" value="${esc(data&&data.value||'')}" placeholder="https://" dir="ltr" required><p style="color:var(--tx2);font-size:13px;margin-top:8px">${t('baseurlh')}</p><br><button class="btn p">${t('save')}</button></form>`);
+    return shell(S,'#/admin/settings',`<div class="ph"><h1>${t('settingsT')}</h1></div><form data-form="platform" class="card" style="max-width:640px"><label style="margin-top:0">${t('baseurl')}</label><input name="url" value="${esc(data&&data.value||'')}" placeholder="https://" dir="ltr" required><p style="color:var(--tx2);font-size:13px;margin-top:8px">${t('baseurlh')}</p><br><button class="btn p">${t('save')}</button></form>`+(await supportBlock()));
   }
   if((sub==='plans'||sub==='engine'||sub==='settings'||sub==='prompts')&&!isSuper())return `<div class="wrap sec">${t('noaccess')}</div>`;
   if(sub==='sites'){
@@ -1242,7 +1269,7 @@ async function render(opts){
   if(a==='s'){await showSite(sub.split('/')[0],true);return}
   let html;
   try{
-    const view=a===''?vHome():a==='pricing'?vPricing():a==='apps'?vApps():a==='login'?vAuth('login'):a==='signup'?vAuth('signup'):a==='app'?vApp(sub):a==='admin'?vAdmin(sub):a==='c'?vContract(sub.split('/')[0]):vHome();
+    const view=a===''?vHome():a==='pricing'?vPricing():a==='apps'?vApps():a==='login'?vAuth('login'):a==='signup'?vAuth('signup'):a==='forgot'?vAuth('forgot'):a==='reset'?vAuth('reset'):a==='help'?vHelp():a==='app'?vApp(sub):a==='admin'?vAdmin(sub):a==='c'?vContract(sub.split('/')[0]):vHome();
     /* حارس: لو لم تكتمل الصفحة خلال 20 ثانية نعرض إعادة المحاولة بدل هيكل رمادي عالق */
     [html]=await withTimeout(Promise.all([view,unreadP]),20000,'slow');
   }catch(e){html=`<div class="wrap sec"><div class="empty">${e&&e.message==='slow'?t('slow'):t('err')}<br><br><button class="btn p" data-act="retry">${t('retry')}</button> <button class="btn s" data-act="resetsession">${t('resetsession')}</button></div></div>`}
@@ -1276,6 +1303,8 @@ document.addEventListener('click',async e=>{
     if(a==='pmodels'){const j=await fx('ai-gateway',{action:'models',provider_id:id},90000);if(!j.ok)throw new Error(errText(j.error||'err')+(j.hint?' — '+errText(j.hint):''));toast(j.tested&&j.tested.ok?t('c_ok'):t('c_warn'))}
     if(a==='mtoggle'){const r=await sb.from('ai_models').update({enabled:b.dataset.to==='true'}).eq('id',id);if(r.error)throw r.error}
     if(a==='itemadd'){const c=$('#irows');if(c&&c.children.length<60){c.insertAdjacentHTML('beforeend',itemRow({n:'',c:'',p:'',d:''}));c.lastElementChild.querySelector('input').focus()}b.disabled=false;return}
+    if(a==='pweye'){const i=b.parentElement.querySelector('input');i.type=i.type==='password'?'text':'password';b.disabled=false;return}
+    if(a==='helpdone'){const r=await sb.from('account_help_requests').update({handled:true}).eq('id',id);if(r.error)throw r.error}
     if(a==='itemup'||a==='itemdown'){const r=b.closest('.irow');if(r){const o=a==='itemup'?r.previousElementSibling:r.nextElementSibling;if(o)a==='itemup'?o.before(r):o.after(r)}b.disabled=false;return}
     if(a==='itemdup'){const r=b.closest('.irow');if(r){const c=r.cloneNode(true);r.after(c)}b.disabled=false;return}
     if(a==='itemrmimg'){const r=b.closest('.irow');if(r){r.querySelector('[data-k="img"]').value='';const im=r.querySelector('.ip');im.hidden=true;im.removeAttribute('src');r.querySelector('.ipp').hidden=false}b.disabled=false;return}
@@ -1377,7 +1406,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')document.body.classL
 document.addEventListener('click',e=>{if(e.target.closest('.dr-i:not([data-act="logout"])'))document.body.classList.remove('dr-open')});
 document.addEventListener('submit',async e=>{
   const f=e.target.closest('[data-form]');if(!f)return;e.preventDefault();
-  const k=f.dataset.form,d=Object.fromEntries(new FormData(f)),btn=f.querySelector('button');btn.disabled=true;
+  const k=f.dataset.form,d=Object.fromEntries(new FormData(f)),btn=f.querySelector('button:not([type="button"])')||f.querySelector('button');btn.disabled=true;
   try{
     if(k==='interest'){const r=await sb.from('interest_signups').insert({email:d.email,service:'apps'});if(r.error&&r.error.code!=='23505')throw r.error;toast(t('notified'));if(!me)f.reset()}
     if(k==='signup'){const r=await sb.auth.signUp({email:d.email,password:d.pass,options:{data:{full_name:d.name}}});if(r.error)throw r.error;if(r.data.session){await loadMe();location.hash='#/app'}else toast(t('checkmail'))}
@@ -1390,6 +1419,9 @@ document.addEventListener('submit',async e=>{
       toast(t('mr_analyzing'));const j=await fnPost('ai-gateway',{action:'quote',request_id:r.data.id});
       if(j&&j.error&&j.error!=='service_not_configured')throw new Error(t(j.error));toast(j&&j.ok?t('mr_priced'):t('mr_wait'));render({keep:true});return}
     if(k==='invoice'){const r=await sb.from('invoices').insert({user_id:d.user,amount:parseFloat(d.amount)});if(r.error)throw r.error;await audit('invoice.create','invoices',{user:d.user});toast(t('saved'));render({keep:true});return}
+    if(k==='forgot'){const r=await sb.auth.resetPasswordForEmail(d.email,{redirectTo:location.origin+location.pathname});if(r.error&&r.error.status===429)throw new Error('rate_limited');f.innerHTML=`<div class="card" style="border-color:var(--ok)">${t('forgot_sent')}</div>`;return}
+    if(k==='reset'){const r=await sb.auth.updateUser({password:d.pass});if(r.error)throw r.error;toast(t('reset_ok'));await loadMe();location.hash='#/app';return}
+    if(k==='support'){const num=intlNum(d.num);const r=await sb.from('platform_settings').upsert({key:'public.support_whatsapp',value:num,updated_by:me.id});if(r.error)throw r.error;await audit('settings.support_whatsapp','platform_settings',{});toast(t('saved'));render({keep:true});return}
     if(k==='platform'){const u=d.url.trim().replace(/\/+$/,'');if(!/^https:\/\/[A-Za-z0-9.-]+(:[0-9]+)?$/.test(u))throw new Error(t('invalidurl'));const r=await sb.from('platform_settings').upsert({key:'public.sites_base_url',value:u,updated_by:me.id});if(r.error)throw r.error;await audit('settings.sites_base_url','platform_settings',{});toast(t('saved'));render({keep:true});return}
     if(k==='contract'){
       const file=d.file;
@@ -1518,6 +1550,7 @@ if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark');
      تتجمد به كل الطلبات حتى إعادة التحميل. لذلك نؤجّل العمل خارج الـcallback. */
   sb.auth.onAuthStateChange((ev,sess)=>{
     const uid=sess&&sess.user&&sess.user.id||null;
+    if(ev==='PASSWORD_RECOVERY'){setTimeout(()=>{location.hash='#/reset'},0);return}
     if(ev==='TOKEN_REFRESHED'||ev==='INITIAL_SESSION')return;
     if(ev==='SIGNED_IN'&&uid&&me&&uid===me.id)return;        // رجوع للتبويب بنفس المستخدم: لا حاجة لإعادة التحميل
     setTimeout(()=>{loadMe().then(()=>{chrome();if(ev==='SIGNED_OUT')render()})},0);
