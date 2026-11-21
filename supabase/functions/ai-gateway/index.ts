@@ -55,7 +55,7 @@ async function callProvider(kind: string, endpoint: string | null, key: string, 
       body: JSON.stringify({
         systemInstruction: system ? { parts: [{ text: system }] } : undefined,
         contents: turns.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
-        generationConfig: { maxOutputTokens: Math.max(maxTokens, 8192) },
+        generationConfig: { maxOutputTokens: Math.max(maxTokens, 8192), ...(/flash/i.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}) },
       }),
     });
     if (!r.ok) throw new Error(`provider status ${r.status}: ${(await r.text()).slice(0, 300)}`);
@@ -159,7 +159,7 @@ async function candidates(task: string) {
 async function runAI(opts: { task: string; messages: Msg[]; userId: string; siteId: string | null; maxTokens?: number }) {
   const cand = await candidates(opts.task);
   if (!cand.length) throw new AIError("service_not_configured", 503);
-  const deadline = Date.now() + 105_000;
+  const deadline = Date.now() + 135_000;
   let tried = 0, lastErr = "";
   const dead = new Set<string>(), touched = new Set<string>();   // touched = we flagged it degraded earlier in THIS run, reset it on success
   for (const { provider: p, model } of cand) {
@@ -171,7 +171,7 @@ async function runAI(opts: { task: string; messages: Msg[]; userId: string; site
     if (!key) continue;
     tried++;
     try {
-      const out = await callProvider(p.kind, p.endpoint, key, model.model_id, opts.messages, opts.maxTokens ?? 4096, Math.min(55_000, deadline - Date.now()));
+      const out = await callProvider(p.kind, p.endpoint, key, model.model_id, opts.messages, opts.maxTokens ?? 4096, Math.min(105_000, deadline - Date.now()));
       const cost = (out.tin * Number(model.cost_in_per_1m) + out.tout * Number(model.cost_out_per_1m)) / 1_000_000;
       await db.from("ai_usage").insert({ user_id: opts.userId, website_id: opts.siteId, provider_id: p.id, model: model.model_id, tokens_in: out.tin, tokens_out: out.tout, cost, status: "ok" });
       if (p.health !== "healthy" || p.last_error || touched.has(p.id)) await db.from("ai_providers").update({ health: "healthy", checked_at: new Date().toISOString(), last_error: null }).eq("id", p.id);
@@ -180,7 +180,7 @@ async function runAI(opts: { task: string; messages: Msg[]; userId: string; site
       const msg = String((e as Error).message);
       const status = Number(msg.match(/status (\d{3})/)?.[1] ?? 0);
       const authFail = status === 401 || status === 403;
-      if (authFail) dead.add(p.id);
+      if (authFail || (status === 429 && /insufficient_quota|billing|credit/i.test(msg))) dead.add(p.id);   // no point trying the same provider's other models
       touched.add(p.id);
       lastErr = `${p.name}/${model.model_id}: ${msg.slice(0, 160)}`;
       await db.from("ai_usage").insert({ user_id: opts.userId, website_id: opts.siteId, provider_id: p.id, model: model.model_id, status: "error" });
@@ -229,6 +229,8 @@ const ADDENDUM = `قيود المنصة (تتقدم على أي متطلبات �
 - روابط الاتصال تستخدم tel:+الرقم الدولي وروابط واتساب https://wa.me/الرقم الدولي، حرفياً كما في بيانات العميل.
 - أعد وثيقة HTML كاملة فقط، بلا شرح ولا Markdown.
 - لا تخترع أرقام هواتف أو آراء عملاء أو إحصائيات أو شهادات أو عناوين أو أسعاراً؛ استخدم ما في بيانات العميل فقط.
+- بيانات العميل تحوي must_have: قائمة بنود إلزامية طلبها العميل صراحةً (بانر إعلاني، خلفية متحركة، حركات، زر واتساب عائم، ترتيب الأقسام). نفّذها كلها حرفياً بالمعرّفات المذكورة (id/data-attributes) لأنها تُفحص آلياً ثم تُعاد الصفحة إن نقص منها شيء. وإن وُجد design_plan فاتبع عناوينه ونصوصه. استخدم customer_notes وaudience وmain_goal وtone وselling_points لتشكيل المحتوى والنبرة.
+- مستوى الجودة المطلوب: تصميم بمستوى وكالات التصميم المحترفة: هيرو سينمائي، طباعة واثقة، مسافات سخية، حركات متقنة (دخول عند التمرير، hover، خلفية حية) تعمل بسلاسة على الجوال، وكل قسم مفصّل ومكتمل وليس مجرد عنوان.
 - عقد الأصناف (إلزامي لأنواع الشركة والمتجر والمطعم والصفحة التعريفية): قسم الأصناف عنصر <section id=\"items\"> يحوي <div id=\"items-list\"></div> فارغاً يملؤه سكربت. ضع قبل </body> كتلة <script type=\"application/json\" id=\"site-data\">{\"sample\":true,\"items\":[{\"n\":\"الاسم\",\"c\":\"التصنيف\",\"p\":\"\",\"d\":\"وصف قصير\"}]}</script> ثم سكربت صغير يقرأ الكتلة ويرسم البطاقات داخل #items-list بإنشاء عناصر DOM وtextContent (لا innerHTML بنصوص خام)، مع أزرار تصنيف إذا وُجد أكثر من تصنيف، وإذا كان p فارغاً اعرض «اتصل للسعر» كرابط tel أو واتساب. إن وردت offerings في بيانات العميل فاستخدمها كما هي (الاسم|السعر|الوصف) وضع sample=false، وإلا أنشئ من 6 إلى 10 أصناف نموذجية واقعية تناسب النشاط والوصف بلا أسعار (p فارغ) وsample=true. كل صنف: n الاسم، c التصنيف، p السعر، d الوصف، وإن وُجدت صورة img (رابط). إن وُجد existing_items في بيانات العميل فانسخه كما هو حرفياً داخل site-data (بما فيه img وc وp) ولا تستبدله بأصناف نموذجية وضع sample=false. إن وُجد logo أو currency فأضفهما كحقلين logo وcur في site-data، واعرض الشعار صغيراً في الشريط العلوي، وصورة الصنف إن وُجدت (بإنشاء عنصر img عبر DOM)، وألحق cur بالأسعار الرقمية. ضع أيضاً نسخة ثابتة من الأصناف داخل #items-list بين التعليقين <!--sd--> و<!--/sd--> (يستبدلها السكربت عند التحميل) لتراها محركات البحث.`;
 
 // Built-in prompt for the "app" type (web app / PWA). ai_prompts.key has a CHECK constraint, so it lives in code.
@@ -238,6 +240,38 @@ const APP_PROMPT = `أنت مصمم تطبيقات ويب جوال محترف. �
 - تصميم مسطّح أنيق باللون الأساسي المطلوب، حواف مدوّرة، أزرار كبيرة سهلة اللمس، دعم RTL كامل ووضع داكن تلقائي حسب prefers-color-scheme.
 - أضف في شاشة الإعدادات أو الرئيسية بطاقة قصيرة تشرح كيف يثبّت المستخدم التطبيق على شاشته (مشاركة ثم إضافة إلى الشاشة الرئيسية).
 - لا تخترع أرقام هواتف أو آراء أو إحصائيات حقيقية. لا اتصال بخوادم؛ احفظ ما يلزم في localStorage فقط.`;
+
+// ---- What the customer explicitly asked for must really exist in the page (checked, then repaired) ----
+type Req = { id: string; rule: string; test: (h: string) => boolean };
+export function requirements(brief: any, siteType: string, hasContact: boolean): Req[] {
+  const kwt = [brief?.desc, brief?.notes, brief?.tag, brief?.usp].join(" ");
+  const out: Req[] = [];
+  const banner = String(brief?.banner ?? "").trim() || /بانر|إعلان|اعلان|عروض|banner|promo/i.test(kwt) || siteType === "store";
+  if (banner) out.push({ id: "banner", rule: `بانر إعلاني ظاهر أول الصفحة فوق الهيرو: عنصر id="promo-banner" بنص عرض مقنع${brief?.banner ? ` هو حرفياً: «${String(brief.banner).slice(0, 140)}»` : " (صياغة عامة بلا أرقام أو خصومات مخترعة)"} وزر واتساب وزر إغلاق، وبحركة لافتة (لمعان أو تمرير).`, test: (h) => /id=["']promo-banner["']/.test(h) });
+  const bg = brief?.bg !== "none" && brief?.motion !== "none";
+  if (bg) out.push({ id: "bg", rule: `خلفية متحركة في أعلى الصفحة (الهيرو): عنصر يحمل data-animated-bg="${["aurora", "particles", "waves"].includes(brief?.bg) ? brief.bg : "aurora"}" يملأ الهيرو بحركة مستمرة ناعمة (ألوان متحركة/جزيئات متصلة/أمواج) بـCSS keyframes أو canvas خفيف، ويحترم prefers-reduced-motion، ولا يغطي النصوص.`, test: (h) => /data-animated-bg=/.test(h) && /@keyframes|requestAnimationFrame/.test(h) });
+  if (brief?.motion !== "none") out.push({ id: "motion", rule: "حركات دخول عند التمرير (IntersectionObserver) لأقسام وبطاقات الصفحة، وتأثيرات hover للبطاقات والأزرار، وحركة دخول للعنوان الرئيسي.", test: (h) => /IntersectionObserver|animation-timeline/.test(h) });
+  if (brief?.float !== "0" && hasContact) out.push({ id: "float", rule: 'زر واتساب عائم ثابت في زاوية الصفحة: عنصر id="wa-float" برابط https://wa.me/… الحقيقي وبنبض خفيف.', test: (h) => /id=["']wa-float["']/.test(h) && /wa\.me/.test(h) });
+  if (siteType === "store" || siteType === "restaurant") out.push({ id: "order", rule: "ترتيب الأقسام: بانر ← هيرو ← الأصناف/المنتجات مباشرة بعد الهيرو ← من نحن ← كيف تطلب ← أسئلة شائعة ← تواصل.", test: (h) => { const a = h.search(/id=["']items["']/), b = h.search(/id=["']about["']/); return a < 0 || b < 0 || a < b; } });
+  return out;
+}
+const missingOf = (reqs: Req[], html: string) => reqs.filter((r) => !r.test(html));
+const PLAN_PROMPT = `أنت مدير إبداعي في وكالة تصميم مواقع. اقرأ بيانات العميل (بما فيها ملاحظاته وجمهوره وهدفه ونبرته) وضع خطة موقع قبل بنائه.
+أعد JSON فقط بلا أي نص آخر بالشكل: {"headline":"عنوان الهيرو القوي","subheadline":"جملة داعمة","banner_text":"نص البانر الإعلاني القصير","about":"فقرة من نحن بأسلوب النبرة المطلوبة","sections":[{"id":"items","title":"عنوان قسم الأصناف","intro":"جملة تمهيدية"}],"why_us":["ميزة1","ميزة2","ميزة3"],"faq":[{"q":"سؤال","a":"جواب"}],"cta":"نص زر الدعوة","vibe":"وصف الجو البصري والحركات في سطرين"}.
+قواعد: اكتب بلغة الموقع المطلوبة، التزم بنبرة العميل، لا تخترع أرقاماً ولا أسعاراً ولا آراء عملاء ولا عناوين ولا خصومات، استخدم مميزات العميل نفسها في why_us إن وُجدت، ونص البانر عام ومقنع بلا نسب خصم.`;
+function briefData(brief: any, site: any, ph: string, wa: string, prevSD: any, keepItems: any) {
+  const lang = brief.lang === "both" ? "ثنائي اللغة: عربية RTL افتراضياً مع نسخة إنجليزية وزر EN/ع يبدّل النص واللغة والاتجاه" : brief.lang === "en" ? "English, LTR" : "العربية RTL (dir=rtl, lang=ar)";
+  return {
+    ...(keepItems ? { existing_items: keepItems } : {}), ...(prevSD?.logo ? { logo: prevSD.logo } : {}), ...(prevSD?.cur ? { currency: prevSD.cur } : {}),
+    name: brief.name ?? site.name, tagline: brief.tag ?? "", description: brief.desc ?? "", business_type: site.site_type,
+    audience: brief.aud ?? "", main_goal: brief.goal ?? "", tone: brief.tone ?? "", selling_points: String(brief.usp ?? "").split("\n").map((x: string) => x.trim()).filter(Boolean),
+    inspiration: brief.insp ?? "", customer_notes: brief.notes ?? "",
+    language: lang, main_color: brief.color ?? "", design_style: brief.style ?? "",
+    phone: ph ? "+" + ph : "", whatsapp: wa ? "+" + wa : "", email: brief.email ?? "", address: brief.addr ?? "", hours: brief.hours ?? "",
+    instagram: brief.ig ?? "", facebook: brief.fb ?? "", tiktok: brief.tt ?? "", telegram: brief.tg ?? "",
+    offerings: String(brief.items ?? "").split("\n").map((x: string) => x.trim()).filter(Boolean),
+  };
+}
 
 // ---- Expo / React Native app chat (super admin) ----
 const EXPO_PROMPT = `أنت مهندس Expo وReact Native محترف يبني تطبيقات جوال من وصف المستخدم بالعربي.
@@ -456,29 +490,58 @@ Deno.serve(async (req) => {
         if ((count ?? 0) >= limit) return json({ error: "quota_exceeded", limit }, 429);
       }
       const brief = site.config?.brief ?? {};
-      const lang = brief.lang === "both" ? "ثنائي اللغة: عربية RTL افتراضياً مع نسخة إنجليزية وزر EN/ع يبدّل النص واللغة والاتجاه" : brief.lang === "en" ? "English, LTR" : "العربية RTL (dir=rtl, lang=ar)";
       const ph = intl(brief.phone), wa = intl(brief.wa) || ph;
       const sdm = /<script[^>]*id=["']site-data["'][^>]*>([\s\S]*?)<\/script>/i.exec(site.config?.html ?? "");
       let prevSD: any = null;
       try { prevSD = sdm ? JSON.parse(sdm[1]) : null; } catch { /* ignore */ }
       const keepItems = prevSD && !prevSD.sample && Array.isArray(prevSD.items) && prevSD.items.length ? prevSD.items.slice(0, 60) : null;
-      const data = {
-        ...(keepItems ? { existing_items: keepItems } : {}), ...(prevSD?.logo ? { logo: prevSD.logo } : {}), ...(prevSD?.cur ? { currency: prevSD.cur } : {}),
-        name: brief.name ?? site.name, tagline: brief.tag ?? "", description: brief.desc ?? "", business_type: site.site_type,
-        language: lang, main_color: brief.color ?? "", design_style: brief.style ?? "",
-        phone: ph ? "+" + ph : "", whatsapp: wa ? "+" + wa : "", email: brief.email ?? "", address: brief.addr ?? "", hours: brief.hours ?? "",
-        instagram: brief.ig ?? "", facebook: brief.fb ?? "", tiktok: brief.tt ?? "", telegram: brief.tg ?? "",
-        offerings: String(brief.items ?? "").split("\n").map((x: string) => x.trim()).filter(Boolean),
-      };
+      const reqs = requirements(brief, site.site_type, !!(ph || wa));
+      const data = { ...briefData(brief, site, ph, wa, prevSD, keepItems), ...(site.config?.plan ? { design_plan: site.config.plan } : {}), must_have: reqs.map((r) => r.rule) };
       const sys = await prompts(site.site_type);
-      const r = await runAI({ task: "ui", userId: user.id, siteId: site.id, maxTokens: 12000, messages: [{ role: "system", content: sys }, { role: "user", content: JSON.stringify(data) }] });
+      const r = await runAI({ task: "ui", userId: user.id, siteId: site.id, maxTokens: 14000, messages: [{ role: "system", content: sys }, { role: "user", content: JSON.stringify(data) }] });
       const html = cleanHtml(r.text);
-      if (!validHtml(html, brief, SD_TYPES.includes(site.site_type))) return json({ ok: false, error: "invalid_output" }, 200);
+      if (!validHtml(html, brief, SD_TYPES.includes(site.site_type))) return json({ ok: false, error: "invalid_output", detail: "page_failed_validation" }, 200);
       const cfg = { ...(site.config ?? {}), html };
       await db.from("websites").update({ config: cfg, updated_at: new Date().toISOString() }).eq("id", site.id);
       const { data: vv } = await db.from("website_versions").select("version").eq("website_id", site.id).order("version", { ascending: false }).limit(1);
       await db.from("website_versions").insert({ website_id: site.id, version: (vv?.[0]?.version ?? 0) + 1, snapshot: { html }, note: "design", created_by: user.id });
+      return json({ ok: true, model: r.model, missing: missingOf(reqs, html).map((x) => x.id) });
+    }
+
+    // ---- Creative plan first (fast): headline, copy, banner, sections - stored and fed to the build ----
+    if (body.action === "plan") {
+      const { data: site } = await db.from("websites").select("id,owner_id,org_id,name,site_type,config").eq("id", body.website_id).maybeSingle();
+      if (!site) return json({ error: "website_not_found" }, 404);
+      if (!(await canAccess(user.id, prof.role, site))) return json({ error: "forbidden" }, 403);
+      const brief = site.config?.brief ?? {};
+      const ph = intl(brief.phone), wa = intl(brief.wa) || ph;
+      const r = await runAI({ task: "classify", userId: user.id, siteId: site.id, maxTokens: 3500, messages: [{ role: "system", content: PLAN_PROMPT }, { role: "user", content: JSON.stringify(briefData(brief, site, ph, wa, null, null)) }] });
+      const plan = parseJson(r.text);
+      if (!plan || typeof plan !== "object") return json({ ok: false, error: "invalid_output", detail: "plan_unparseable" });
+      await db.from("websites").update({ config: { ...(site.config ?? {}), plan } }).eq("id", site.id);
       return json({ ok: true, model: r.model });
+    }
+
+    // ---- Repair: add only what the customer asked for and the page lacks (own time budget) ----
+    if (body.action === "repair") {
+      const { data: site } = await db.from("websites").select("id,owner_id,org_id,name,site_type,config").eq("id", body.website_id).maybeSingle();
+      if (!site) return json({ error: "website_not_found" }, 404);
+      if (!(await canAccess(user.id, prof.role, site))) return json({ error: "forbidden" }, 403);
+      const brief = site.config?.brief ?? {};
+      const ph = intl(brief.phone), wa = intl(brief.wa) || ph;
+      const cur = site.config?.html ?? "";
+      const reqs = requirements(brief, site.site_type, !!(ph || wa));
+      const miss = missingOf(reqs, cur);
+      if (!miss.length) return json({ ok: true, missing: [] });
+      if (cur.length > 150_000) return json({ ok: false, error: "page_too_large_for_edit" });
+      const sys = (await prompts(site.site_type)) + "\n\n---\n\nوضع الإصلاح: الصفحة التالية ينقصها بنود طلبها العميل صراحةً. أضف البنود الناقصة فقط (بالمعرّفات المذكورة) وأبقِ كل شيء آخر كما هو حرفياً بما فيه كتلة site-data. أعد وثيقة HTML كاملة فقط.";
+      const r = await runAI({ task: "ui", userId: user.id, siteId: site.id, maxTokens: 14000, messages: [{ role: "system", content: sys }, { role: "user", content: "CURRENT_HTML:\n" + cur + "\n\nMISSING_REQUIREMENTS:\n" + miss.map((m) => "- " + m.rule).join("\n") }] });
+      const html = cleanHtml(r.text);
+      if (!validHtml(html, brief, SD_TYPES.includes(site.site_type))) return json({ ok: false, error: "invalid_output", detail: "repair_failed_validation", missing: miss.map((x) => x.id) });
+      await db.from("websites").update({ config: { ...(site.config ?? {}), html }, updated_at: new Date().toISOString() }).eq("id", site.id);
+      const { data: vv } = await db.from("website_versions").select("version").eq("website_id", site.id).order("version", { ascending: false }).limit(1);
+      await db.from("website_versions").insert({ website_id: site.id, version: (vv?.[0]?.version ?? 0) + 1, snapshot: { html }, note: "repair: " + miss.map((x) => x.id).join(","), created_by: user.id });
+      return json({ ok: true, model: r.model, missing: missingOf(reqs, html).map((x) => x.id) });
     }
 
     // ---- Price a modification request: AI classifies it, the price itself is COMPUTED from the

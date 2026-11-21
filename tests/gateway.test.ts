@@ -339,3 +339,54 @@ Deno.test("app_chat: imports outside the allow-list and unsafe code are rejected
   const ok = await call("admin", { action: "app_chat", website_id: "app1", messages: [{ role: "user", content: "غيّر اللون" }] });
   assert(ok.json.ok === true && sent.includes("export default function App"), "current code sent as context");
 });
+
+// ---- must-have checks, plan and repair ----
+Deno.test("build reports which customer-requested features are missing; repair adds them", async () => {
+  reset(); T.websites[0].site_type = "store"; T.websites[0].config.brief = { ...T.websites[0].config.brief, banner: "خصم على كل القطع", bg: "aurora", motion: "strong", float: "1", wa: "0912345678" };
+  providerBehavior = anthropicFake({ text: HTML });   // a plain page: no banner, no animated bg, ...
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  let sent = "";
+  const base = anthropicFake({ text: HTML });
+  providerBehavior = (q) => { if (q.url.includes("/v1/messages") && q.body.max_tokens > 16) sent = JSON.stringify(q.body.messages); return base(q); };
+  const r = await call("cust", { action: "build", website_id: "site1" });
+  assert(r.json.ok === true && ["banner", "bg", "motion", "float"].every((x) => r.json.missing.includes(x)), "missing reported: " + JSON.stringify(r.json));
+  assert(sent.includes("promo-banner") && sent.includes("خصم على كل القطع") && sent.includes("must_have"), "requirements sent to the AI with the customer's own banner text");
+  const FIXED = HTML.replace("<body>", `<body><div id="promo-banner">x</div><div data-animated-bg="aurora"></div><style>@keyframes a{}</style><script>new IntersectionObserver(()=>{})</script><a id="wa-float" href="https://wa.me/218912345678"></a>`);
+  providerBehavior = anthropicFake({ text: FIXED });
+  const f = await call("cust", { action: "repair", website_id: "site1" });
+  assert(f.json.ok === true && f.json.missing.length === 0, "repaired: " + JSON.stringify(f.json));
+  assert(/promo-banner/.test(T.websites[0].config.html), "repaired page saved");
+  const again = await call("cust", { action: "repair", website_id: "site1" });
+  assert(again.json.ok === true && again.json.missing.length === 0, "nothing to repair the second time");
+});
+
+Deno.test("plan: creative plan is generated and stored, then used by the build", async () => {
+  reset(); providerBehavior = anthropicFake({ text: '{"headline":"أسرع قطع الباتيناج","banner_text":"عروض الأسبوع","sections":[],"why_us":["أرخص سعر"],"faq":[],"vibe":"حيوي"}' });
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const r = await call("cust", { action: "plan", website_id: "site1" });
+  assert(r.json.ok === true && T.websites[0].config.plan.headline === "أسرع قطع الباتيناج", "plan stored " + JSON.stringify(r.json));
+  let sent = "";
+  const base = anthropicFake({ text: HTML });
+  providerBehavior = (q) => { if (q.url.includes("/v1/messages") && q.body.max_tokens > 16) sent = JSON.stringify(q.body.messages); return base(q); };
+  await call("cust", { action: "build", website_id: "site1" });
+  assert(sent.includes("design_plan") && sent.includes("أسرع قطع الباتيناج"), "plan fed to the build");
+});
+
+Deno.test("a provider with no credit (429 insufficient_quota) is skipped after one try, the next provider answers", async () => {
+  reset();
+  providerBehavior = ({ url, headers }) => {
+    if (url.includes("api.openai.com/v1/models")) return { status: 200, body: { data: ["gpt-5", "gpt-5-mini", "gpt-5-pro"].map((id) => ({ id, created: 1 })) } };
+    if (url.includes("api.openai.com")) return { status: 429, body: { error: { message: "You have no credits remaining", code: "credit_balance_exhausted", type: "insufficient_quota" } } };
+    return anthropicFake()({ url, headers, body: {} } as any);
+  };
+  await call("admin", { action: "connect", kind: "openai", key: "sk-proj-abc12345" });
+  providerBehavior = ({ url, headers, body }) => url.includes("api.openai.com") ? { status: 429, body: { error: { message: "You have no credits remaining", type: "insufficient_quota" } } } : anthropicFake()({ url, headers, body });
+  T.ai_providers[0].priority = 1; T.ai_providers[0].health = "healthy"; T.ai_providers[0].last_error = null;   // OpenAI is tried first
+  T.ai_providers.push({ id: "p-claude", name: "Claude", kind: "anthropic", endpoint: null, priority: 100, enabled: true, health: "healthy", secret_id: "s-claude", max_rpm: 60, created_at: "2026-01-01" });
+  secrets["p-claude"] = "sk-ant-good";
+  T.ai_models.push({ id: "mm", provider_id: "p-claude", model_id: "claude-sonnet-5-5", usage_type: "general", enabled: true, cost_in_per_1m: 0, cost_out_per_1m: 0 });
+  const r = await call("cust", { action: "build", website_id: "site1" });
+  assert(r.json.ok === true && /claude/.test(r.json.model), "claude answered: " + JSON.stringify(r.json));
+  const openaiTries = T.ai_usage.filter((u) => u.status === "error" && /gpt/.test(u.model)).length;
+  assert(openaiTries === 1, "OpenAI tried once, not once per model (" + openaiTries + ")");
+});

@@ -39,7 +39,7 @@ async function scenario(name, fns, advance) {
   }, [1000]));
   ok.push(await scenario('AI hangs forever -> client timeout, still finishes', {
     'ai-gateway': () => ({ hang: true }), 'verify-publish': { ok: true, url: 'https://royal.ibtkar.ly' },
-  }, [1500, 30000, 30000, 30000, 30000, 10000, 1000]));
+  }, [1500, 30000, 30000, 30000, 30000, 30000, 30000, 30000, 10000, 1000]));
   ok.push(await scenario('verify-publish hangs -> timeout, still finishes with retry', {
     'ai-gateway': { ok: true }, 'verify-publish': () => ({ hang: true }),
   }, [1000, 45000, 1000]));

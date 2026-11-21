@@ -473,6 +473,8 @@ Object.assign(T.ar,{apps_empty_app:'تطبيق جديد بدون محادثة ب
 Object.assign(T.en,{apps_empty_app:'New app, no chat yet',apps_default_name:'New app',apps_chat_h:'Describe your app',apps_chat_d:'Write your app idea in your own words and I will build its screens. Ask for any change afterwards.',apps_chat_ph:'Write the app idea or what to change…',apps_ex1:'A booking app for a dental clinic',apps_ex2:'A restaurant app with a menu and order button',apps_ex3:'A clothing store app with a cart',apps_ex4:'A workout tracking app',apps_app:'The app',apps_ready:'Ready to view on your phone with Expo.',apps_nocode:'Start the chat and the app will appear here.',apps_expo:'View in Expo',apps_prev:'Preview here',apps_copy:'Copy code',apps_code:'Show code',apps_expo_h:'"View in Expo" opens Snack with the code; scan the QR code with the Expo Go app on your phone to see the app.',apps_long:'The code is long, we copied it. Paste it into Snack (clear what is there first).',apps_copied:'Code copied',apps_copy_manual:'Select the code and copy it manually',apps_thinking:'Building the app…'});
 Object.assign(T.ar,{wz_fx:'المؤثرات',wz_bg:'الخلفية المتحركة في أعلى الصفحة',bg_aurora:'ألوان متحركة ناعمة (موصى بها)',bg_particles:'جزيئات متصلة',bg_waves:'أمواج',bg_none:'بدون خلفية متحركة',wz_motion:'الحركات',motion_strong:'قوية (ظهور عند التمرير وتأثيرات)',motion_none:'بدون حركات',wz_float:'زر واتساب عائم',yes:'نعم',no:'لا',wz_banner:'نص البانر الإعلاني',wz_banner_ph:'مثال: خصم على كل قطع الباتيناج هذا الأسبوع',wz_banner_h:'شريط متحرك يظهر أول الصفحة. إن تركته فارغاً وضعنا بانراً عاماً للمتاجر.'});
 Object.assign(T.en,{wz_fx:'Effects',wz_bg:'Animated background at the top',bg_aurora:'Soft moving colours (recommended)',bg_particles:'Connected particles',bg_waves:'Waves',bg_none:'No animated background',wz_motion:'Motion',motion_strong:'Strong (scroll reveal and effects)',motion_none:'No motion',wz_float:'Floating WhatsApp button',yes:'Yes',no:'No',wz_banner:'Promo banner text',wz_banner_ph:'e.g. Discount on all parts this week',wz_banner_h:'A moving strip shown at the top. Leave empty and stores get a generic banner.'});
+Object.assign(T.ar,{bo_p0:'نحلّل طلبك ونخطّط الموقع',bo_p1:'نصمّم الصفحات والحركات',bo_p2:'نفحص الجودة ونكمل أي نقص',bo_p3:'ننشر موقعك',bo_wait:'التصميم الكامل بالذكاء الاصطناعي قد يستغرق دقيقة أو دقيقتين، لا تغلق الصفحة.'});
+Object.assign(T.en,{bo_p0:'Analysing your request and planning the site',bo_p1:'Designing pages and motion',bo_p2:'Checking quality and completing anything missing',bo_p3:'Publishing your site',bo_wait:'A full AI design can take a minute or two. Please keep this page open.'});
 Object.assign(T.en,{slow:'The connection is slow or stalled.',retry:'Try again',resetsession:'Clear session and reload',timeout:'Request timed out, please try again',network:'Could not reach the network',session_timeout:'Session is slow, please retry',not_signed_in:'Please sign in first',verify_failed:'Could not verify the publish',bo_tpl_note:'Published with a basic design because the AI was unavailable'});
 let L=localStorage.getItem('lang')||'ar';
 const t=k=>T[L][k]??k;
@@ -1117,15 +1119,25 @@ function tplGallery(){
   return `<h3>${t('tpl_title')}</h3><p style="color:var(--tx2);font-size:14px;margin:4px 0 14px">${t('tpl_sub')}</p><div class="tpls">${TEMPLATES.map((tp,i)=>`<label class="tpl"><input type="radio" name="tpl" value="${tp.id}" ${i===0?'checked':''}><div class="thumb"><iframe sandbox tabindex="-1" srcdoc="${esc(genSite(sample(tp)))}"></iframe></div><b>${t('tn_'+tp.id)}</b></label>`).join('')}</div><br>`;
 }
 const intlNum=x=>{let q=String(x||'').trim().replace(/[^\d+]/g,'');if(!q)return'';if(q[0]==='+')return q.slice(1);if(q.startsWith('00'))return q.slice(2);if(q[0]==='0')return '218'+q.slice(1);return q.length<=9?'218'+q:q};
+/* خط البناء بالذكاء الاصطناعي على مراحل (كل مرحلة طلب مستقل بمهلة كاملة): خطة ← بناء ← إكمال ما ينقص */
+async function aiPipeline(id,stage){
+  stage=stage||(()=>{});
+  stage(0);await fnPost('ai-gateway',{action:'plan',website_id:id},{ms:45000});          // الخطة اختيارية: فشلها لا يوقف البناء
+  stage(1);let j=await fnPost('ai-gateway',{action:'build',website_id:id},{ms:150000});
+  if(!(j&&j.ok))return{ok:false,error:(j&&j.error)||'err',detail:j&&j.detail};
+  let missing=j.missing||[];
+  if(missing.length){stage(2);const r=await fnPost('ai-gateway',{action:'repair',website_id:id},{ms:150000});if(r&&r.ok)missing=r.missing||[]}
+  return{ok:true,missing,model:j.model};
+}
 async function buildSite(id,b,note){
   await saveHtml(id,genSite(b),note||'initial');           // a working page always exists first
   LAST_AI_ERR='';
-  const j=await fnPost('ai-gateway',{action:'build',website_id:id},{ms:120000});
-  if(j&&j.ok)return'ai';
-  LAST_AI_ERR=(j&&j.error)||'';
+  const j=await aiPipeline(id);
+  if(j.ok)return'ai';
+  LAST_AI_ERR=j.error||'';LAST_AI_DETAIL=j.detail||'';
   return'tpl';
 }
-let LAST_AI_ERR='';
+let LAST_AI_ERR='',LAST_AI_DETAIL='';
 
 const WZ_N=7;
 const wzItem=()=>`<div class="wzrow"><input data-wi="n" placeholder="${esc(t('wz_i_name'))}" maxlength="80"><input data-wi="p" placeholder="${esc(t('wz_i_price'))}" maxlength="30"><input data-wi="d" placeholder="${esc(t('wz_i_desc'))}" maxlength="160"><button type="button" class="btn d sm" data-act="wzrowdel" aria-label="${esc(t('del'))}">&times;</button></div>`;
@@ -1576,13 +1588,13 @@ document.addEventListener('submit',async e=>{
       const av=await sb.rpc('slug_available',{p_slug:slug});if(av.error)throw av.error;if(!av.data)throw new Error(t('sub_taken'));
       const brief={...d};delete brief.sub;btn.dataset.l=btn.textContent;btn.textContent=t('wz_save');
       const ins=await sb.from('websites').insert({owner_id:me.id,name:d.name,site_type:d.type,slug,config:{brief}}).select().single();if(ins.error)throw ins.error;
-      const sid=ins.data.id;boOpen(t('bo_building'),t('bo_building_s'),[t('bo_s1'),t('bo_s2'),t('bo_s3')]);boStage(0);
-      try{await saveHtml(sid,genSite(brief),'initial');boStage(1);let how='tpl',why='';
-        const j=await fnPost('ai-gateway',{action:'build',website_id:sid},{ms:120000});
-        if(j&&j.ok)how='ai';else why=(j&&j.error)||'';
-        boStage(2);
+      const sid=ins.data.id;boOpen(t('bo_building'),t('bo_building_s'),[t('bo_p0'),t('bo_p1'),t('bo_p2'),t('bo_p3')]);boStage(0);
+      try{await saveHtml(sid,genSite(brief),'initial');let how='tpl',why='',det='';
+        const j=await aiPipeline(sid,n=>{boStage(n);if(n===1)boSet(t('bo_building'),t('bo_wait'))});
+        if(j.ok)how='ai';else{why=j.error||'';det=j.detail||''}
+        boStage(3);
         const pub=await autoPublish(sid);
-        const note=how==='ai'?'':t('bo_tpl_note')+(why&&why!=='service_not_configured'?' ('+errText(why)+')':'');
+        const note=how==='ai'?'':t('bo_tpl_note')+(why&&why!=='service_not_configured'?' ('+errText(why)+(det?': '+String(det).slice(0,90):'')+')':'');
         if(pub.ok)boDone(t('bo_live'),(note?note+' · ':'')+pub.url,[`<a class="btn p lg" href="${esc(pub.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`]);
         else boDone(t('bo_ready'),(how==='ai'?t('bo_ready_ai'):t('bo_ready_tpl'))+(note&&how!=='ai'?' ('+note+')':'')+' · '+t('pubfail')+': '+errText(pub.error),[`<button class="btn p lg" data-act="bopublish" data-id="${sid}">${t('send')}</button>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('preview')}</button>`]);
       }catch(x){boClose();throw x}
