@@ -1,0 +1,13 @@
+{
+  "admin": { "listen": "127.0.0.1:2019" },
+  "apps": {
+    "http": {
+      "servers": {
+        "ibtikar": {
+          "listen": [":443", ":80"],
+          "routes": []
+        }
+      }
+    }
+  }
+}

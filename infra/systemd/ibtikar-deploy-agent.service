@@ -1,0 +1,23 @@
+[Unit]
+Description=ابتكار deploy-agent (runs each customer PHP/Node site in its own Docker container)
+After=network-online.target docker.service ibtikar-caddy.service
+Requires=docker.service
+Wants=network-online.target ibtikar-caddy.service
+
+[Service]
+Type=simple
+User=root
+Group=docker
+WorkingDirectory=/opt/ibtikar-deploy-agent
+EnvironmentFile=/etc/ibtikar/deploy-agent.env
+ExecStart=/usr/bin/node /opt/ibtikar-deploy-agent/server.js
+Restart=on-failure
+RestartSec=2s
+NoNewPrivileges=true
+ProtectHome=true
+# Deliberately NOT ProtectSystem/PrivateTmp=strict: this service must be
+# able to talk to the Docker daemon (via its group membership + socket)
+# and write each site's build context under SITES_ROOT/the system tmp dir.
+
+[Install]
+WantedBy=multi-user.target

@@ -117,6 +117,42 @@ Security → فعّل "Leaked password protection".**
 
 ---
 
+## 6) دعم PHP/Node.js الحقيقي (متجر/عيادة/شركة/معرض أعمال)
+
+هذه الميزة الجديدة تحتاج **خادم VPS منفصل** بجانب Supabase — راجع
+`infra/README.md` للشرح الكامل وأمر الإعداد الواحد على الخادم. الخطوات هنا
+فقط لجانب Supabase:
+
+1. **Migrations جديدتان** (نفّذهما بنفس طريقة القسم 1 أعلاه، بالترتيب):
+   - `supabase/migrations/20261121010000_add_stack_and_vps_deploys.sql`
+   - `supabase/migrations/20261121020000_seed_app_stack_prompts.sql`
+2. **دالة جديدة** `deploy-vps`:
+   ```bash
+   supabase functions deploy deploy-vps --project-ref ppegbmqkcdwopakewetl
+   ```
+   (Verify JWT يجب أن يبقى **مفعّلاً** — هذه الدالة تتحقق من هوية المستخدم.)
+3. **أسرار جديدان** (القيم تأتي من مخرجات `infra/vps-setup.sh` على الخادم):
+   ```bash
+   supabase secrets set DEPLOY_AGENT_URL=https://<IP-أو-نطاق-الخادم> --project-ref ppegbmqkcdwopakewetl
+   supabase secrets set DEPLOY_AGENT_SECRET=<القيمة-من-السكربت> --project-ref ppegbmqkcdwopakewetl
+   ```
+4. **أعد نشر `ai-gateway`** (تحتوي الآن على منطق توليد PHP/Node ويحتاج طلب
+   توكن المفتاح العام أيضاً):
+   ```bash
+   supabase secrets set SUPABASE_ANON_KEY=<publishable key من لوحة Settings -> API> --project-ref ppegbmqkcdwopakewetl
+   supabase functions deploy ai-gateway --project-ref ppegbmqkcdwopakewetl
+   ```
+   (SUPABASE_URL وSUPABASE_SERVICE_ROLE_KEY موجودان تلقائياً في كل الدوال؛
+   SUPABASE_ANON_KEY وحده يحتاج ضبطاً يدوياً لأن ai-gateway يستخدمه لينشر
+   الموقع تلقائياً بهوية العميل نفسه بعد كل بناء أو تعديل ناجح.)
+5. أضف سجل DNS: `*.apps.ibtkar.ly` (أو النطاق الذي اخترته) يشير لعنوان IP
+   خادم الـVPS.
+
+بعد هذا، أي موقع من نوع متجر/عيادة/شركة/معرض أعمال يُبنى وينشر تلقائياً على
+الخادم، بلا أي خطوة يدوية إضافية لكل موقع جديد.
+
+---
+
 ## ترتيب مقترح للتنفيذ
 
 1. المigration (القسم 1) أولاً — أثر فوري على الأداء، صفر خطر على السلوك.

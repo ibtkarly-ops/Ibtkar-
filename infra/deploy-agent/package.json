@@ -1,0 +1,15 @@
+{
+  "name": "ibtikar-deploy-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Receives authenticated deploy requests from the IBTKAR Supabase edge functions and runs each customer site in its own isolated Docker container (PHP or Node.js), wiring it into Caddy for automatic HTTPS.",
+  "type": "commonjs",
+  "main": "server.js",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "4.21.2"
+  }
+}
