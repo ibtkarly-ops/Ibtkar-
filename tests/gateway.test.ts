@@ -1,0 +1,220 @@
+// Runs the REAL supabase/functions/ai-gateway/index.ts in-process against an in-memory fake of
+// PostgREST + Auth and fake AI providers (global fetch is replaced, nothing touches the network).
+//   deno test -A --no-check tests/gateway.test.ts
+const SUPA = "https://fake.supabase.co";
+Deno.env.set("SUPABASE_URL", SUPA);
+Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "service-role-secret");
+
+// ---------- in-memory database ----------
+type Row = Record<string, any>;
+let T: Record<string, Row[]>;
+let secrets: Record<string, string>;
+let seq = 0;
+const log: { url: string; method: string; body?: any; auth?: string }[] = [];
+let providerBehavior: (req: { url: string; headers: Headers; body: any }) => { status: number; body: any };
+
+function reset() {
+  seq = 0; secrets = {}; log.length = 0;
+  T = {
+    profiles: [{ id: "admin", role: "super_admin", status: "active" }, { id: "cust", role: "customer", status: "active" }],
+    ai_providers: [], ai_models: [], ai_usage: [], audit_logs: [], platform_settings: [], subscriptions: [], plans: [{ code: "free", ai_requests_limit: 50, price: 0 }],
+    ai_prompts: [{ key: "master", body: "MASTER" }, { key: "company", body: "COMPANY" }],
+    websites: [{ id: "site1", owner_id: "cust", org_id: null, name: "الملكي", site_type: "company", config: { brief: { name: "الملكي", phone: "0912345678" } } }],
+    website_versions: [],
+  };
+}
+const ok = (data: unknown, status = 200, headers: Record<string, string> = {}) => new Response(data === undefined ? null : JSON.stringify(data), { status, headers: { "content-type": "application/json", ...headers } });
+
+function matches(row: Row, params: URLSearchParams) {
+  for (const [k, v] of params) {
+    if (["select", "order", "limit", "offset", "columns"].includes(k)) continue;
+    const val = row[k];
+    if (v.startsWith("eq.")) { if (String(val) !== v.slice(3)) return false; }
+    else if (v === "not.is.null") { if (val === null || val === undefined) return false; }
+    else if (v.startsWith("in.(")) { if (!v.slice(4, -1).split(",").includes(String(val))) return false; }
+    else if (v.startsWith("gte.")) { if (!(String(val) >= v.slice(4))) return false; }
+  }
+  return true;
+}
+function rest(req: Request, url: URL, body: any) {
+  const table = url.pathname.split("/")[3];
+  const rows = (T[table] ??= []);
+  const accept = req.headers.get("accept") ?? "";
+  const pref = req.headers.get("prefer") ?? "";
+  if (req.method === "GET" || req.method === "HEAD") {
+    let out = rows.filter((r) => matches(r, url.searchParams));
+    const ord = url.searchParams.get("order");
+    if (ord) { const [c, d] = ord.split("."); out = [...out].sort((a, b) => (a[c] > b[c] ? 1 : -1) * (d === "desc" ? -1 : 1)); }
+    const lim = url.searchParams.get("limit"); if (lim) out = out.slice(0, Number(lim));
+    const range = { "content-range": `0-${Math.max(out.length - 1, 0)}/${out.length}` };
+    if (req.method === "HEAD") return new Response(null, { status: 200, headers: range });
+    if (accept.includes("vnd.pgrst.object")) return out.length === 1 ? ok(out[0]) : ok({ code: "PGRST116", message: "rows" }, 406);
+    return ok(out, 200, range);
+  }
+  if (req.method === "POST") {
+    const list = (Array.isArray(body) ? body : [body]).map((b) => ({ id: `${table}-${++seq}`, created_at: new Date(Date.now() + seq).toISOString(), ...b }));
+    rows.push(...list);
+    if (!pref.includes("return=representation")) return new Response(null, { status: 201 });
+    return accept.includes("vnd.pgrst.object") ? ok(list[0], 201) : ok(list, 201);
+  }
+  if (req.method === "PATCH") {
+    const hit = rows.filter((r) => matches(r, url.searchParams)); hit.forEach((r) => Object.assign(r, body));
+    return pref.includes("return=representation") ? ok(hit) : new Response(null, { status: 204 });
+  }
+  if (req.method === "DELETE") { T[table] = rows.filter((r) => !matches(r, url.searchParams)); return new Response(null, { status: 204 }); }
+  return ok({}, 405);
+}
+
+globalThis.fetch = (async (input: any, init: any = {}) => {
+  const req = new Request(input, init);
+  const url = new URL(req.url);
+  let body: any = null;
+  try { const t = await req.clone().text(); body = t ? JSON.parse(t) : null; } catch { /* not json */ }
+  log.push({ url: req.url, method: req.method, body, auth: req.headers.get("authorization") ?? undefined });
+  if (url.origin === SUPA) {
+    if (url.pathname === "/auth/v1/user") {
+      const tok = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+      return tok.startsWith("tok-") ? ok({ id: tok.slice(4), email: "x@y.z" }) : ok({ msg: "bad" }, 401);
+    }
+    if (url.pathname.startsWith("/rest/v1/rpc/")) {
+      const fn = url.pathname.split("/")[4];
+      if (fn === "get_provider_key") return ok(secrets[body.p_provider] ?? null);
+      if (fn === "admin_set_provider_key") {
+        const tok = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+        if (tok !== "tok-admin") return ok({ message: "forbidden" }, 400);           // like the real is_super() check
+        secrets[body.p_provider] = body.p_key;
+        T.ai_providers.find((p) => p.id === body.p_provider)!.secret_id = "sec-" + body.p_provider;
+        return new Response(null, { status: 204 });
+      }
+      return ok(true);
+    }
+    if (url.pathname.startsWith("/rest/v1/")) return rest(req, url, body);
+    return ok({});
+  }
+  // ---- fake AI providers ----
+  const r = providerBehavior({ url: req.url, headers: req.headers, body });
+  return ok(r.body, r.status);
+}) as typeof fetch;
+
+let handler: (r: Request) => Promise<Response>;
+(Deno as any).serve = (h: any) => { handler = h; return {} as any; };
+await import("../supabase/functions/ai-gateway/index.ts");
+
+async function call(who: string, body: unknown) {
+  const res = await handler(new Request(SUPA + "/functions/v1/ai-gateway", { method: "POST", headers: { authorization: "Bearer tok-" + who, "content-type": "application/json" }, body: JSON.stringify(body) }));
+  return { status: res.status, json: await res.json() };
+}
+function assert(c: unknown, msg: string) { if (!c) throw new Error("ASSERT: " + msg); }
+
+// A provider fake: lists models for the right key, answers chats per model.
+const ANTHROPIC_MODELS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-sonnet-4-5"].map((id) => ({ id, created_at: "2026-01-01T00:00:00Z" }));
+const HTML = "<!doctype html><html><head><title>الملكي</title></head><body>" + "<p>الملكي 0912345678</p>".repeat(80) + "</body></html>";
+function anthropicFake(opts: { goodKey?: string; failModels?: Record<string, number> } = {}) {
+  return ({ url, headers, body }: { url: string; headers: Headers; body: any }) => {
+    if (url.includes("api.anthropic.com/v1/models")) {
+      return headers.get("x-api-key") === (opts.goodKey ?? "sk-ant-good") ? { status: 200, body: { data: ANTHROPIC_MODELS } } : { status: 401, body: { error: { type: "authentication_error", message: "invalid x-api-key" } } };
+    }
+    if (url.includes("api.anthropic.com/v1/messages")) {
+      if (headers.get("x-api-key") !== (opts.goodKey ?? "sk-ant-good")) return { status: 401, body: { error: { message: "invalid x-api-key" } } };
+      const code = opts.failModels?.[body.model];
+      if (code) return { status: code, body: { error: { message: "overloaded" } } };
+      return { status: 200, body: { content: [{ type: "text", text: body.max_tokens <= 16 ? "pong" : HTML }], usage: { input_tokens: 100, output_tokens: 200 } } };
+    }
+    return { status: 404, body: {} };
+  };
+}
+
+Deno.test("connect: discovers real models, picks primary+fallbacks, stores key as the admin, tests, enables", async () => {
+  reset(); providerBehavior = anthropicFake();
+  const r = await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  assert(r.json.ok === true, "connect ok " + JSON.stringify(r.json));
+  assert(r.json.tested.ok === true, "test ping ok");
+  assert(T.ai_providers.length === 1 && T.ai_providers[0].name === "Claude" && T.ai_providers[0].enabled === true, "one enabled provider");
+  assert(T.ai_providers[0].health === "healthy" && T.ai_providers[0].last_error === null, "healthy");
+  assert(secrets[T.ai_providers[0].id] === "sk-ant-good", "key stored through admin_set_provider_key as admin");
+  const enabled = T.ai_models.filter((m) => m.enabled).map((m) => m.model_id).sort();
+  assert(JSON.stringify(enabled) === JSON.stringify(["claude-haiku-5-5", "claude-sonnet-4-5", "claude-sonnet-5-5"]), "enabled models " + enabled);
+  assert(T.ai_models.find((m) => m.model_id === "claude-opus-5-5")?.enabled === false, "opus stays off");
+  assert(Number(T.ai_models.find((m) => m.model_id === "claude-sonnet-5-5")?.cost_in_per_1m) === 3, "price estimate filled");
+});
+
+Deno.test("connect is idempotent: no duplicate provider or models", async () => {
+  reset(); providerBehavior = anthropicFake();
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const before = T.ai_models.length;
+  const r = await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  assert(r.json.ok, "second connect ok");
+  assert(T.ai_providers.length === 1, "still one provider");
+  assert(T.ai_models.length === before, "no duplicate models");
+});
+
+Deno.test("bad key: clear error + hint, nothing saved", async () => {
+  reset(); providerBehavior = anthropicFake();
+  const r = await call("admin", { action: "connect", kind: "anthropic", key: "sk-proj-wrong-provider-key" });
+  assert(r.json.ok === false && r.json.error === "invalid_key", "invalid_key " + JSON.stringify(r.json));
+  assert(r.json.hint === "wrong_key_for_claude", "hint says it is not a Claude key");
+  assert(T.ai_providers.length === 0 && Object.keys(secrets).length === 0, "nothing saved");
+});
+
+Deno.test("only the super admin can connect providers", async () => {
+  reset(); providerBehavior = anthropicFake();
+  const r = await call("cust", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  assert(r.status === 403, "customer forbidden");
+});
+
+Deno.test("models: re-detect adds new models and switches off ids the provider does not list (typos)", async () => {
+  reset(); providerBehavior = anthropicFake();
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const pid = T.ai_providers[0].id;
+  T.ai_models.push({ id: "m-typo", provider_id: pid, model_id: "claude-sonnet-9-9-luna", enabled: true, usage_type: "general", cost_in_per_1m: 0, cost_out_per_1m: 0 });
+  ANTHROPIC_MODELS.push({ id: "claude-haiku-6-0", created_at: "2026-06-01T00:00:00Z" });
+  const r = await call("admin", { action: "models", provider_id: pid });
+  ANTHROPIC_MODELS.pop();
+  assert(r.json.ok, "models ok " + JSON.stringify(r.json));
+  assert(T.ai_models.find((m) => m.model_id === "claude-sonnet-9-9-luna")?.enabled === false, "typo model switched off");
+  assert(T.ai_models.some((m) => m.model_id === "claude-haiku-6-0"), "new model discovered");
+});
+
+Deno.test("build: primary overloaded (503) -> automatically uses the fallback model, provider ends healthy", async () => {
+  reset(); providerBehavior = anthropicFake();
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  providerBehavior = anthropicFake({ failModels: { "claude-sonnet-5-5": 503 } });
+  const r = await call("cust", { action: "build", website_id: "site1" });
+  assert(r.json.ok === true, "build ok " + JSON.stringify(r.json));
+  assert(r.json.model === "claude-haiku-5-5", "fell back to haiku, got " + r.json.model);
+  assert(T.ai_providers[0].health === "healthy", "health reset after success");
+  assert(T.website_versions.length === 1, "version saved");
+});
+
+Deno.test("build: provider with a rejected key is tried once and skipped, the next provider answers", async () => {
+  reset();
+  T.ai_providers.push({ id: "bad", name: "Claude-old", kind: "anthropic", enabled: true, secret_id: "s1", priority: 1, health: "healthy", max_rpm: 60 });
+  T.ai_providers.push({ id: "good", name: "Claude", kind: "anthropic", enabled: true, secret_id: "s2", priority: 5, health: "healthy", max_rpm: 60 });
+  secrets.bad = "sk-ant-expired"; secrets.good = "sk-ant-good";
+  for (const id of ["bad", "good"]) for (const m of ["claude-sonnet-5-5", "claude-haiku-5-5"]) T.ai_models.push({ id: id + m, provider_id: id, model_id: m, enabled: true, usage_type: "general", cost_in_per_1m: 3, cost_out_per_1m: 15 });
+  providerBehavior = anthropicFake();
+  const r = await call("cust", { action: "build", website_id: "site1" });
+  assert(r.json.ok === true, "build ok " + JSON.stringify(r.json));
+  const calls401 = log.filter((l) => l.url.includes("/v1/messages") && l.body?.model).length;
+  assert(calls401 === 2, "bad provider tried once + good provider once, saw " + calls401);
+  assert(T.ai_providers.find((p) => p.id === "bad")!.health === "down", "rejected key marked down");
+});
+
+Deno.test("build: everything failing reports all_providers_failed with a readable reason", async () => {
+  reset(); providerBehavior = anthropicFake();
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  providerBehavior = anthropicFake({ failModels: { "claude-sonnet-5-5": 503, "claude-haiku-5-5": 503, "claude-sonnet-4-5": 503 } });
+  const r = await call("cust", { action: "build", website_id: "site1" });
+  assert(r.status === 502 && r.json.error === "all_providers_failed", "all failed " + JSON.stringify(r.json));
+  assert(/503/.test(r.json.detail), "detail has the reason: " + r.json.detail);
+});
+
+Deno.test("chat without a website is staff-only (was open to every customer)", async () => {
+  reset(); providerBehavior = anthropicFake();
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const c = await call("cust", { action: "chat", messages: [{ role: "user", content: "hi" }] });
+  assert(c.status === 403, "customer blocked");
+  T.profiles.push({ id: "adm2", role: "admin", status: "active" });
+  const a = await call("adm2", { action: "chat", messages: [{ role: "user", content: "hi" }] });
+  assert(a.status === 200 && a.json.text, "admin allowed");
+});

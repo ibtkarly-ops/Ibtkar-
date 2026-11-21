@@ -1,4 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { DISPLAY, KINDS, keyHint, listError, modelsRequest, orderModels, parseModels, rankModels, safeEndpoint, type Found, type Kind, type Ranked } from "./models.ts";
+
+// Public publishable key (same one shipped in the browser app). Used only as the `apikey` header when we act
+// *as the signed-in admin* (their JWT goes in Authorization), e.g. to call admin_set_provider_key.
+const PUBLISHABLE = Deno.env.get("SUPABASE_ANON_KEY") || "sb_publishable_5Ch9XW29qSLTxPuqvVVBnA_jjHsHtu0";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -23,12 +28,12 @@ const BASES: Record<string, string> = {
   gemini: "https://generativelanguage.googleapis.com",
 };
 
-async function callProvider(kind: string, endpoint: string | null, key: string, model: string, messages: Msg[], maxTokens = 4096): Promise<Out> {
+async function callProvider(kind: string, endpoint: string | null, key: string, model: string, messages: Msg[], maxTokens = 4096, timeoutMs = 45_000): Promise<Out> {
   const base = (endpoint || BASES[kind] || "").replace(/\/+$/, "");
   if (!base.startsWith("https://")) throw new Error("provider endpoint must be https");
   const system = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
   const turns = messages.filter((m) => m.role !== "system");
-  const signal = AbortSignal.timeout(130_000);
+  const signal = AbortSignal.timeout(timeoutMs);
 
   if (kind === "anthropic") {
     const r = await fetch(`${base}/v1/messages`, {
@@ -116,7 +121,7 @@ async function setting(key: string): Promise<string | null> {
   return data?.value ?? null;
 }
 
-class AIError extends Error { constructor(public code: string, public status = 502) { super(code); } }
+class AIError extends Error { constructor(public code: string, public status = 502, public detail = "") { super(code); } }
 
 // Candidate models for a task, cheapest first, from enabled providers with a saved key (no network call).
 //
@@ -141,34 +146,48 @@ async function candidates(task: string) {
     const pool = models ?? [];
     let cand = pool.filter((m: any) => m.usage_type === task);
     if (!cand.length) cand = pool.filter((m: any) => m.usage_type === "general");
-    cand.sort((a: any, b: any) => (Number(a.cost_in_per_1m) + Number(a.cost_out_per_1m)) - (Number(b.cost_in_per_1m) + Number(b.cost_out_per_1m)));
+    // Same chain the connect screen shows (best balanced -> best fast -> others); cost is only for budgeting.
+    cand = orderModels(task, p.kind as Kind, cand);
     for (const model of cand) out.push({ provider: p, model });
   }
   return out;
 }
 
-// Model router: cheapest enabled model that fits the task category, providers by priority, automatic fallback.
+// Model router. Tries enabled providers/models best-first and moves on automatically when one fails
+// (overloaded 503/429, timeout, bad model). A rejected key (401/403) skips that provider's remaining models.
+// Hard deadline so the edge function always answers before its own wall-clock limit (the browser also has a timeout).
 async function runAI(opts: { task: string; messages: Msg[]; userId: string; siteId: string | null; maxTokens?: number }) {
   const cand = await candidates(opts.task);
   if (!cand.length) throw new AIError("service_not_configured", 503);
-  let tried = 0;
+  const deadline = Date.now() + 105_000;
+  let tried = 0, lastErr = "";
+  const dead = new Set<string>(), touched = new Set<string>();   // touched = we flagged it degraded earlier in THIS run, reset it on success
   for (const { provider: p, model } of cand) {
+    if (dead.has(p.id)) continue;
+    if (Date.now() > deadline - 8_000) break;
     const { count: recent } = await db.from("ai_usage").select("id", { count: "exact", head: true }).eq("provider_id", p.id).gte("created_at", new Date(Date.now() - 60_000).toISOString());
     if ((recent ?? 0) >= p.max_rpm) continue;
     const { data: key } = await db.rpc("get_provider_key", { p_provider: p.id });
     if (!key) continue;
     tried++;
     try {
-      const out = await callProvider(p.kind, p.endpoint, key, model.model_id, opts.messages, opts.maxTokens ?? 4096);
+      const out = await callProvider(p.kind, p.endpoint, key, model.model_id, opts.messages, opts.maxTokens ?? 4096, Math.min(55_000, deadline - Date.now()));
       const cost = (out.tin * Number(model.cost_in_per_1m) + out.tout * Number(model.cost_out_per_1m)) / 1_000_000;
       await db.from("ai_usage").insert({ user_id: opts.userId, website_id: opts.siteId, provider_id: p.id, model: model.model_id, tokens_in: out.tin, tokens_out: out.tout, cost, status: "ok" });
+      if (p.health !== "healthy" || p.last_error || touched.has(p.id)) await db.from("ai_providers").update({ health: "healthy", checked_at: new Date().toISOString(), last_error: null }).eq("id", p.id);
       return { text: out.text, model: model.model_id };
     } catch (e) {
+      const msg = String((e as Error).message);
+      const status = Number(msg.match(/status (\d{3})/)?.[1] ?? 0);
+      const authFail = status === 401 || status === 403;
+      if (authFail) dead.add(p.id);
+      touched.add(p.id);
+      lastErr = `${p.name}/${model.model_id}: ${msg.slice(0, 160)}`;
       await db.from("ai_usage").insert({ user_id: opts.userId, website_id: opts.siteId, provider_id: p.id, model: model.model_id, status: "error" });
-      await db.from("ai_providers").update({ health: "degraded", checked_at: new Date().toISOString(), last_error: String((e as Error).message).slice(0, 500) }).eq("id", p.id);
+      await db.from("ai_providers").update({ health: authFail ? "down" : "degraded", checked_at: new Date().toISOString(), last_error: msg.slice(0, 500) }).eq("id", p.id);
     }
   }
-  throw new AIError(tried ? "all_providers_failed" : "service_not_configured", tried ? 502 : 503);
+  throw new AIError(tried ? "all_providers_failed" : "service_not_configured", tried ? 502 : 503, lastErr);
 }
 
 const intl = (x: unknown) => {
@@ -362,6 +381,85 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
 
   try {
+    // ---- Admin: connect a provider with ONE key (discover its real models, pick the right ones, test, enable) ----
+    //      "models" does the same for an already-connected provider (re-detect after a provider releases new models).
+    if (body.action === "connect" || body.action === "models") {
+      if (prof.role !== "super_admin") return json({ error: "forbidden" }, 403);
+      let kind: Kind, key: string, endpoint: string | null = null, provider: any = null;
+      if (body.action === "models") {
+        const { data: p } = await db.from("ai_providers").select("*").eq("id", body.provider_id).maybeSingle();
+        if (!p || !p.secret_id) return json({ ok: false, error: "provider_or_key_missing" });
+        const { data: k } = await db.rpc("get_provider_key", { p_provider: p.id });
+        if (!k) return json({ ok: false, error: "provider_or_key_missing" });
+        provider = p; kind = p.kind as Kind; key = k; endpoint = p.endpoint;
+      } else {
+        kind = String(body.kind ?? "") as Kind;
+        if (!KINDS.includes(kind)) return json({ ok: false, error: "bad_kind" });
+        key = String(body.key ?? "").trim();
+        if (key.length < 8 || key.length > 500 || /\s/.test(key)) return json({ ok: false, error: "invalid_key_format" });
+        if (kind === "custom") {
+          endpoint = safeEndpoint(String(body.endpoint ?? ""));
+          if (!endpoint) return json({ ok: false, error: "endpoint_required" });
+        }
+      }
+
+      // 1) ask the provider which models this key can really use
+      const rq = modelsRequest(kind, endpoint, key);
+      let found: Found[] = [];
+      try {
+        const r = await fetch(rq.url, { headers: rq.headers, signal: AbortSignal.timeout(15_000) });
+        if (!r.ok) {
+          const detail = (await r.text()).slice(0, 300);
+          if (provider) await db.from("ai_providers").update({ health: "down", checked_at: new Date().toISOString(), last_error: `models status ${r.status}: ${detail}`.slice(0, 500) }).eq("id", provider.id);
+          return json({ ok: false, error: listError(r.status), status: r.status, hint: keyHint(kind, key), detail });
+        }
+        found = parseModels(kind, await r.json());
+      } catch { return json({ ok: false, error: "unreachable" }); }
+      const ranked = rankModels(kind, found);
+      if (!ranked.length) return json({ ok: false, error: "no_models" });
+
+      // 2) one provider per kind (no more duplicates); store the key as the signed-in super admin
+      if (!provider) {
+        let q = db.from("ai_providers").select("*").eq("kind", kind).order("created_at", { ascending: true }).limit(1);
+        if (kind === "custom") q = q.eq("endpoint", endpoint);
+        const { data: ex } = await q;
+        provider = ex?.[0] ?? null;
+        if (!provider) {
+          const name = kind === "custom" ? (String(body.name ?? "").trim().slice(0, 40) || "Custom") : DISPLAY[kind];
+          const ins = await db.from("ai_providers").insert({ name, kind, endpoint, priority: 100, enabled: true }).select().single();
+          if (ins.error) return json({ ok: false, error: "save_failed", detail: ins.error.message });
+          provider = ins.data;
+        }
+        const userDb = createClient(Deno.env.get("SUPABASE_URL")!, PUBLISHABLE, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false } });
+        const kr = await userDb.rpc("admin_set_provider_key", { p_provider: provider.id, p_key: key });
+        if (kr.error) return json({ ok: false, error: "key_store_failed", detail: kr.error.message });
+      }
+
+      // 3) sync models: add the new ones (primary + fallbacks enabled), fill missing prices, switch off ids the provider does not list
+      const { data: have } = await db.from("ai_models").select("*").eq("provider_id", provider.id);
+      const haveMap = new Map((have ?? []).map((m: any) => [m.model_id, m]));
+      for (const m of ranked) {
+        const row: any = haveMap.get(m.id);
+        if (!row) await db.from("ai_models").insert({ provider_id: provider.id, model_id: m.id, usage_type: "general", enabled: m.selected, cost_in_per_1m: m.cost_in, cost_out_per_1m: m.cost_out });
+        else if (Number(row.cost_in_per_1m) === 0 && Number(row.cost_out_per_1m) === 0 && (m.cost_in || m.cost_out)) await db.from("ai_models").update({ cost_in_per_1m: m.cost_in, cost_out_per_1m: m.cost_out }).eq("id", row.id);
+      }
+      const live = new Set(found.map((f) => f.id));
+      for (const row of have ?? []) if (row.enabled && !live.has((row as any).model_id)) await db.from("ai_models").update({ enabled: false }).eq("id", (row as any).id);
+
+      // 4) real test call with the first model that answers
+      let tested: { ok: boolean; model?: string; error?: string } = { ok: false };
+      for (const m of ranked.filter((x: Ranked) => x.selected)) {
+        try { await callProvider(kind, endpoint, key, m.id, [{ role: "user", content: "ping" }], 16, 20_000); tested = { ok: true, model: m.id }; break; }
+        catch (e) { tested = { ok: false, model: m.id, error: String((e as Error).message).slice(0, 200) }; }
+      }
+      await db.from("ai_providers").update({ enabled: true, health: tested.ok ? "healthy" : "degraded", checked_at: new Date().toISOString(), last_error: tested.ok ? null : (tested.error ?? "test failed") }).eq("id", provider.id);
+      await db.from("audit_logs").insert({ actor_id: user.id, action: body.action === "connect" ? "ai_provider.connect" : "ai_provider.sync_models", entity: "ai_providers", meta: { provider_id: provider.id, kind, models: ranked.filter((x: Ranked) => x.selected).map((x: Ranked) => x.id), ok: tested.ok } });
+
+      const { data: all } = await db.from("ai_models").select("model_id,enabled").eq("provider_id", provider.id);
+      const en = new Map((all ?? []).map((m: any) => [m.model_id, !!m.enabled]));
+      return json({ ok: true, provider: { id: provider.id, name: provider.name, kind }, models: ranked.map((m: Ranked) => ({ id: m.id, role: m.role, tier: m.tier, enabled: en.get(m.id) ?? false })), tested });
+    }
+
     // ---- Admin: test a provider's real connection ----
     if (body.action === "test") {
       if (!isAdmin) return json({ error: "forbidden" }, 403);
@@ -405,7 +503,8 @@ Deno.serve(async (req) => {
         instagram: brief.ig ?? "", facebook: brief.fb ?? "", tiktok: brief.tt ?? "", telegram: brief.tg ?? "",
         offerings: String(brief.items ?? "").split("\n").map((x: string) => x.trim()).filter(Boolean),
       };
-      const stack = stackFor(site.site_type);
+      const serverOn = (await setting("ai.server_stack")) === "on";   // experimental server-side generator: OFF unless explicitly enabled
+      const stack = serverOn ? stackFor(site.site_type) : null;
       if (stack) {
         const sys = await appPrompts(site.site_type, stack);
         const r = await runAI({ task: "ui", userId: user.id, siteId: site.id, maxTokens: 12000, messages: [{ role: "system", content: sys }, { role: "user", content: JSON.stringify(data) }] });
@@ -476,7 +575,7 @@ Deno.serve(async (req) => {
       const { data: site } = await db.from("websites").select("id,owner_id,org_id,name,site_type,stack,config").eq("id", rq.website_id).maybeSingle();
       if (!site || !(await canAccess(user.id, prof.role, site))) return json({ error: "forbidden" }, 403);
       if (rq.status !== "approved") return json({ error: "not_approved" }, 409);
-      const stack = (site.stack === "php" || site.stack === "node") ? (site.stack as Stack) : null;
+      const stack = ((await setting("ai.server_stack")) === "on" && (site.stack === "php" || site.stack === "node")) ? (site.stack as Stack) : null;
       const cur = stack ? JSON.stringify(site.config?.files ?? {}) : (site.config?.html ?? "");
       if (!cur || cur === "{}" || cur.length > 120_000) return json({ error: "page_too_large_for_edit" }, 413);
       const bd = await budget(site.id, site.owner_id);
@@ -524,6 +623,7 @@ Deno.serve(async (req) => {
     if (body.action === "chat") {
       const messages = cleanMessages(body.messages);
       if (!messages) return json({ error: "invalid_messages" }, 400);
+      if (!body.website_id && !isAdmin) return json({ error: "forbidden" }, 403);   // no website = no budget to charge, so staff only
       let siteId: string | null = null;
       if (body.website_id) {
         const { data: w } = await db.from("websites").select("id,owner_id,org_id").eq("id", body.website_id).maybeSingle();
@@ -539,7 +639,7 @@ Deno.serve(async (req) => {
 
     return json({ error: "unknown_action" }, 400);
   } catch (e) {
-    if (e instanceof AIError) return json({ error: e.code }, e.status);
+    if (e instanceof AIError) return json({ error: e.code, detail: e.detail }, e.status);
     return json({ error: "server_error" }, 500);
   }
 });
