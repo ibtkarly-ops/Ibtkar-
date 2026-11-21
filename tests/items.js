@@ -1,0 +1,30 @@
+"use strict";
+// Customer "items" tab: edit/add/delete -> saves html with new site-data -> auto-publishes.
+const { launch, UID } = require('./mock');
+let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  ' + n); if (!c) fails++; };
+(async () => {
+  const boot = await launch({ role: 'customer' }); await boot.open('#/'); await boot.page.waitForTimeout(300);
+  const html = await boot.page.evaluate(() => genSite({ name: 'ملكي', type: 'store', lang: 'ar', phone: '0912345678', desc: 'متجر', color: '#2433ff', style: 'modern' }));
+  await boot.close();
+  const w = { id: 's1', owner_id: UID, name: 'ملكي', slug: 'royal', site_type: 'store', status: 'published', url: 'https://royal.ibtkar.ly', created_at: new Date().toISOString(), config: { html } };
+  const h = await launch({ role: 'customer', tables: { websites: [w], website_versions: [], platform_settings: [{ key: 'public.sites_root_domain', value: 'ibtkar.ly' }] }, rpc: { request_publish: 'dep-1' }, functions: { 'verify-publish': { ok: true, url: 'https://royal.ibtkar.ly' } } });
+  const { page } = h;
+  await h.open('#/app/site/s1/items');
+  await page.waitForSelector('form[data-form="items"]', { timeout: 8000 });
+  check('sample rows listed', (await page.locator('.irow').count()) === 8);
+  check('sample notice shown', await page.locator('text=نموذجية').count() > 0);
+  await page.click('.irow:first-child [data-act="itemdel"]');
+  await page.click('[data-act="itemadd"]');
+  const last = page.locator('.irow').last();
+  await last.locator('[data-k=n]').fill('عطر الورد'); await last.locator('[data-k=p]').fill('45 د.ل');
+  await page.click('form[data-form="items"] button.btn.p');
+  await page.waitForTimeout(800);
+  const saved = h.calls.find((c) => c.method === 'POST' && /website_versions/.test(c.url));
+  check('new version saved', !!saved);
+  const sd = await page.evaluate((x) => readSD(x), saved.body.snapshot.html);
+  check('items updated in html (8 rows: -1 +1)', sd.items.length === 8 && sd.items.some((i) => i.n === 'عطر الورد' && i.p === '45 د.ل') && !sd.sample);
+  check('published automatically', h.calls.some((c) => /rpc\/request_publish/.test(c.url)));
+  check('no page errors', h.errors.length === 0 || (console.log(h.errors), false));
+  await h.close();
+  process.exit(fails ? 2 : 0);
+})();

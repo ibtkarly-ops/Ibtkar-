@@ -200,7 +200,18 @@ const intl = (x: unknown) => {
 };
 
 function cleanHtml(x: string) { return (x || "").replace(/^\s*```(?:html)?\s*/i, "").replace(/```\s*$/, "").trim(); }
-function validHtml(h: string, brief: any): boolean {
+const SD_TYPES = ["company", "store", "restaurant", "landing"];
+// The generated page must carry its items as JSON (id="site-data") so the customer can edit them later without AI.
+export function validSiteData(h: string): boolean {
+  const m = /<script[^>]*id=["']site-data["'][^>]*>([\s\S]*?)<\/script>/i.exec(h);
+  if (!m || !/id=["']items-list["']/.test(h)) return false;
+  try {
+    const d = JSON.parse(m[1]);
+    return Array.isArray(d.items) && d.items.length >= 3 && d.items.length <= 60 && d.items.every((i: any) => i && typeof i.n === "string" && i.n.trim());
+  } catch { return false; }
+}
+function validHtml(h: string, brief: any, needSD = false): boolean {
+  if (needSD && !validSiteData(h)) return false;
   if (!/<html[\s>]/i.test(h) || !/<\/html>/i.test(h) || h.length < 1500 || h.length > 300_000) return false;
   if (/<script[^>]+src=/i.test(h) || /<img[^>]+src=["']https?:/i.test(h)) return false;
   const dg = h.replace(/\D/g, "");
@@ -210,144 +221,28 @@ function validHtml(h: string, brief: any): boolean {
   return true;
 }
 
-// ---------------------------------------------------------------------------
-// PHP/Node ("app stack") generation (added 2026-11-21).
-//
-// store + clinic -> PHP; company + portfolio -> Node.js. Every other
-// site_type (landing, restaurant, blog, education, other, ...) keeps the
-// existing single-self-contained-HTML flow below completely unchanged.
-// ---------------------------------------------------------------------------
-type Stack = "php" | "node";
-function stackFor(siteType: string): Stack | null {
-  if (siteType === "store" || siteType === "clinic") return "php";
-  if (siteType === "company" || siteType === "portfolio") return "node";
-  return null;
-}
-
-const APP_PREAMBLE = (stack: Stack) => stack === "php"
-  ? "أنت مهندس PHP محترف تكتب مشروع موقع حقيقي وكامل وجاهز للتشغيل فوراً، بأعلى معايير الأمان."
-  : "أنت مهندس Node.js محترف تكتب مشروع موقع حقيقي وكامل وجاهز للتشغيل فوراً، بأعلى معايير الأمان.";
-
-const APP_ADDENDUM = (stack: Stack) => `قيود صارمة لهذا النوع (تتقدم على أي متطلبات تقنية أخرى في التعليمات، ولا استثناء لها):
-- أعد JSON صالحاً فقط، بلا أي نص أو شرح أو Markdown قبله أو بعده، بالشكل التالي حرفياً: {"files": {"المسار": "المحتوى الكامل كنص", ...}}
-${stack === "php" ? `- الملف "public/index.php" إلزامي (نقطة الدخول الوحيدة). يمكن إضافة ملفات أصول داخل "public/" (مثل public/style.css) وملفات PHP تُدرَج داخل "src/" فقط. ممنوع منعاً مطلقاً أي ملف خارج هذين المجلدين، وممنوع إنشاء .htaccess أو أي ملف إعداد خادم.
-- قاعدة البيانات: PDO SQLite فقط، المسار من getenv('DB_PATH') (لا تفترض قيمة ثابتة)، أنشئ الجداول بـ"CREATE TABLE IF NOT EXISTS" عند أول استخدام.
-- كل استعلام SQL يجب أن يكون prepared statement بمعاملات مُجهّزة (bindValue/execute(array)). ممنوع تجميع أي SQL من نصوص خام بتاتاً.
-- اهرب كل مُخرَج من بيانات المستخدم بدالة htmlspecialchars.
-- أي صفحة تعرض طلبات/حجوزات/رسائل محفوظة (عادة public/admin.php) يجب حمايتها بهذا الكود تماماً في أولها: تحقق من $_SERVER['PHP_AUTH_USER'] و $_SERVER['PHP_AUTH_PW'] مقارنة بـgetenv('ADMIN_USER') وgetenv('ADMIN_PASSWORD')، وإن لم تتطابقا أرسل header('WWW-Authenticate: Basic realm="admin"') وhttp_response_code(401) وتوقف.` : `- الملفان "package.json" و "server.js" إلزاميان في جذر المشروع. استخدم فقط وحدات Node المدمجة (http, node:sqlite, url, crypto) بلا أي حزمة خارجية إلا إذا كانت ضرورية جداً، وإن استخدمت حزمة فيجب أن تكون من سجل npm العام برقم إصدار عادي (لا git:// ولا file:// ولا روابط). ممنوع أي سكربت preinstall أو postinstall في package.json.
-- السيرفر يستمع عبر "process.env.PORT" (رقم المنفذ من البيئة، لا تفرض رقماً ثابتاً بنفسك) باستخدام http.createServer المدمج.
-- قاعدة البيانات: وحدة "node:sqlite" المدمجة (const {DatabaseSync} = require('node:sqlite')) فقط، المسار من process.env.DB_PATH، أنشئ الجداول بـ"CREATE TABLE IF NOT EXISTS" عند أول استخدام.
-- كل استعلام SQL يجب أن يكون عبر db.prepare(...).run(params)/.get(params) بمعاملات مُجهّزة. ممنوع تجميع أي SQL من نصوص خام بتاتاً.
-- اهرب كل مُخرَج من بيانات المستخدم بدالة escape بسيطة تكتبها بنفسك (استبدال &<>"').
-- أي مسار يعرض طلبات/رسائل محفوظة (عادة "/admin") يجب حمايته بفحص ترويسة Authorization: Basic (فكّك قيمتها بـBase64 وقارن المستخدم وكلمة المرور بـprocess.env.ADMIN_USER وprocess.env.ADMIN_PASSWORD)، وإن لم تتطابقا أرسل status 401 مع ترويسة WWW-Authenticate: Basic وتوقف.`}
-- ممنوع تماماً: eval أو ما يشابهها، تنفيذ أوامر نظام (exec/shell/system/child_process)، قراءة أو كتابة أي مسار خارج مجلد المشروع أو مجلد البيانات، أي طلب شبكة خارجي (fetch/curl/http client نحو أي عنوان خارجي)، وأي مفتاح أو كلمة مرور مكتوبة مباشرة في الكود.
-- عمليات العميل التي تُغيّر بيانات (طلب شراء، حجز، رسالة تواصل) تُحفظ في SQLite ثم تُعرض فقط في الصفحة المحمية أعلاه — لا إرسال بريد فعلي ولا دفع فعلي في هذا الإصدار، ويُستبدل ذلك برابط واتساب/هاتف حقيقي كما في بيانات العميل.
-- أعد مشروعاً كاملاً يعمل فوراً دون أي تعديل، بلا أي ملف إعداد Docker أو خادم، وبلا أي نص خارج كتلة JSON.`;
-
-const APP_MAX_FILES = 200;
-const APP_MAX_FILE_BYTES = 512 * 1024;
-const APP_MAX_TOTAL_BYTES = 8 * 1024 * 1024;
-const APP_SAFE_PATH = /^[A-Za-z0-9][A-Za-z0-9._/-]*$/;
-
-function isSafeAppPath(p: string): boolean {
-  if (typeof p !== "string" || !p || p.length > 200) return false;
-  if (!APP_SAFE_PATH.test(p)) return false;
-  if (p.includes("..") || p.startsWith("/")) return false;
-  return !p.split("/").some((seg) => seg === "" || seg === "." || seg === "..");
-}
-
-// Mirrors supabase/functions/deploy-vps and infra/deploy-agent/validate.js
-// on purpose: the AI's raw output is validated here FIRST (so a bad
-// generation never even gets saved as the "current" version of the site),
-// and validated again independently by the deploy-agent right before it
-// ever touches Docker. Neither layer trusts the other.
-function validateAppProject(stack: Stack, files: unknown): string | null {
-  if (!files || typeof files !== "object" || Array.isArray(files)) return "bad_files";
-  const map = files as Record<string, unknown>;
-  const paths = Object.keys(map);
-  if (paths.length === 0) return "no_files";
-  if (paths.length > APP_MAX_FILES) return "too_many_files";
-  let total = 0;
-  for (const p of paths) {
-    if (!isSafeAppPath(p)) return `unsafe_path:${p}`;
-    const c = map[p];
-    if (typeof c !== "string") return `non_string_content:${p}`;
-    const bytes = new TextEncoder().encode(c).length;
-    if (bytes > APP_MAX_FILE_BYTES) return `file_too_large:${p}`;
-    total += bytes;
-  }
-  if (total > APP_MAX_TOTAL_BYTES) return "project_too_large";
-  if (stack === "php") {
-    if (!("public/index.php" in map)) return "missing_entrypoint:public/index.php";
-    for (const p of paths) {
-      if (p === ".htaccess" || p.endsWith("/.htaccess")) return "htaccess_not_allowed";
-      if (!p.startsWith("public/") && !p.startsWith("src/")) return `path_outside_project_layout:${p}`;
-    }
-  } else {
-    if (!("package.json" in map)) return "missing_entrypoint:package.json";
-    if (!("server.js" in map)) return "missing_entrypoint:server.js";
-    try {
-      const pkg = JSON.parse(map["package.json"] as string);
-      if (pkg?.scripts?.preinstall) return "preinstall_script_not_allowed";
-      if (pkg?.scripts?.postinstall) return "postinstall_script_not_allowed";
-      const deps = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
-      for (const [dep, ver] of Object.entries(deps)) {
-        if (/^(file:|git|https?:|github:)/i.test(String(ver))) return `unsafe_dependency_source:${dep}`;
-      }
-    } catch { return "bad_package_json"; }
-  }
-  return null;
-}
-
-function cleanJson(x: string) { return (x || "").replace(/^\s*```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim(); }
-function parseFilesJson(text: string): Record<string, string> | null {
-  const cleaned = cleanJson(text);
-  const m = cleaned.match(/\{[\s\S]*\}/);
-  if (!m) return null;
-  try {
-    const parsed = JSON.parse(m[0]);
-    return parsed && typeof parsed.files === "object" ? parsed.files : null;
-  } catch { return null; }
-}
-
-async function autoDeployVps(token: string, websiteId: string): Promise<{ deployed: boolean; url?: string; error?: string }> {
-  try {
-    const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/deploy-vps`, {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${token}`, apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" },
-      body: JSON.stringify({ website_id: websiteId }),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.ok) return { deployed: false, error: j.error || `deploy_vps_http_${r.status}` };
-    return { deployed: true, url: j.url };
-  } catch (e) {
-    return { deployed: false, error: String((e as Error).message).slice(0, 200) };
-  }
-}
-
 const ADDENDUM = `قيود المنصة (تتقدم على أي متطلبات تقنية أخرى في التعليمات):
 - المخرج صفحة HTML واحدة مكتفية بذاتها: CSS داخلي وجافاسكربت داخلي بسيط. لا سكربتات خارجية ولا صور بعيدة (استخدم تدرجات CSS أو SVG داخلي). يُسمح برابط Google Fonts فقط.
 - لا يوجد خادم ولا قاعدة بيانات ولا لوحة إدارة. لا تحاكِ حسابات أو دفعاً أو مخزوناً حقيقياً أو إرسال نماذج. استبدلها بأزرار اتصال وواتساب وبريد حقيقية.
 - روابط الاتصال تستخدم tel:+الرقم الدولي وروابط واتساب https://wa.me/الرقم الدولي، حرفياً كما في بيانات العميل.
-- أعد وثيقة HTML كاملة فقط، بلا شرح ولا Markdown.`;
+- أعد وثيقة HTML كاملة فقط، بلا شرح ولا Markdown.
+- لا تخترع أرقام هواتف أو آراء عملاء أو إحصائيات أو شهادات أو عناوين أو أسعاراً؛ استخدم ما في بيانات العميل فقط.
+- عقد الأصناف (إلزامي لأنواع الشركة والمتجر والمطعم والصفحة التعريفية): قسم الأصناف عنصر <section id=\"items\"> يحوي <div id=\"items-list\"></div> فارغاً يملؤه سكربت. ضع قبل </body> كتلة <script type=\"application/json\" id=\"site-data\">{\"sample\":true,\"items\":[{\"n\":\"الاسم\",\"c\":\"التصنيف\",\"p\":\"\",\"d\":\"وصف قصير\"}]}</script> ثم سكربت صغير يقرأ الكتلة ويرسم البطاقات داخل #items-list بإنشاء عناصر DOM وtextContent (لا innerHTML بنصوص خام)، مع أزرار تصنيف إذا وُجد أكثر من تصنيف، وإذا كان p فارغاً اعرض «اتصل للسعر» كرابط tel أو واتساب. إن وردت offerings في بيانات العميل فاستخدمها كما هي (الاسم|السعر|الوصف) وضع sample=false، وإلا أنشئ من 6 إلى 10 أصناف نموذجية واقعية تناسب النشاط والوصف بلا أسعار (p فارغ) وsample=true. كل صنف: n الاسم، c التصنيف، p السعر، d الوصف.`;
+
+// Built-in prompt for the "app" type (web app / PWA). ai_prompts.key has a CHECK constraint, so it lives in code.
+const APP_PROMPT = `أنت مصمم تطبيقات ويب جوال محترف. أنشئ تطبيق ويب (PWA) بصفحة HTML واحدة يبدو كتطبيق أصلي على الجوال:
+- شريط تبويب سفلي ثابت (٣–٥ تبويبات) تبدّل بينها شاشات داخل نفس الصفحة بجافاسكربت بسيط، وشريط علوي باسم التطبيق.
+- شاشات واقعية تناسب فكرة التطبيق وميزاته المطلوبة (قوائم، بطاقات، نماذج، ملف شخصي أو إعدادات) ببيانات نموذجية واضحة أنها نموذجية.
+- تصميم مسطّح أنيق باللون الأساسي المطلوب، حواف مدوّرة، أزرار كبيرة سهلة اللمس، دعم RTL كامل ووضع داكن تلقائي حسب prefers-color-scheme.
+- أضف في شاشة الإعدادات أو الرئيسية بطاقة قصيرة تشرح كيف يثبّت المستخدم التطبيق على شاشته (مشاركة ثم إضافة إلى الشاشة الرئيسية).
+- لا تخترع أرقام هواتف أو آراء أو إحصائيات حقيقية. لا اتصال بخوادم؛ احفظ ما يلزم في localStorage فقط.`;
 
 async function prompts(type: string): Promise<string> {
-  const key = ({ restaurant: "restaurant", store: "store", company: "company" } as Record<string, string>)[type] ?? "landing";
+  const key = ({ restaurant: "restaurant", store: "store", company: "company", app: "app" } as Record<string, string>)[type] ?? "landing";
   const { data } = await db.from("ai_prompts").select("key,body").in("key", ["master", key]);
-  const m = (data ?? []).find((x: any) => x.key === "master")?.body ?? "";
-  const t = (data ?? []).find((x: any) => x.key === key)?.body ?? "";
+  const m = key === "app" ? "" : ((data ?? []).find((x: any) => x.key === "master")?.body ?? "");
+  const t = (data ?? []).find((x: any) => x.key === key)?.body ?? (key === "app" ? APP_PROMPT : "");
   return [m, t, ADDENDUM].filter(Boolean).join("\n\n---\n\n");
-}
-
-// Same idea as prompts() above but for the PHP/Node generator: no shared
-// HTML-flavored 'master' row and no HTML ADDENDUM — just this type's own
-// business instructions (editable from Admin -> Instructions exactly like
-// 'landing'/'restaurant' already are) sandwiched between the fixed
-// APP_PREAMBLE/APP_ADDENDUM that enforce the output format and security
-// rules no admin edit can loosen.
-async function appPrompts(type: string, stack: Stack): Promise<string> {
-  const { data } = await db.from("ai_prompts").select("body").eq("key", type).maybeSingle();
-  return [APP_PREAMBLE(stack), data?.body ?? "", APP_ADDENDUM(stack)].filter(Boolean).join("\n\n---\n\n");
 }
 
 async function canAccess(userId: string, role: string, site: any) {
@@ -503,26 +398,10 @@ Deno.serve(async (req) => {
         instagram: brief.ig ?? "", facebook: brief.fb ?? "", tiktok: brief.tt ?? "", telegram: brief.tg ?? "",
         offerings: String(brief.items ?? "").split("\n").map((x: string) => x.trim()).filter(Boolean),
       };
-      const serverOn = (await setting("ai.server_stack")) === "on";   // experimental server-side generator: OFF unless explicitly enabled
-      const stack = serverOn ? stackFor(site.site_type) : null;
-      if (stack) {
-        const sys = await appPrompts(site.site_type, stack);
-        const r = await runAI({ task: "ui", userId: user.id, siteId: site.id, maxTokens: 12000, messages: [{ role: "system", content: sys }, { role: "user", content: JSON.stringify(data) }] });
-        const files = parseFilesJson(r.text);
-        const invalid = files ? validateAppProject(stack, files) : "unparseable_output";
-        if (invalid) return json({ ok: false, error: "invalid_output", detail: invalid }, 200);
-        const cfg = { ...(site.config ?? {}), files };
-        await db.from("websites").update({ config: cfg, stack, updated_at: new Date().toISOString() }).eq("id", site.id);
-        const { data: vv } = await db.from("website_versions").select("version").eq("website_id", site.id).order("version", { ascending: false }).limit(1);
-        await db.from("website_versions").insert({ website_id: site.id, version: (vv?.[0]?.version ?? 0) + 1, snapshot: { files }, note: "design", created_by: user.id });
-        const dep = await autoDeployVps(token, site.id);
-        return json({ ok: true, model: r.model, ...dep });
-      }
-
       const sys = await prompts(site.site_type);
       const r = await runAI({ task: "ui", userId: user.id, siteId: site.id, maxTokens: 12000, messages: [{ role: "system", content: sys }, { role: "user", content: JSON.stringify(data) }] });
       const html = cleanHtml(r.text);
-      if (!validHtml(html, brief)) return json({ ok: false, error: "invalid_output" }, 200);
+      if (!validHtml(html, brief, SD_TYPES.includes(site.site_type))) return json({ ok: false, error: "invalid_output" }, 200);
       const cfg = { ...(site.config ?? {}), html };
       await db.from("websites").update({ config: cfg, updated_at: new Date().toISOString() }).eq("id", site.id);
       const { data: vv } = await db.from("website_versions").select("version").eq("website_id", site.id).order("version", { ascending: false }).limit(1);
@@ -552,7 +431,7 @@ Deno.serve(async (req) => {
       const level = ["simple", "medium", "advanced", "major"].includes(j.level) ? j.level : "medium";
       const [lo, hi] = bounds[level] ?? [0, 100];
 
-      const curLen = site.stack ? (JSON.stringify(site.config?.files ?? {}).length || 6000) : ((site.config?.html ?? "").length || 6000);
+      const curLen = (site.config?.html ?? "").length || 6000;
       const reqLen = String(rq.description ?? "").length;
       const estIn = Math.ceil((curLen + reqLen + 1200) / 3);
       const estOut = Math.ceil(curLen / 3);
@@ -575,38 +454,17 @@ Deno.serve(async (req) => {
       const { data: site } = await db.from("websites").select("id,owner_id,org_id,name,site_type,stack,config").eq("id", rq.website_id).maybeSingle();
       if (!site || !(await canAccess(user.id, prof.role, site))) return json({ error: "forbidden" }, 403);
       if (rq.status !== "approved") return json({ error: "not_approved" }, 409);
-      const stack = ((await setting("ai.server_stack")) === "on" && (site.stack === "php" || site.stack === "node")) ? (site.stack as Stack) : null;
-      const cur = stack ? JSON.stringify(site.config?.files ?? {}) : (site.config?.html ?? "");
+      const cur = site.config?.html ?? "";
       if (!cur || cur === "{}" || cur.length > 120_000) return json({ error: "page_too_large_for_edit" }, 413);
       const bd = await budget(site.id, site.owner_id);
       if (!bd.ok) return json({ error: "budget_exceeded" }, 402);
       await db.from("modification_requests").update({ status: "in_progress" }).eq("id", rq.id);
 
-      if (stack) {
-        const sys = (await appPrompts(site.site_type, stack)) + "\n\n---\n\nوضع التعديل: هذا مشروع موجود، عدّل فقط ما يطلبه العميل وحافظ على كل شيء آخر كما هو حرفياً. CURRENT_PROJECT أدناه هو JSON بالشكل {\"files\":{...}} لنفس المشروع الحالي. أعد نفس الشكل {\"files\":{...}} كاملاً بعد التعديل، بكل الملفات (المعدّلة وغير المعدّلة).";
-        try {
-          const r = await runAI({ task: "ui", userId: user.id, siteId: site.id, maxTokens: 12000, messages: [{ role: "system", content: sys }, { role: "user", content: "CURRENT_PROJECT:\n" + cur + "\n\nREQUESTED_CHANGE:\n" + rq.description }] });
-          const files = parseFilesJson(r.text);
-          const invalid = files ? validateAppProject(stack, files) : "unparseable_output";
-          if (invalid) throw new AIError("invalid_output", 502);
-          await db.from("websites").update({ config: { ...(site.config ?? {}), files }, updated_at: new Date().toISOString() }).eq("id", site.id);
-          const { data: vv } = await db.from("website_versions").select("version").eq("website_id", site.id).order("version", { ascending: false }).limit(1);
-          await db.from("website_versions").insert({ website_id: site.id, version: (vv?.[0]?.version ?? 0) + 1, snapshot: { files }, note: "edit: " + String(rq.description).slice(0, 150), created_by: user.id });
-          await db.from("modification_requests").update({ status: "done" }).eq("id", rq.id);
-          await db.from("notifications").insert({ user_id: rq.user_id, type: "modification", title: "mod_done" });
-          const dep = await autoDeployVps(token, site.id);
-          return json({ ok: true, ...dep });
-        } catch (e) {
-          await db.from("modification_requests").update({ status: "approved" }).eq("id", rq.id);
-          throw e;
-        }
-      }
-
       const sys = (await prompts(site.site_type)) + "\n\n---\n\nوضع التعديل: عدّل فقط ما يطلبه العميل وحافظ على بقية الصفحة كما هي حرفياً (النصوص وأرقام الهاتف والروابط). أعد وثيقة HTML الكاملة المحدّثة فقط.";
       try {
         const r = await runAI({ task: "ui", userId: user.id, siteId: site.id, maxTokens: 12000, messages: [{ role: "system", content: sys }, { role: "user", content: "CURRENT_HTML:\n" + cur + "\n\nREQUESTED_CHANGE:\n" + rq.description }] });
         const html = cleanHtml(r.text);
-        if (!validHtml(html, site.config?.brief ?? { name: site.name })) throw new AIError("invalid_output", 502);
+        if (!validHtml(html, site.config?.brief ?? { name: site.name }, /id=[\"']site-data[\"']/.test(cur))) throw new AIError("invalid_output", 502);
         await db.from("websites").update({ config: { ...(site.config ?? {}), html }, updated_at: new Date().toISOString() }).eq("id", site.id);
         const { data: vv } = await db.from("website_versions").select("version").eq("website_id", site.id).order("version", { ascending: false }).limit(1);
         await db.from("website_versions").insert({ website_id: site.id, version: (vv?.[0]?.version ?? 0) + 1, snapshot: { html }, note: "edit: " + String(rq.description).slice(0, 150), created_by: user.id });

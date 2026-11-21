@@ -108,8 +108,11 @@ function assert(c: unknown, msg: string) { if (!c) throw new Error("ASSERT: " + 
 
 // A provider fake: lists models for the right key, answers chats per model.
 const ANTHROPIC_MODELS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-sonnet-4-5"].map((id) => ({ id, created_at: "2026-01-01T00:00:00Z" }));
-const HTML = "<!doctype html><html><head><title>الملكي</title></head><body>" + "<p>الملكي 0912345678</p>".repeat(80) + "</body></html>";
-function anthropicFake(opts: { goodKey?: string; failModels?: Record<string, number> } = {}) {
+const SD = (items: unknown) => `<section id="items"><div id="items-list"></div></section><script type="application/json" id="site-data">${JSON.stringify({ items })}</script>`;
+const GOOD_ITEMS = [{ n: "أ", c: "", p: "", d: "" }, { n: "ب", c: "", p: "", d: "" }, { n: "ج", c: "", p: "", d: "" }];
+const HTML = "<!doctype html><html><head><title>الملكي</title></head><body>" + "<p>الملكي 0912345678</p>".repeat(80) + SD(GOOD_ITEMS) + "</body></html>";
+const HTML_NO_SD = "<!doctype html><html><head><title>الملكي</title></head><body>" + "<p>الملكي 0912345678</p>".repeat(80) + "</body></html>";
+function anthropicFake(opts: { goodKey?: string; failModels?: Record<string, number>; text?: string } = {}) {
   return ({ url, headers, body }: { url: string; headers: Headers; body: any }) => {
     if (url.includes("api.anthropic.com/v1/models")) {
       return headers.get("x-api-key") === (opts.goodKey ?? "sk-ant-good") ? { status: 200, body: { data: ANTHROPIC_MODELS } } : { status: 401, body: { error: { type: "authentication_error", message: "invalid x-api-key" } } };
@@ -118,7 +121,7 @@ function anthropicFake(opts: { goodKey?: string; failModels?: Record<string, num
       if (headers.get("x-api-key") !== (opts.goodKey ?? "sk-ant-good")) return { status: 401, body: { error: { message: "invalid x-api-key" } } };
       const code = opts.failModels?.[body.model];
       if (code) return { status: code, body: { error: { message: "overloaded" } } };
-      return { status: 200, body: { content: [{ type: "text", text: body.max_tokens <= 16 ? "pong" : HTML }], usage: { input_tokens: 100, output_tokens: 200 } } };
+      return { status: 200, body: { content: [{ type: "text", text: body.max_tokens <= 16 ? "pong" : (opts.text ?? HTML) }], usage: { input_tokens: 100, output_tokens: 200 } } };
     }
     return { status: 404, body: {} };
   };
@@ -217,4 +220,15 @@ Deno.test("chat without a website is staff-only (was open to every customer)", a
   T.profiles.push({ id: "adm2", role: "admin", status: "active" });
   const a = await call("adm2", { action: "chat", messages: [{ role: "user", content: "hi" }] });
   assert(a.status === 200 && a.json.text, "admin allowed");
+});
+
+Deno.test("build: a company page without a valid site-data block is rejected (so the customer can always edit items)", async () => {
+  reset();
+  for (const bad of [HTML_NO_SD, HTML.replace(/"n":"ب",/, ""), HTML.replace("id=\"items-list\"", "id=\"x\"")]) {
+    providerBehavior = anthropicFake({ text: bad });
+    await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" }).catch(() => {});
+    const r = await call("cust", { action: "build", website_id: "site1" });
+    assert(r.json.error === "invalid_output", "rejected: " + JSON.stringify(r.json).slice(0, 120));
+    reset();
+  }
 });
