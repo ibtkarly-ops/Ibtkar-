@@ -1,0 +1,33 @@
+-- ============================================================================
+-- URGENT, pre-existing bug — found 2026-11-21 while testing a PHP client
+-- against the live project, unrelated to any other change in this repo.
+--
+-- public.is_admin() never had EXECUTE granted to the `anon` role, while
+-- every sibling helper (is_staff, is_super, is_org_member, owns_website,
+-- has_perm) does. Several PUBLIC, anonymous-facing RLS policies call
+-- is_admin() as part of an OR condition — e.g. plans.pl_sel and
+-- banners.b_sel are "active OR is_admin()" — and Postgres must be able to
+-- evaluate EVERY term of that OR for the role running the query, even
+-- when the first term (`active`) is already true. For the `anon` role,
+-- evaluating is_admin() raises "permission denied for function is_admin"
+-- (Postgres error 42501) instead of just resolving to false, and the
+-- WHOLE query is rejected — not merely the extra condition.
+--
+-- Real-world effect confirmed just now with a direct REST call using the
+-- site's own public key: a visitor who is NOT logged in gets an error
+-- instead of data from both:
+--   - GET /rest/v1/plans      (breaks the public pricing section on the
+--                               home page for every signed-out visitor)
+--   - GET /rest/v1/banners    (breaks the announcement banner likewise)
+--
+-- This predates every other change in this repository — it is not caused
+-- by the RLS-consolidation migration earlier today, which only changed
+-- which policy a check lives in, never any function's GRANTs.
+--
+-- Fix: grant the same EXECUTE access anon already has on every sibling
+-- helper. is_admin() only ever reports whether auth.uid() (null for an
+-- anonymous request) belongs to an admin, so granting EXECUTE to anon
+-- cannot leak anything — it will simply, correctly, return false for them
+-- instead of erroring the whole query.
+-- ============================================================================
+grant execute on function public.is_admin() to anon;
