@@ -82,10 +82,21 @@ async function safeUrl(u: string): Promise<URL | null> {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
-  const { data: u } = await db.auth.getUser(token);
-  if (!u?.user) return json({ error: "unauthorized" }, 401);
-  const { data: p } = await db.from("profiles").select("role,status").eq("id", u.user.id).maybeSingle();
-  if (!p || p.status !== "active" || !["super_admin", "admin", "technical_manager"].includes(p.role)) return json({ error: "forbidden" }, 403);
+  // Allow the project's own scheduled job (pg_cron + pg_net, set up in
+  // 20261121050000_schedule_uptime_check.sql) to call this directly with
+  // the service-role key as its bearer token, so monitoring can run on a
+  // schedule without a signed-in admin session. Anyone presenting this
+  // token already has full database access regardless, so this grants
+  // nothing beyond what they already have.
+  const isSystemCaller = !!token && token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  let actorId: string | null = null;
+  if (!isSystemCaller) {
+    const { data: u } = await db.auth.getUser(token);
+    if (!u?.user) return json({ error: "unauthorized" }, 401);
+    const { data: p } = await db.from("profiles").select("role,status").eq("id", u.user.id).maybeSingle();
+    if (!p || p.status !== "active" || !["super_admin", "admin", "technical_manager"].includes(p.role)) return json({ error: "forbidden" }, 403);
+    actorId = u.user.id;
+  }
 
   const { data: sites } = await db.from("websites").select("id,name,public_url:url,owner_id").eq("status", "published").not("url", "is", null).limit(200);
   const results: unknown[] = [];
@@ -104,7 +115,7 @@ Deno.serve(async (req) => {
       const { data: last } = await db.from("uptime_checks").select("ok").eq("website_id", s.id).order("checked_at", { ascending: false }).range(1, 1);
       if (last?.[0]?.ok !== false) {
         await db.from("notifications").insert({ user_id: s.owner_id, type: "site_down", title: "site_down", body: s.name });
-        await db.from("audit_logs").insert({ actor_id: u.user.id, action: "monitor.down", entity: "websites", meta: { id: s.id, code, err } });
+        await db.from("audit_logs").insert({ actor_id: actorId, action: "monitor.down", entity: "websites", meta: { id: s.id, code, err } });
       }
     }
     results.push({ id: s.id, ok: okv, status_code: code });

@@ -216,7 +216,10 @@ body.dark .bento .card:nth-child(1){background:#151a3d}body.dark .bento .card:nt
 body.noscroll{overflow:hidden}
 .sheet{position:fixed;inset:0;z-index:60}
 .sheet-bg{position:absolute;inset:0;background:rgba(15,19,48,.45);backdrop-filter:blur(8px);animation:fadeIn .25s ease}
-.sheet-p{position:absolute;top:70px;inset-inline-end:22px;width:min(440px,calc(100vw - 28px));max-height:calc(100vh - 90px);overflow:auto;background:#fff;border:1px solid var(--bd);border-radius:26px;padding:20px;box-shadow:0 40px 80px -30px rgba(36,51,255,.45);animation:pop2 .32s cubic-bezier(.2,.9,.3,1.2)}
+.sheet-p{position:fixed;top:0;inset-inline-start:0;height:100vh;width:min(320px,86vw);overflow:auto;background:#fff;border-inline-end:1px solid var(--bd);border-radius:0;padding:20px;box-shadow:0 0 60px -20px rgba(23,23,23,.35);animation:slideSide .28s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes slideSide{from{transform:translateX(-100%)}}
+[dir=rtl] .sheet-p{animation-name:slideSideR}
+@keyframes slideSideR{from{transform:translateX(100%)}}
 @keyframes fadeIn{from{opacity:0}}@keyframes pop2{from{opacity:0;transform:translateY(-14px) scale(.92)}}
 .sheet-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .sheet-g{margin-bottom:14px}.sheet-g>small{display:block;color:var(--tx2);font-size:12px;margin:6px 4px 8px;font-weight:500}
@@ -381,10 +384,12 @@ async function vPricing(){
   const {data}=await sb.from('plans').select('*').eq('active',true).order('sort');
   return `<div class="wrap sec"><h2>${t('pricing')}</h2><div class="sub">${t('plansD')}</div>${planCards(data)}</div>`;
 }
-function vApps(){
+async function vApps(){
   if(!isSuper())return `<div class="wrap soon"><h2>${t('soon')}</h2></div>`;
-  return `<div class="wrap soon"><span class="chip wa">${t('soon')} · ${t('appsSuperOnly')}</span><h2 style="font-size:36px;margin:14px 0 6px">${t('appsT')}</h2><p style="color:var(--tx2);max-width:48ch;margin:0 auto 22px">${t('appsD')}</p>
-  <form data-form="interest" class="row2" style="justify-content:center"><input style="width:280px" type="email" required name="email" placeholder="${t('email')}"><button class="btn p">${t('notify')}</button></form></div>`;
+  const {data:signups}=await sb.from('interest_signups').select('*').order('created_at',{ascending:false}).limit(200);
+  return `<div class="wrap soon"><span class="chip ok">${t('appsSuperOnly')}</span><h2 style="font-size:36px;margin:14px 0 6px">${t('appsT')}</h2><p style="color:var(--tx2);max-width:48ch;margin:0 auto 22px">${t('appsD')}</p>
+  <form data-form="interest" class="row2" style="justify-content:center"><input style="width:280px" type="email" required name="email" placeholder="${t('email')}"><button class="btn p">${t('notify')}</button></form>
+  <div style="max-width:560px;margin:34px auto 0;text-align:start">${tbl([t('email'),t('when')],(signups||[]).map(s=>`<tr><td dir="ltr" style="text-align:end">${esc(s.email)}</td><td>${fmtD(s.created_at)}</td></tr>`))}</div></div>`;
 }
 function vAuth(mode){
   const su=mode==='signup';
@@ -407,7 +412,7 @@ const typeCards=sel=>`<h3>${t('pick_type')}</h3><div class="tcards">${TYPE4.map(
 function topbar(){
   const ini=(prof&&prof.full_name||'?').trim().charAt(0).toUpperCase();
   return `<header class="tb"><a class="logo" href="#/app">${LOGO}<span>ابتكار<small>IBTIKAR</small></span></a><div class="search">${ic('search')}<input id="gs" placeholder="${t('searchph')}" autocomplete="off"><div id="sres" class="sres" hidden></div></div><span class="sp"></span>
-  <a class="ib" href="#/app/notes" aria-label="${t('notes')}">${ic('bell')}${UNREAD?`<em>${UNREAD}</em>`:''}</a><button class="ib dots" data-act="menu" aria-label="${t('sections')}" aria-haspopup="true">&#8942;</button>
+  <a class="ib" href="#/app/notes" aria-label="${t('notes')}">${ic('bell')}${UNREAD?`<em>${UNREAD}</em>`:''}</a><button class="ib dots" data-act="menu" aria-label="${t('sections')}" aria-haspopup="true">&#9776;</button>
   <div class="who"><div class="av">${esc(ini)}</div><div><b>${esc(prof&&prof.full_name||'')}</b><small>${esc(prof&&prof.role||'')}</small></div></div></header>`;
 }
 function shell(side,cur,body){
@@ -629,6 +634,7 @@ async function vAdmin0(sub){
     <span class="chip ${p.health==='healthy'?'ok':p.health==='not_configured'?'':'er'}">${t(p.health==='not_configured'?'notcfg':p.health)}</span><span class="chip ${p.enabled?'ok':''}">${p.enabled?t('active'):'off'}</span></div>${p.last_error?`<small style="color:var(--er);display:block;margin-top:8px" dir="ltr">${t('lasterr')}: ${esc(p.last_error)}</small>`:''}
     <div class="row2" style="margin-top:12px"><input type="password" id="k${p.id}" placeholder="${t('keyph')}" autocomplete="off" style="width:260px"><button class="btn s sm" data-act="setkey" data-id="${p.id}">${t('setkey')}</button>
     <button class="btn s sm" data-act="ptest" data-id="${p.id}">${t('test')}</button><button class="btn s sm" data-act="ptoggle" data-id="${p.id}" data-to="${!p.enabled}">${p.enabled?t('disable'):t('enable')}</button></div>
+    <div class="row2" style="margin-top:12px"><input id="pe${p.id}" value="${esc(p.endpoint||'')}" placeholder="${t('endpoint')}" style="width:220px" dir="ltr"><input id="ppr${p.id}" type="number" value="${p.priority}" title="${t('priority')}" style="width:90px"><button class="btn s sm" data-act="psave" data-id="${p.id}">${t('save')}</button><button class="btn d sm" data-act="pdel" data-id="${p.id}">${t('del')}</button></div>
     <div class="row2" style="margin-top:12px">${ms.map(m=>`<span class="chip">${esc(m.model_id)}</span>`).join('')}<input id="m${p.id}" placeholder="${t('model')}" style="width:200px"><button class="btn s sm" data-act="addmodel" data-id="${p.id}">${t('add')}</button></div></div>`}).join('');
   }
   if(sub==='audit'){
@@ -677,7 +683,7 @@ async function vSite(id,tab){
   const TI={overview:'globe',details:'list',analytics:'chart',versions:'pulse',requests:'chat',domains:'server'};SHEET_EXTRA={title:w.name,cur:'#/app/site/'+id+'/'+tab,items:tabs.map(x=>['#/app/site/'+id+'/'+x,t('tab_'+x),TI[x]])};
   const {data:pss}=await sb.from('platform_settings').select('key,value').in('key',['public.sites_base_url','public.sites_root_domain']);const root=((pss||[]).find(x=>x.key==='public.sites_root_domain')||{}).value||'';const hostOk=!!(pss&&pss.length);
   const head=`<div class="ph"><div><h1>${esc(w.name)}</h1><p>${esc(w.site_type||'')}</p></div>${stChip(w.status)}<span class="sp"></span>${w.status==='published'&&w.url?`<a class="btn s" href="${esc(w.url)}" target="_blank" rel="noopener">${t('openlive')}</a><button class="btn d" data-act="unpublish" data-id="${id}">${t('unpublish')}</button>`:''}<button class="btn p" data-act="publish" data-id="${id}" ${hostOk&&html?'':'disabled'} title="${esc(hostOk?'':t('hostna'))}">${t('publish')}</button></div>
-  <div class="row2" style="margin:-6px 0 18px"><button class="btn s" data-act="menu"><b class="dots" style="font-size:18px">&#8942;</b> ${t('tab_'+tab)}</button></div>`;
+  <div class="row2" style="margin:-6px 0 18px"><button class="btn s" data-act="menu"><b class="dots" style="font-size:18px">&#9776;</b> ${t('tab_'+tab)}</button></div>`;
   let b='';
   if(tab==='overview'){
     const {data:dps}=await sb.from('deployments').select('*').eq('website_id',id).order('created_at',{ascending:false}).limit(5);
@@ -974,7 +980,7 @@ async function render(opts){
   if(a==='s'){await showSite(sub.split('/')[0]);return}
   let html;
   try{
-    html=a===''?await vHome():a==='pricing'?await vPricing():a==='apps'?vApps():a==='login'?vAuth('login'):a==='signup'?vAuth('signup'):a==='app'?await vApp(sub):a==='admin'?await vAdmin(sub):a==='c'?await vContract(sub.split('/')[0]):await vHome();
+    html=a===''?await vHome():a==='pricing'?await vPricing():a==='apps'?await vApps():a==='login'?vAuth('login'):a==='signup'?vAuth('signup'):a==='app'?await vApp(sub):a==='admin'?await vAdmin(sub):a==='c'?await vContract(sub.split('/')[0]):await vHome();
   }catch(e){html=`<div class="wrap sec">${t('err')}</div>`}
   if(n!==busy)return;
   if(!keep){v.style.animation='none';v.offsetHeight;v.style.animation=''}
@@ -999,6 +1005,8 @@ document.addEventListener('click',async e=>{
     if(a==='bdel'){if(!confirm(t('del')+'?'))return;const r=await sb.from('banners').delete().eq('id',id);if(r.error)throw r.error;await audit('banner.delete','banners',{id})}
     if(a==='pprice'){const v=parseFloat($('#pp'+id).value);if(isNaN(v)||v<0)throw new Error(t('err'));const r=await sb.from('plans').update({price:v}).eq('id',id);if(r.error)throw r.error;await audit('plan.price','plans',{id,v})}
     if(a==='ptoggle'){const r=await sb.from('ai_providers').update({enabled:b.dataset.to==='true'}).eq('id',id);if(r.error)throw r.error;await audit('provider.toggle','ai_providers',{id})}
+    if(a==='psave'){const ep=$('#pe'+id).value.trim(),pri=parseInt($('#ppr'+id).value,10);if(isNaN(pri)||pri<1)throw new Error(t('err'));const r=await sb.from('ai_providers').update({endpoint:ep||null,priority:pri}).eq('id',id);if(r.error)throw r.error;await audit('provider.edit','ai_providers',{id,endpoint:ep,priority:pri});toast(t('saved'))}
+    if(a==='pdel'){if(!confirm(t('del')+'?'))return;const dm=await sb.from('ai_models').delete().eq('provider_id',id);if(dm.error)throw dm.error;const r=await sb.from('ai_providers').delete().eq('id',id);if(r.error)throw r.error;await audit('provider.delete','ai_providers',{id});toast(t('saved'));render({keep:true});return}
     if(a==='addmodel'){const v=$('#m'+id).value.trim();if(!v)throw new Error(t('model'));const r=await sb.from('ai_models').insert({provider_id:id,model_id:v});if(r.error)throw r.error}
     if(a==='setkey'){const el=$('#k'+id),v=el.value.trim();const r=await sb.rpc('admin_set_provider_key',{p_provider:id,p_key:v});el.value='';if(r.error)throw r.error}
     if(a==='ptest'){const {data:s}=await sb.auth.getSession();const r=await fetch(SB_URL+'/functions/v1/ai-gateway',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+s.session.access_token,apikey:SB_KEY},body:JSON.stringify({action:'test',provider_id:id})});const j=await r.json();if(!j.ok)throw new Error(j.error||t('err'));}

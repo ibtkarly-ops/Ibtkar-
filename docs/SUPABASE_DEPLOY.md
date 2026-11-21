@@ -175,6 +175,21 @@ Security → فعّل "Leaked password protection".**
 
 ---
 
+## 7) أسعار الباقات + مراقبة تلقائية 24/7
+
+1. **Migration**: `supabase/migrations/20261121040000_set_default_plan_prices.sql`
+   — أسعار مبدئية مقترحة لكل باقة (كانت كلها 0). غيّرها من Admin -> الباقات
+   في أي وقت.
+2. **أعد نشر `uptime-check`** (أصبحت تقبل استدعاء النظام المُجدوَل، بجانب
+   تسجيل دخول الأدمن كالسابق تماماً):
+   ```bash
+   supabase functions deploy uptime-check --project-ref ppegbmqkcdwopakewetl
+   ```
+3. **Migration**: `supabase/migrations/20261121050000_schedule_uptime_check.sql`
+   — **عدّل `<SERVICE_ROLE_KEY>` بداخله لمفتاحك الحقيقي قبل التنفيذ**
+   (Settings -> API -> service_role). هذا يُفعّل فحص كل المواقع المنشورة
+   تلقائياً كل 10 دقائق، على مدار الساعة، بلا أي ضغط زر.
+
 ## ترتيب مقترح للتنفيذ
 
 1. المigration (القسم 1) أولاً — أثر فوري على الأداء، صفر خطر على السلوك.
