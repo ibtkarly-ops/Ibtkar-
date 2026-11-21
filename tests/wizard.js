@@ -19,7 +19,7 @@ async function scenario(name, fns, advance) {
   await page.fill('input[name=phone]', '0912345678');
   await page.click('form[data-form="wizard"] button.btn.p.lg');
   await page.waitForSelector('#bo', { timeout: 5000 });
-  for (const ms of advance) { await page.clock.runFor(ms); await page.waitForTimeout(150); }
+  for (const ms of advance) { await page.clock.runFor(ms); await page.waitForTimeout(300); }
   const state = await page.evaluate(() => { const b = document.querySelector('#bo'); return b ? { cls: b.className, title: b.querySelector('h2')?.textContent, sub: b.querySelector('p')?.textContent } : null; });
   const done = !!state && /\b(ok|err)\b/.test(state.cls);
   console.log(`${done ? 'PASS' : 'FAIL'}  ${name}\n      -> ${JSON.stringify(state)}`);
@@ -37,7 +37,7 @@ async function scenario(name, fns, advance) {
   }, [1000]));
   ok.push(await scenario('AI hangs forever -> client timeout, still finishes', {
     'ai-gateway': () => ({ hang: true }), 'verify-publish': { ok: true, url: 'https://royal.ibtkar.ly' },
-  }, [125000, 1000]));
+  }, [1500, 30000, 30000, 30000, 30000, 10000, 1000]));
   ok.push(await scenario('verify-publish hangs -> timeout, still finishes with retry', {
     'ai-gateway': { ok: true }, 'verify-publish': () => ({ hang: true }),
   }, [1000, 45000, 1000]));

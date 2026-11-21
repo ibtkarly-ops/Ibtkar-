@@ -290,7 +290,7 @@ footer{background:var(--card)}body.dark footer{background:var(--card)}
 .pills span{background:var(--card)}
 .rg .on{background:var(--card);box-shadow:none;color:var(--ac)}
 .bar i{background:var(--ac)}
-.dom span{background:var(--bg2)}
+.dom span{background:var(--bg2)}.dom span:empty{display:none}.dom input:only-child{border-radius:10px}
 .side a.on{background:rgba(36,51,255,.08)}
 .tpl .thumb{background:var(--card)}
 .cta{background:var(--navy);animation:none;border-radius:18px}body.dark .cta{background:#1b2150}
@@ -443,6 +443,8 @@ Object.assign(T.ar,{guest:'زائر',featT:'كل ما تحتاجه في مكان
 Object.assign(T.en,{guest:'Guest',featT:'Everything you need in one place',typesT:'Any kind of site you need',typesD:'Pick a type and we prepare a complete site with sections and items, ready to edit and publish.',role_customer:'Customer',role_super_admin:'Super admin',role_admin:'Admin',role_technical_manager:'Technical manager',role_developer:'Developer',role_support:'Support'});
 Object.assign(T.ar,{tab_items:'الأصناف',it_name:'الاسم',it_cat:'التصنيف',it_price:'السعر',it_price_ph:'اتركه فارغاً = اتصل للسعر',it_desc:'الوصف',it_add:'إضافة صنف',it_save:'حفظ ونشر',it_saved_pub:'تم حفظ الأصناف ونشرها',it_hint:'عدّل منتجاتك أو خدماتك أو قائمتك هنا ثم اضغط حفظ ونشر. التغيير فوري وبدون تكلفة ذكاء اصطناعي.',it_sample:'هذه أصناف نموذجية وضعناها لك. عدّلها أو احذفها أو أضف أصنافك الحقيقية.',it_none:'هذا الموقع لا يدعم إدارة الأصناف بعد',it_none_d:'أعد بناء الموقع مرة واحدة من تبويب التفاصيل ليحصل على قسم أصناف قابل للتعديل.'});
 Object.assign(T.en,{tab_items:'Items',it_name:'Name',it_cat:'Category',it_price:'Price',it_price_ph:'Leave empty = call for price',it_desc:'Description',it_add:'Add item',it_save:'Save & publish',it_saved_pub:'Items saved and published',it_hint:'Edit your products, services or menu here, then Save & publish. Changes are instant and cost no AI.',it_sample:'These are sample items we added for you. Edit or delete them, or add your real ones.',it_none:'This site does not support item management yet',it_none_d:'Rebuild the site once from the Details tab so it gets an editable items section.'});
+Object.assign(T.ar,{apps_f1:'تطبيق ويب يعمل على الجوال كأنه تطبيق حقيقي',apps_f2:'يُثبَّت على الشاشة الرئيسية بدون متجر تطبيقات',apps_f3:'نخبرك بمجرد أن يصبح متاحاً',apps_admin_d:'أنشئ تطبيق ويب (PWA) بالذكاء الاصطناعي وانشره، وتابع المهتمين بالتطبيقات.',apps_new:'تطبيق جديد',apps_name:'اسم التطبيق',apps_idea:'فكرة التطبيق',apps_idea_ph:'مثال: تطبيق لحجز المواعيد في عيادة أسنان',apps_feat:'الميزات المطلوبة (كل ميزة في سطر)',apps_feat_ph:'حجز موعد\nقائمة الخدمات\nتواصل واتساب',apps_create:'إنشاء التطبيق',apps_mine:'تطبيقاتي',apps_none:'لا توجد تطبيقات بعد',apps_interest:'المهتمون بالتطبيقات',apps_building:'تطبيقك قيد البناء'});
+Object.assign(T.en,{apps_f1:'A web app that feels like a real phone app',apps_f2:'Installs on the home screen, no app store needed',apps_f3:'We will tell you as soon as it is available',apps_admin_d:'Create a web app (PWA) with AI, publish it, and follow the people interested in apps.',apps_new:'New app',apps_name:'App name',apps_idea:'App idea',apps_idea_ph:'e.g. an appointment booking app for a dental clinic',apps_feat:'Required features (one per line)',apps_feat_ph:'Book an appointment\nServices list\nWhatsApp contact',apps_create:'Create the app',apps_mine:'My apps',apps_none:'No apps yet',apps_interest:'People interested in apps',apps_building:'Your app is being built'});
 Object.assign(T.en,{slow:'The connection is slow or stalled.',retry:'Try again',resetsession:'Clear session and reload',timeout:'Request timed out, please try again',network:'Could not reach the network',session_timeout:'Session is slow, please retry',not_signed_in:'Please sign in first',verify_failed:'Could not verify the publish',bo_tpl_note:'Published with a basic design because the AI was unavailable'});
 let L=localStorage.getItem('lang')||'ar';
 const t=k=>T[L][k]??k;
@@ -511,12 +513,36 @@ async function vPricing(){
   const {data}=await sb.from('plans').select('*').eq('active',true).order('sort');
   return `<div class="wrap sec"><h2>${t('pricing')}</h2><div class="sub">${t('plansD')}</div>${planCards(data)}</div>`;
 }
-async function vApps(){
-  if(!isSuper())return `<div class="wrap soon"><h2>${t('soon')}</h2></div>`;
-  const {data:signups}=await sb.from('interest_signups').select('*').order('created_at',{ascending:false}).limit(200);
-  return `<div class="wrap soon"><span class="chip ok">${t('appsSuperOnly')}</span><h2 style="font-size:36px;margin:14px 0 6px">${t('appsT')}</h2><p style="color:var(--tx2);max-width:48ch;margin:0 auto 22px">${t('appsD')}</p>
-  <form data-form="interest" class="row2" style="justify-content:center"><input style="width:280px" type="email" required name="email" placeholder="${t('email')}"><button class="btn p">${t('notify')}</button></form>
-  <div style="max-width:560px;margin:34px auto 0;text-align:start">${tbl([t('email'),t('when')],(signups||[]).map(s=>`<tr><td dir="ltr" style="text-align:end">${esc(s.email)}</td><td>${fmtD(s.created_at)}</td></tr>`))}</div></div>`;
+const APPS_COLORS=['#2433ff','#0f766e','#b45309','#be123c','#7c3aed','#111827'];
+async function appsBody(){
+  if(!isSuper())return `<div class="soon"><span class="chip wa">${t('soon')}</span><h2 style="font-size:34px;margin:14px 0 8px">${t('appsT')}</h2><p style="color:var(--tx2);max-width:52ch;margin:0 auto 22px">${t('appsD')}</p>
+  <div class="lp-why" style="max-width:640px;margin:0 auto 26px;text-align:start">${[1,2,3].map(i=>`<div>${ic('check')}<span>${t('apps_f'+i)}</span></div>`).join('')}</div>
+  <form data-form="interest" class="row2" style="justify-content:center"><input style="width:280px;max-width:100%" type="email" required name="email" value="${esc((me&&me.email)||'')}" placeholder="${t('email')}"><button class="btn p">${t('notify')}</button></form></div>`;
+  const [{data:apps},{data:signups}]=await Promise.all([sb.from('websites').select('id,name,status,created_at').eq('site_type','app').order('created_at',{ascending:false}),sb.from('interest_signups').select('*').order('created_at',{ascending:false}).limit(200)]);
+  return `<div class="ph"><div><h1>${t('appsT')}</h1><p>${t('apps_admin_d')}</p></div><span class="chip ok">${t('appsSuperOnly')}</span></div>
+  <form data-form="newapp" class="card fcard" style="max-width:900px"><h3>${t('apps_new')}</h3>
+  <label>${t('f_sub')}</label><div class="dom"><input id="sl" name="sub" required minlength="3" maxlength="30" pattern="[a-z0-9\\-]{3,30}" placeholder="myapp" autocomplete="off" autocapitalize="off"><span></span></div><div id="slst" style="font-size:13px;margin:6px 0 0;color:var(--tx2)">${t('sub_hint')}</div><span id="slp" hidden>myapp</span>
+  <div class="fg"><div><label>${t('apps_name')}</label><input name="name" required maxlength="80"></div><div><label>${t('f_lang')}</label><select name="lang">${['ar','en','both'].map(x=>`<option value="${x}" ${L===x?'selected':''}>${t('l_'+x)}</option>`).join('')}</select></div></div>
+  <label>${t('apps_idea')}</label><textarea name="desc" required maxlength="1200" placeholder="${esc(t('apps_idea_ph'))}"></textarea>
+  <label>${t('apps_feat')}</label><textarea name="items" maxlength="2000" placeholder="${esc(t('apps_feat_ph'))}"></textarea>
+  <label>${t('f_color')}</label><div class="sw">${APPS_COLORS.map((c,i)=>`<label><input type="radio" name="color" value="${c}" ${i?'':'checked'}><i style="background:${c}"></i></label>`).join('')}</div><br><br><button class="btn p lg">${t('apps_create')}</button></form>
+  <h3 style="margin:26px 0 12px">${t('apps_mine')}</h3>${(apps&&apps.length)?`<div class="grid">${apps.map(x=>`<a class="card h" href="#/app/site/${x.id}/overview"><h3>${esc(x.name)}</h3>${stChip(x.status)}</a>`).join('')}</div>`:`<div class="empty">${t('apps_none')}</div>`}
+  <h3 style="margin:26px 0 12px">${t('apps_interest')} (${(signups||[]).length})</h3>${tbl([t('email'),t('when')],(signups||[]).map(x=>`<tr><td dir="ltr" style="text-align:start">${esc(x.email)}</td><td>${fmtD(x.created_at)}</td></tr>`))}`;
+}
+async function vApps(){return `<div class="wrap sec">${await appsBody()}</div>`}
+/* قالب احتياطي لتطبيق ويب (يُستبدل بنسخة الذكاء الاصطناعي عند نجاحه) */
+function genApp(b){
+  const e=esc,c=/^#[0-9a-f]{6}$/i.test(b.color||'')?b.color:'#2433ff',en=b.lang==='en',tx=en?{home:'Home',feat:'Features',set:'Settings',inst:'Install on your phone',instd:'Open the browser menu, then choose "Add to Home Screen".',sample:'Sample data'}:{home:'الرئيسية',feat:'الميزات',set:'الإعدادات',inst:'ثبّت التطبيق على هاتفك',instd:'افتح قائمة المتصفح ثم اختر «إضافة إلى الشاشة الرئيسية».',sample:'بيانات نموذجية'};
+  const fs=String(b.items||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,12);
+  return `<!doctype html><html lang="${en?'en':'ar'}" dir="${en?'ltr':'rtl'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${e(b.name)}</title><meta name="theme-color" content="${c}"><style>*{box-sizing:border-box;margin:0}body{font:16px/1.7 system-ui,'IBM Plex Sans Arabic',sans-serif;background:#f4f6fb;color:#0f1b3d;padding-bottom:72px}@media(prefers-color-scheme:dark){body{background:#0b0e24;color:#e9edfb}.c{background:#151a3d!important;border-color:#232a55!important}nav{background:#151a3d!important}}
+header{background:${c};color:#fff;padding:18px 20px;font-weight:700;font-size:19px;position:sticky;top:0}.s{display:none;padding:16px}.s.on{display:block}.c{background:#fff;border:1px solid #dfe5f1;border-radius:14px;padding:16px;margin-bottom:12px}.c small{opacity:.7}
+nav{position:fixed;bottom:0;inset-inline:0;background:#fff;border-top:1px solid #dfe5f1;display:flex}nav button{flex:1;border:0;background:none;padding:12px 4px;font:inherit;font-size:13px;cursor:pointer;color:inherit;opacity:.65}nav button.on{opacity:1;color:${c};font-weight:700}</style></head><body>
+<header>${e(b.name)}</header>
+<section class="s on" id="s0"><div class="c"><b>${e(b.name)}</b><p>${e(b.desc)}</p></div>${fs.slice(0,3).map(x=>`<div class="c">${e(x)}<br><small>${tx.sample}</small></div>`).join('')}</section>
+<section class="s" id="s1">${(fs.length?fs:[b.name]).map(x=>`<div class="c">${e(x)}</div>`).join('')}</section>
+<section class="s" id="s2"><div class="c"><b>${tx.inst}</b><p>${tx.instd}</p></div></section>
+<nav><button class="on" data-t="0">${tx.home}</button><button data-t="1">${tx.feat}</button><button data-t="2">${tx.set}</button></nav>
+<script>document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){document.querySelectorAll("nav button,.s").forEach(function(x){x.classList.remove("on")});b.classList.add("on");document.getElementById("s"+b.dataset.t).classList.add("on")}})<\/script></body></html>`;
 }
 function vAuth(mode){
   const su=mode==='signup';
@@ -527,10 +553,10 @@ function vAuth(mode){
 }
 
 /* ---------- customer ---------- */
-const SIDE_C=()=>[['#/app',t('dashT')],['#/app/sites',t('mysites')],['#/app/new',t('newsite')],['#/app/analytics',t('navAnalytics')],['#/app/requests',t('requests')],['#/app/support',t('support')],['#/app/notes',t('notes')],['#/app/billing',t('billing')],['#/app/contracts',t('contracts')],['#/app/settings',t('profile')]];
+const SIDE_C=()=>[['#/app',t('dashT')],['#/app/sites',t('mysites')],['#/app/new',t('newsite')],['#/app/apps',t('apps')],['#/app/analytics',t('navAnalytics')],['#/app/requests',t('requests')],['#/app/support',t('support')],['#/app/notes',t('notes')],['#/app/billing',t('billing')],['#/app/contracts',t('contracts')],['#/app/settings',t('profile')]];
 const ICP={grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',globe:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',plus:'M12 5v14M5 12h14',chat:'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z',bell:'M18 16v-5a6 6 0 1 0-12 0v5l-2 2h16zM10 20a2 2 0 0 0 4 0',card:'M3 6h18v12H3zM3 10h18',users:'M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M21 20v-2a4 4 0 0 0-3-3.9',flag:'M4 4v17M4 4h12l-2 4 2 4H4',price:'M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',bolt:'M13 2L4 14h7l-1 8 9-12h-7z',pulse:'M3 12h4l3-8 4 16 3-8h4',list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',chart:'M4 20V10M10 20V4M16 20v-7M22 20H2',server:'M3 4h18v6H3zM3 14h18v6H3zM7 7h.01M7 17h.01',gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1',moon:'M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z',search:'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3'};
 ICP.menu='M4 6h16M4 12h16M4 18h16';ICP.moon='M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z';ICP.home='M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10';ICP.login='M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3';ICP.logout='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9';ICP.x='M6 6l12 12M18 6L6 18';ICP.shop='M3 9l1-5h16l1 5M4 9v11h16V9M9 20v-6h6v6';ICP.food='M6 3v8a2 2 0 0 0 2 2v8M10 3v6M6 7h4M17 3c-2 2-3 5-3 8h3v10';ICP.build='M4 21V5l8-2v18M12 9h8v12M7 9h2M7 13h2M7 17h2M15 13h2M15 17h2';ICP.phone='M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM11 18h2';ICP.check='M5 13l4 4L19 7';
-const ICH={'#/':'home','#/pricing':'price','#/apps':'phone','#/login':'login','#/signup':'plus','#/app':'grid','#/app/sites':'globe','#/app/new':'plus','#/app/analytics':'chart','#/app/requests':'list','#/app/support':'chat','#/app/notes':'bell','#/app/billing':'card','#/app/contracts':'card','#/app/settings':'gear','#/admin':'grid','#/admin/analytics':'chart','#/admin/users':'users','#/admin/sites':'globe','#/admin/requests':'list','#/admin/tickets':'chat','#/admin/invoices':'card','#/admin/contracts':'card','#/admin/banners':'flag','#/admin/plans':'price','#/admin/servers':'server','#/admin/monitor':'pulse','#/admin/engine':'bolt','#/admin/audit':'list','#/admin/settings':'gear','#/admin/prompts':'list'};
+const ICH={'#/app/apps':'phone','#/admin/apps':'phone','#/':'home','#/pricing':'price','#/apps':'phone','#/login':'login','#/signup':'plus','#/app':'grid','#/app/sites':'globe','#/app/new':'plus','#/app/analytics':'chart','#/app/requests':'list','#/app/support':'chat','#/app/notes':'bell','#/app/billing':'card','#/app/contracts':'card','#/app/settings':'gear','#/admin':'grid','#/admin/analytics':'chart','#/admin/users':'users','#/admin/sites':'globe','#/admin/requests':'list','#/admin/tickets':'chat','#/admin/invoices':'card','#/admin/contracts':'card','#/admin/banners':'flag','#/admin/plans':'price','#/admin/servers':'server','#/admin/monitor':'pulse','#/admin/engine':'bolt','#/admin/audit':'list','#/admin/settings':'gear','#/admin/prompts':'list'};
 const DAY=864e5;let ST={},UNREAD=0;
 const LOGO=`<svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><path d="M3 3 33 3 24 13 3 13Z" fill="var(--ac)"/><path d="M3 16 25 16 16 26 3 26Z" fill="var(--ac)"/><path d="M3 29 19 29 10 39 3 39Z" fill="var(--ac)" opacity=".82"/></svg>`;
 const ic=n=>`<svg viewBox="0 0 24 24" class="ics"><path d="${ICP[n]}"/></svg>`;
@@ -737,7 +763,7 @@ async function vApp0(sub){
 }
 
 /* ---------- admin ---------- */
-const SIDE_A=()=>[['#/admin',t('dashT')],['#/admin/analytics',t('navAnalytics')],['#/admin/users',t('users')],['#/admin/sites',t('allsites')],['#/admin/requests',t('requests')],['#/admin/tickets',t('tickets')],['#/admin/invoices',t('invs')],['#/admin/contracts',t('contracts')],['#/admin/banners',t('banners')],['#/admin/plans',t('plans')],['#/admin/servers',t('servers')],['#/admin/monitor',t('monitor')],['#/admin/engine',t('engine')],['#/admin/prompts',t('prompts')],['#/admin/settings',t('settingsT')],['#/admin/audit',t('audit')]].filter(x=>isSuper()||!['#/admin/plans','#/admin/engine','#/admin/settings','#/admin/prompts'].includes(x[0]));
+const SIDE_A=()=>[['#/admin',t('dashT')],['#/admin/analytics',t('navAnalytics')],['#/admin/users',t('users')],['#/admin/sites',t('allsites')],['#/admin/apps',t('apps')],['#/admin/requests',t('requests')],['#/admin/tickets',t('tickets')],['#/admin/invoices',t('invs')],['#/admin/contracts',t('contracts')],['#/admin/banners',t('banners')],['#/admin/plans',t('plans')],['#/admin/servers',t('servers')],['#/admin/monitor',t('monitor')],['#/admin/engine',t('engine')],['#/admin/prompts',t('prompts')],['#/admin/settings',t('settingsT')],['#/admin/audit',t('audit')]].filter(x=>isSuper()||!['#/admin/plans','#/admin/engine','#/admin/settings','#/admin/prompts'].includes(x[0]));
 const tbl=(h,rows)=>`<div class="tw"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.join('')||`<tr><td colspan="${h.length}" style="text-align:center;color:var(--tx2)">—</td></tr>`}</tbody></table></div>`;
 
 async function vAdmin0(sub){
@@ -838,11 +864,11 @@ async function vSite(id,tab){
   const {data:w}=await sb.from('websites').select('*').eq('id',id).maybeSingle();
   const S=SIDE_C();
   if(!w)return shell(S,'#/app/sites',`<div class="empty">404</div>`);
-  const tabs=['overview','items','details','analytics','versions','requests','domains'],html=w.config?.html||'';
+  const tabs=['overview','items','details','analytics','versions','requests','domains'].filter(x=>!(w.site_type==='app'&&x==='items')),html=w.config?.html||'';
   const TI={overview:'globe',items:'shop',details:'list',analytics:'chart',versions:'pulse',requests:'chat',domains:'server'};SHEET_EXTRA={title:w.name,cur:'#/app/site/'+id+'/'+tab,items:tabs.map(x=>['#/app/site/'+id+'/'+x,t('tab_'+x),TI[x]])};
   const {data:pss}=await sb.from('platform_settings').select('key,value').in('key',['public.sites_base_url','public.sites_root_domain']);const root=((pss||[]).find(x=>x.key==='public.sites_root_domain')||{}).value||'';const hostOk=!!(pss&&pss.length);
   const head=`<div class="ph"><div><h1>${esc(w.name)}</h1><p>${esc(w.site_type||'')}</p></div>${stChip(w.status)}<span class="sp"></span>${w.status==='published'&&w.url?`<a class="btn s" href="${esc(w.url)}" target="_blank" rel="noopener">${t('openlive')}</a><button class="btn d" data-act="unpublish" data-id="${id}">${t('unpublish')}</button>`:''}<button class="btn p" data-act="publish" data-id="${id}" ${hostOk&&html?'':'disabled'} title="${esc(hostOk?'':t('hostna'))}">${t('publish')}</button></div>
-  <div class="row2" style="margin:-6px 0 18px"><button class="btn s" data-act="menu"><b class="dots" style="font-size:18px">&#9776;</b> ${t('tab_'+tab)}</button></div>`;
+  <div class="tabs">${tabs.map(x=>`<a href="#/app/site/${id}/${x}" class="${x===tab?'on':''}">${t('tab_'+x)}</a>`).join('')}</div>`;
   let b='';
   if(tab==='overview'){
     const {data:dps}=await sb.from('deployments').select('*').eq('website_id',id).order('created_at',{ascending:false}).limit(5);
@@ -1021,6 +1047,7 @@ async function vApp(sub){
   if(!me)return vApp0(sub);
   const S=SIDE_C();
   if(sub==='new')return vNewSite();
+  if(sub==='apps')return shell(S,'#/app/apps',await appsBody());
   if(!sub)return vCDash();
   if(sub==='sites')return vSites();
   if(sub==='analytics'||sub.startsWith('analytics/'))return vCAnalytics(sub.slice(10));
@@ -1056,6 +1083,7 @@ async function vAdmin(sub){
   if(!me||!isAdm())return vAdmin0(sub);
   const S=SIDE_A();
   if(!sub)return vADash();
+  if(sub==='apps')return shell(S,'#/admin/apps',await appsBody());
   if(sub==='analytics')return vAAnalytics();
   if(sub==='servers')return vAServers();
   if(sub==='prompts')return vAPrompts();
@@ -1313,7 +1341,7 @@ document.addEventListener('submit',async e=>{
   const f=e.target.closest('[data-form]');if(!f)return;e.preventDefault();
   const k=f.dataset.form,d=Object.fromEntries(new FormData(f)),btn=f.querySelector('button');btn.disabled=true;
   try{
-    if(k==='interest'){const r=await sb.from('interest_signups').insert({email:d.email,service:'apps'});if(r.error)throw r.error;toast(t('notified'));f.reset()}
+    if(k==='interest'){const r=await sb.from('interest_signups').insert({email:d.email,service:'apps'});if(r.error&&r.error.code!=='23505')throw r.error;toast(t('notified'));if(!me)f.reset()}
     if(k==='signup'){const r=await sb.auth.signUp({email:d.email,password:d.pass,options:{data:{full_name:d.name}}});if(r.error)throw r.error;if(r.data.session){await loadMe();location.hash='#/app'}else toast(t('checkmail'))}
     if(k==='login'){const r=await sb.auth.signInWithPassword({email:d.email,password:d.pass});if(r.error)throw r.error;await loadMe();location.hash='#/app'}
     if(k==='newsite'){const r=await sb.from('websites').insert({owner_id:me.id,name:d.name,site_type:d.type}).select().single();if(r.error)throw r.error;location.hash='#/app/site/'+r.data.id;return}
@@ -1374,6 +1402,23 @@ document.addEventListener('submit',async e=>{
       const up=await sb.from('websites').update({name:d.name,site_type:d.type,config:{...(w.data&&w.data.config||{}),brief:{...d,tpl:(((w.data&&w.data.config)||{}).brief||{}).tpl}}}).eq('id',f.dataset.id);if(up.error)throw up.error;
       const how=await buildSite(f.dataset.id,{...d,tpl:(((w.data&&w.data.config)||{}).brief||{}).tpl},'rebuild');toast(how==='ai'?t('designed'):t('designed_tpl')+(LAST_AI_ERR?' ('+errText(LAST_AI_ERR)+')':''));
       const h='#/app/site/'+f.dataset.id+'/overview';if(location.hash===h)render({keep:true});else location.hash=h;return}
+    if(k==='newapp'){
+      if(!isSuper())throw new Error(t('noaccess'));
+      const slug=(d.sub||'').trim().toLowerCase();
+      if(!/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(slug)||slug.includes('--'))throw new Error(t('sub_taken'));
+      const av=await sb.rpc('slug_available',{p_slug:slug});if(av.error)throw av.error;if(!av.data)throw new Error(t('sub_taken'));
+      const brief={name:d.name,type:'app',desc:d.desc,items:d.items||'',lang:d.lang,color:d.color,style:'modern'};
+      const ins=await sb.from('websites').insert({owner_id:me.id,name:d.name,site_type:'app',slug,config:{brief}}).select().single();if(ins.error)throw ins.error;
+      const sid=ins.data.id;boOpen(t('apps_building'),t('bo_building_s'),[t('bo_s1'),t('bo_s2'),t('bo_s3')]);boStage(0);
+      try{await saveHtml(sid,genApp(brief),'initial');boStage(1);let how='tpl',why='';
+        const j=await fnPost('ai-gateway',{action:'build',website_id:sid},{ms:120000});
+        if(j&&j.ok)how='ai';else why=(j&&j.error)||'';
+        boStage(2);const pub=await autoPublish(sid);
+        const note=how==='ai'?'':t('bo_tpl_note')+(why&&why!=='service_not_configured'?' ('+errText(why)+')':'');
+        if(pub.ok)boDone(t('bo_live'),(note?note+' · ':'')+pub.url,[`<a class="btn p lg" href="${esc(pub.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`]);
+        else boDone(t('bo_ready'),(note&&how!=='ai'?note+' · ':'')+t('pubfail')+': '+errText(pub.error),[`<button class="btn p lg" data-act="bopublish" data-id="${sid}">${t('send')}</button>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('preview')}</button>`]);
+      }catch(x){boClose();throw x}
+      return}
     if(k==='items'){
       const rows=[...f.querySelectorAll('.irow')].map(r=>{const g=q=>r.querySelector('[data-k="'+q+'"]').value.trim();return{n:g('n'),c:g('c'),p:g('p'),d:g('d')}}).filter(x=>x.n);
       if(rows.length>60)throw new Error(t('err'));
