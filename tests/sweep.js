@@ -9,7 +9,7 @@ const ROUTES = {
   customer: ['#/app', '#/app/sites', '#/app/new', '#/app/apps', '#/app/analytics', '#/app/requests', '#/app/support', '#/app/notes', '#/app/billing', '#/app/contracts', '#/app/settings',
     '#/app/site/s1/overview', '#/app/site/s1/items', '#/app/site/s1/details', '#/app/site/s1/analytics', '#/app/site/s1/versions', '#/app/site/s1/requests', '#/app/site/s1/domains'],
   super_admin: ['#/admin', '#/admin/analytics', '#/admin/users', '#/admin/sites', '#/admin/apps', '#/admin/requests', '#/admin/tickets', '#/admin/invoices', '#/admin/contracts', '#/admin/banners', '#/admin/plans', '#/admin/servers', '#/admin/monitor', '#/admin/engine', '#/admin/prompts', '#/admin/settings', '#/admin/audit'],
-  visitor: ['#/', '#/pricing', '#/apps', '#/login', '#/signup'],
+  visitor: ['#/', '#/pricing', '#/apps', '#/login', '#/signup', '#/forgot', '#/help'],
 };
 const MODES = [
   ['light-ar-m', { dark: false, lang: 'ar', viewport: { width: 390, height: 844 } }],

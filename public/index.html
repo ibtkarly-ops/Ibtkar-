@@ -475,6 +475,8 @@ Object.assign(T.ar,{wz_fx:'المؤثرات',wz_bg:'الخلفية المتحر�
 Object.assign(T.en,{wz_fx:'Effects',wz_bg:'Animated background at the top',bg_aurora:'Soft moving colours (recommended)',bg_particles:'Connected particles',bg_waves:'Waves',bg_none:'No animated background',wz_motion:'Motion',motion_strong:'Strong (scroll reveal and effects)',motion_none:'No motion',wz_float:'Floating WhatsApp button',yes:'Yes',no:'No',wz_banner:'Promo banner text',wz_banner_ph:'e.g. Discount on all parts this week',wz_banner_h:'A moving strip shown at the top. Leave empty and stores get a generic banner.'});
 Object.assign(T.ar,{bo_p0:'نحلّل طلبك ونخطّط الموقع',bo_p1:'نصمّم الصفحات والحركات',bo_p2:'نفحص الجودة ونكمل أي نقص',bo_p3:'ننشر موقعك',bo_wait:'التصميم الكامل بالذكاء الاصطناعي قد يستغرق دقيقة أو دقيقتين، لا تغلق الصفحة.'});
 Object.assign(T.en,{bo_p0:'Analysing your request and planning the site',bo_p1:'Designing pages and motion',bo_p2:'Checking quality and completing anything missing',bo_p3:'Publishing your site',bo_wait:'A full AI design can take a minute or two. Please keep this page open.'});
+Object.assign(T.ar,{upg_t:'حدّث تصميم موقعك',upg_d:'تصميم موقعك قديم: نحدّثه الآن ببانر إعلاني وخلفية متحركة وحركات قوية وزر واتساب عائم، مع الحفاظ على أصنافك وبياناتك.',upg_btn:'تحديث التصميم الآن',upg_ai:'أو أعد البناء بالذكاء الاصطناعي'});
+Object.assign(T.en,{upg_t:'Refresh your site design',upg_d:'Your site uses the older design. We can update it now with a promo banner, animated background, strong motion and a floating WhatsApp button, keeping your items and details.',upg_btn:'Refresh design now',upg_ai:'or rebuild with AI'});
 Object.assign(T.en,{slow:'The connection is slow or stalled.',retry:'Try again',resetsession:'Clear session and reload',timeout:'Request timed out, please try again',network:'Could not reach the network',session_timeout:'Session is slow, please retry',not_signed_in:'Please sign in first',verify_failed:'Could not verify the publish',bo_tpl_note:'Published with a basic design because the AI was unavailable'});
 let L=localStorage.getItem('lang')||'ar';
 const t=k=>T[L][k]??k;
@@ -931,7 +933,8 @@ async function vSite(id,tab){
   let b='';
   if(tab==='overview'){
     const {data:dps}=await sb.from('deployments').select('*').eq('website_id',id).order('created_at',{ascending:false}).limit(5);
-    b=`${hostOk?'':`<p style="color:var(--tx2);margin-bottom:16px">${t('hostna')}</p>`}
+    const oldDesign=!!html&&w.site_type!=='app'&&!/data-animated-bg="|id="promo-banner"/.test(html);
+    b=(oldDesign?`<div class="card" style="margin-bottom:16px;border-color:var(--ac)"><h3>${t('upg_t')}</h3><p style="color:var(--tx2);margin:6px 0 12px">${t('upg_d')}</p><div class="row2"><button class="btn p" data-act="tplrefresh" data-id="${id}" data-pub="${w.status==='published'?1:0}">${t('upg_btn')}</button><a class="btn s" href="#/app/site/${id}/details">${t('upg_ai')}</a></div></div>`:'')+`${hostOk?'':`<p style="color:var(--tx2);margin-bottom:16px">${t('hostna')}</p>`}
     <div class="card row2"><span style="color:var(--tx2)">${t('yoursite')}</span><b dir="ltr">${esc(pubLabel(w.slug,root,pbase))}</b><span class="sp"></span><a class="btn s" href="#/app/site/${id}/details">${t('tab_details')}</a></div>
     <br><h3>${t('preview')}</h3><br>${html?`<iframe sandbox srcdoc="${esc(html)}"></iframe>`:w.stack?`<div class="empty">PHP/Node</div>`:`<div class="empty">—</div>`}
     ${w.stack&&w.config?.admin_password?`<br><h3>${t('adminpanel')}</h3><div class="card" style="margin-top:12px"><p style="color:var(--tx2);font-size:13px;margin-bottom:10px">${t('adminnote')}</p><div class="row2"><span style="color:var(--tx2)">${t('adminuser')}</span><b dir="ltr">${esc(w.config.admin_user||'admin')}</b></div><div class="row2" style="margin-top:6px"><span style="color:var(--tx2)">${t('adminpass')}</span><b dir="ltr" data-adminpass="${esc(w.config.admin_password)}" style="filter:blur(4px);cursor:pointer" title="${esc(t('showpass'))}" onclick="this.style.filter='none'">${esc(w.config.admin_password)}</b></div></div>`:''}
@@ -1330,8 +1333,15 @@ async function showSite(slug,boxed){
   let h=row.html;h=/<\/body>/i.test(h)?h.replace(/<\/body>/i,tr+'</body>'):h+tr;
   document.open();document.write(h);document.close();
 }
-const HOSTED=(()=>{const m=location.hostname.match(/^([a-z0-9-]+)\.ibtkar\.ly$/);return m&&!['app','www'].includes(m[1])?m[1]:null})();
-const PATH_SLUG=(()=>{if(HOSTED)return null;const m=location.pathname.match(/^\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])\/?$/);return m&&!['app','admin','vendor','assets','s','c'].includes(m[1])?m[1]:null})();
+/* موقع منشور على نطاق فرعي (slug.نطاقك): يُعرَّف من إعداد public.sites_root_domain (فارغ الآن = لا نطاق، تُستعمل روابط المسار) */
+async function resolveHosted(){
+  const h=location.hostname;if(/\.(pages|workers)\.dev$|^localhost$|^\d+(\.\d+){3}$/.test(h)||h.split('.').length<3)return null;
+  let root=null;try{root=sessionStorage.getItem('rootdom')}catch(e){}
+  if(root===null){try{const r=await withTimeout(sb.from('platform_settings').select('value').eq('key','public.sites_root_domain').maybeSingle(),4000);root=(r.data&&r.data.value)||'';try{sessionStorage.setItem('rootdom',root)}catch(e){}}catch(e){return null}}
+  if(!root||!h.endsWith('.'+root))return null;
+  const sub=h.slice(0,-root.length-1);return /^[a-z0-9-]+$/.test(sub)&&!['app','www'].includes(sub)?sub:null;
+}
+const PATH_SLUG=(()=>{const m=location.pathname.match(/^\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])\/?$/);return m&&!['app','admin','vendor','assets','s','c'].includes(m[1])?m[1]:null})();
 
 /* ---------- public contract signing page: #/c/<share_token> ---------- */
 async function ctrGet(token,which){
@@ -1437,6 +1447,9 @@ document.addEventListener('click',async e=>{
     if(a==='itemup'||a==='itemdown'){const r=b.closest('.irow');if(r){const o=a==='itemup'?r.previousElementSibling:r.nextElementSibling;if(o)a==='itemup'?o.before(r):o.after(r)}b.disabled=false;return}
     if(a==='itemdup'){const r=b.closest('.irow');if(r){const c=r.cloneNode(true);r.after(c)}b.disabled=false;return}
     if(a==='itemrmimg'){const r=b.closest('.irow');if(r){r.querySelector('[data-k="img"]').value='';const im=r.querySelector('.ip');im.hidden=true;im.removeAttribute('src');r.querySelector('.ipp').hidden=false}b.disabled=false;return}
+    if(a==='tplrefresh'){const w=await sb.from('websites').select('config,name,site_type').eq('id',id).single();const cf=(w.data&&w.data.config)||{},bf={...(cf.brief||{name:w.data.name,type:w.data.site_type})},sd=readSD(cf.html);
+      if(sd&&!sd.sample){bf._data=sd;if(sd.logo&&!bf.logo)bf.logo=sd.logo;if(sd.cur&&!bf.cur)bf.cur=sd.cur}
+      await saveHtml(id,genSite(bf),'design-refresh');if(b.dataset.pub==='1'){toast(t('publishing'));const r=await autoPublish(id);if(!r.ok)throw new Error(t('pubfail')+': '+errText(r.error))}toast(t('saved'));render({keep:true});return}
     if(a==='sdenable'){if(!confirm(t('it_enable_c')))return;const w=await sb.from('websites').select('config,name,site_type').eq('id',id).single();const bf={...((w.data&&w.data.config&&w.data.config.brief)||{name:w.data.name,type:w.data.site_type})};await saveHtml(id,genSite(bf),'items-enable');render({keep:true});return}
     if(a==='itemdel'){const r=b.closest('.irow');if(r)r.remove();return}
     if(a==='cmode'){document.querySelectorAll('[data-act="cmode"]').forEach(x=>x.classList.toggle('on',x===b));$('#cm-key').hidden=b.dataset.mode!=='key';$('#cm-curl').hidden=b.dataset.mode!=='curl';b.disabled=false;return}
@@ -1672,7 +1685,7 @@ let sT;document.addEventListener('input',e=>{
 document.addEventListener('click',e=>{if(!e.target.closest('.search')){const b=$('#sres');if(b)b.hidden=true}});
 if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark');
 (async()=>{
-  if(HOSTED){await showSite(HOSTED);return}
+  const hosted=await resolveHosted();if(hosted){await showSite(hosted);return}
   if(PATH_SLUG){await showSite(PATH_SLUG,true);return}
   await loadMe();
   /* مهم: callback غير async ولا يستدعي Supabase مباشرةً. supabase-js يمسك قفل المصادقة أثناء إطلاق الأحداث

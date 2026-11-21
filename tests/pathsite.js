@@ -37,6 +37,16 @@ const srv = http.createServer((req, res) => {
   await page.goto(base + '/#/s/royalskate'); await page.waitForSelector('iframe#sf', { timeout: 8000 });
   check('hash route #/s/slug is isolated too', true);
   check('no page errors', h.errors.length === 0 || (console.log(h.errors), false));
-  await h.close(); srv.close();
+  await h.close();
+  // ---- subdomain mode: only when public.sites_root_domain is set (empty = path links only) ----
+  for (const [root, expectSite] of [['mydomain.ly', true], ['', false]]) {
+    const hh = await launch({ role: 'customer', signedIn: false, tables: { platform_settings: [{ key: 'public.sites_root_domain', value: root }], plans: [] }, rpc: { get_published_site: (b) => (b.p_slug === 'royal' ? [{ website_id: 'w1', html, hash: 'h' }] : []) } });
+    await hh.context.route('http://royal.mydomain.ly/**', async (route) => { const u = new URL(route.request().url()); const r = await route.fetch({ url: base + u.pathname + u.search }); await route.fulfill({ response: r }); });
+    await hh.page.goto('http://royal.mydomain.ly/'); await hh.page.waitForTimeout(1500);
+    const shown = (await hh.page.locator('#x').count()) === 1;
+    check(`root domain "${root || '(empty)'}": ${expectSite ? 'royal.mydomain.ly shows the site' : 'platform shown, no site'}`, shown === expectSite);
+    await hh.close();
+  }
+  srv.close();
   process.exit(fails ? 2 : 0);
 })();
