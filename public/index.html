@@ -429,6 +429,11 @@ function boClose(){const el=$('#bo');if(el)el.remove()}
 async function runApply(id,sid){
   boOpen(t('mr_applying'),t('mr_applying_s'),[]);
   try{const j=await fnPost('ai-gateway',{action:'apply',request_id:id});if(!j.ok)throw new Error(t(j.error||'err'));
+    if(sid){try{
+      const r=await sb.rpc('request_publish',{p_site:sid});if(r.error)throw new Error(t(r.error.message));
+      const pj=await fnPost('verify-publish',{deployment_id:r.data});if(!pj.ok)throw new Error(t('pubfail')+': '+(pj.error||''));
+      boDone(t('mr_done'),t('mr_done_s')+' · '+t('pubok'),[`<a class="btn p lg" href="${esc(pj.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`]);return
+    }catch(pe){}}
     boDone(t('mr_done'),t('mr_done_s'),[`<button class="btn p lg" data-act="boview" data-id="${sid||''}">${t('preview')}</button>`,`<button class="btn s lg" data-act="boclose">${t('close')||'×'}</button>`])}
   catch(x){boDone(t('pubfail').replace(/.*/,t('err')),x.message,[`<button class="btn p lg" data-act="aiapply" data-id="${id}" data-site="${sid||''}">${t('mr_apply')}</button>`,`<button class="btn s lg" data-act="boclose">×</button>`],true)}
 }

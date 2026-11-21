@@ -119,10 +119,24 @@ async function setting(key: string): Promise<string | null> {
 class AIError extends Error { constructor(public code: string, public status = 502) { super(code); } }
 
 // Candidate models for a task, cheapest first, from enabled providers with a saved key (no network call).
+//
+// FIX (2026-11-21): providers used to be tried strictly by `priority`, so a
+// provider with a known-bad key (health='down' from a previous failed
+// "test" call, e.g. a leftover test entry) could sit ahead of a working one
+// at the same priority and eat a slow failed request on every single build
+// before falling back. Providers are now ranked healthy-first (down last)
+// within the same priority tier; a down provider is still tried as a last
+// resort rather than skipped outright, in case it has since recovered.
 async function candidates(task: string) {
   const { data: providers } = await db.from("ai_providers").select("*").eq("enabled", true).not("secret_id", "is", null).order("priority", { ascending: true });
+  const healthRank = (h: string) => (h === "down" ? 2 : h === "degraded" ? 1 : 0);
+  const ranked = (providers ?? []).slice().sort((a: any, b: any) => {
+    const pa = Number(a.priority ?? 100), pb = Number(b.priority ?? 100);
+    if (pa !== pb) return pa - pb;
+    return healthRank(a.health) - healthRank(b.health);
+  });
   const out: { provider: any; model: any }[] = [];
-  for (const p of providers ?? []) {
+  for (const p of ranked) {
     const { data: models } = await db.from("ai_models").select("*").eq("provider_id", p.id).eq("enabled", true);
     const pool = models ?? [];
     let cand = pool.filter((m: any) => m.usage_type === task);
