@@ -1,0 +1,7 @@
+{
+  "name": "ibtikar-node-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Starting skeleton for a Node.js port of the IBTIKAR dashboard (second language for later scale). Mirrors php-app/index.php's structure 1:1 — only home + login are implemented; extend following that file.",
+  "scripts": { "start": "node server.js" }
+}
