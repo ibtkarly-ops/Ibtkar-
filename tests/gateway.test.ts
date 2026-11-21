@@ -342,7 +342,7 @@ Deno.test("app_chat: imports outside the allow-list and unsafe code are rejected
 
 // ---- must-have checks, plan and repair ----
 Deno.test("build reports which customer-requested features are missing; repair adds them", async () => {
-  reset(); T.websites[0].site_type = "store"; T.websites[0].config.brief = { ...T.websites[0].config.brief, banner: "خصم على كل القطع", bg: "aurora", motion: "strong", float: "1", wa: "0912345678" };
+  reset(); T.websites[0].site_type = "store"; T.websites[0].config.brief = { ...T.websites[0].config.brief, banner: "خصم على كل القطع", bg: "aurora", motion: "strong", float: "1", wa: "0912345678", banners: [{ t: "عروض الصيف", img: "https://x.supabase.co/storage/v1/object/public/site-assets/s1/b.webp", u: "javascript:alert(1)" }] };
   providerBehavior = anthropicFake({ text: HTML });   // a plain page: no banner, no animated bg, ...
   await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
   let sent = "";
@@ -352,6 +352,7 @@ Deno.test("build reports which customer-requested features are missing; repair a
   assert(r.json.ok === true && ["banner", "bg", "motion", "float", "cart"].every((x) => r.json.missing.includes(x)), "missing reported: " + JSON.stringify(r.json));
   assert(sent.includes("promo-banner") && sent.includes("خصم على كل القطع") && sent.includes("must_have"), "requirements sent to the AI with the customer's own banner text");
   assert(sent.includes("cart-btn") && sent.includes("أرسل الطلب عبر واتساب"), "cart requirement sent for a store with WhatsApp");
+  assert(sent.includes("banners") && sent.includes("عروض الصيف") && sent.includes("site-assets/s1/b.webp") && !sent.includes("javascript:"), "customer banners (text + own image) sent to the AI, unsafe links dropped");
   const FIXED = HTML.replace("<body>", `<body><div id="promo-banner">x</div><div data-animated-bg="aurora"></div><style>@keyframes a{}</style><script>new IntersectionObserver(()=>{})</script><a id="wa-float" href="https://wa.me/218912345678"></a><button id="cart-btn"></button><aside id="cart"></aside><script>encodeURIComponent("x")</script>`);
   providerBehavior = anthropicFake({ text: FIXED });
   const f = await call("cust", { action: "repair", website_id: "site1" });
