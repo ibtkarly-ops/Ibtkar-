@@ -1,0 +1,15 @@
+{
+  "name": "ابتكار | IBTIKAR",
+  "short_name": "ابتكار",
+  "description": "ابتكر موقعك بمحادثة — أنشئ موقعك واستضفه وعدّله من مكان واحد.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2433ff",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

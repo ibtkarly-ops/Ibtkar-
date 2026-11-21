@@ -1,0 +1,1195 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="ibtikar-app" content="1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ابتكار | IBTIKAR</title>
+<meta name="description" content="ابتكر موقعك بمحادثة: صف ما تريد بكلماتك، ونجهّز لك موقعاً كاملاً تعدّله وتنشره وتتابعه من مكان واحد.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://ibtkar.ly/">
+<meta name="theme-color" content="#2433ff">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/favicon.svg">
+<link rel="manifest" href="/manifest.json">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ابتكار | IBTIKAR">
+<meta property="og:title" content="ابتكار | IBTIKAR">
+<meta property="og:description" content="ابتكر موقعك بمحادثة: صف ما تريد بكلماتك، ونجهّز لك موقعاً كاملاً تعدّله وتنشره وتتابعه من مكان واحد.">
+<meta property="og:url" content="https://ibtkar.ly/">
+<meta property="og:locale" content="ar_AR">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ابتكار | IBTIKAR">
+<meta name="twitter:description" content="ابتكر موقعك بمحادثة: صف ما تريد بكلماتك، ونجهّز لك موقعاً كاملاً تعدّله وتنشره وتتابعه من مكان واحد.">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
+<style>
+.skip-link{position:absolute;inset-inline-start:-9999px;top:auto;background:var(--ac);color:#fff;padding:10px 18px;border-radius:0 0 12px 12px;z-index:100;font-weight:500}
+.skip-link:focus{inset-inline-start:12px;top:0}
+:root{--bg:#fff;--bg2:#F7F8FA;--tx:#171717;--tx2:#6b7280;--bd:#EAECEF;--ac:#2433ff;--ac2:#00c2a8;--ok:#16a34a;--wa:#f59e0b;--er:#dc2626;--g:linear-gradient(115deg,#2433ff 0%,#5b4bff 48%,#00c2a8 100%);--sh:0 1px 2px rgba(23,23,23,.04),0 14px 34px -18px rgba(23,23,23,.22)}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font:400 15px/1.75 'IBM Plex Sans Arabic',system-ui,sans-serif;color:var(--tx);background:var(--bg);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.wrap{max-width:1180px;margin:auto;padding:0 22px}
+nav{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.78);backdrop-filter:saturate(1.6) blur(16px);border-bottom:1px solid rgba(234,236,239,.8)}
+nav .wrap{display:flex;align-items:center;gap:16px;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:-.01em}
+.logo i{width:34px;height:34px;border-radius:11px;background:var(--g);display:grid;place-items:center;color:#fff;font-style:normal;font-size:18px;box-shadow:0 8px 18px -8px var(--ac)}
+nav .links{display:flex;gap:2px;margin-inline-start:18px}
+nav .links a{padding:7px 14px;border-radius:10px;color:var(--tx2);font-weight:500;transition:.2s}
+nav .links a:hover,nav .links a.on{background:var(--bg2);color:var(--tx)}
+.sp{flex:1}
+.btn{border:0;cursor:pointer;border-radius:12px;padding:10px 20px;font-weight:500;transition:transform .15s,box-shadow .25s,background-position .4s;display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1.4}
+.btn:active{transform:scale(.96)}
+.btn.p{background:var(--g);background-size:170% 100%;color:#fff;box-shadow:0 10px 24px -10px var(--ac),inset 0 1px 0 rgba(255,255,255,.25)}
+.btn.p:hover{background-position:100% 0;box-shadow:0 14px 28px -10px var(--ac)}
+.btn.s{background:#fff;border:1px solid var(--bd);box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.btn.s:hover{border-color:#cfd3da;background:var(--bg2)}
+.btn.d{background:#fff;border:1px solid #fecaca;color:var(--er)}
+.btn.sm{padding:5px 12px;font-size:13px;border-radius:9px}
+.btn.lg{padding:14px 28px;font-size:16px;border-radius:14px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+#bar{background:var(--g);color:#fff;text-align:center;padding:8px 16px;font-size:14px;font-weight:500}
+main{animation:in .4s cubic-bezier(.2,.7,.2,1) both}
+@keyframes in{from{opacity:0;transform:translateY(10px)}}
+.heroW{position:relative;overflow:hidden}
+.heroW::before,.heroW::after{content:"";position:absolute;width:560px;height:560px;border-radius:50%;filter:blur(90px);opacity:.28;z-index:-1;animation:bl 14s ease-in-out infinite}
+.heroW::before{background:#5b4bff;top:-220px;inset-inline-start:-160px}
+.heroW::after{background:#00c2a8;top:40px;inset-inline-end:-200px;animation-delay:-6s}
+@keyframes bl{50%{transform:translate(40px,30px) scale(1.08)}}
+.hero{padding:92px 0 70px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+.hero h1{font-size:clamp(40px,6vw,76px);line-height:1.1;font-weight:700;letter-spacing:-.035em}
+.hero h1 span{background:var(--g);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% 100%;animation:sh 7s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.hero p.lead{color:var(--tx2);font-size:19px;margin:22px 0 32px;max-width:44ch}
+.mock{border:1px solid var(--bd);border-radius:22px;background:#fff;box-shadow:0 40px 80px -40px rgba(36,51,255,.45);overflow:hidden;position:relative;animation:fl 8s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-10px)}}
+.mock .top{display:flex;gap:6px;align-items:center;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--bd)}
+.mock .top b{width:10px;height:10px;border-radius:50%;background:#d8dce2}
+.mock .top em{flex:1;margin:0 12px;background:#fff;border:1px solid var(--bd);border-radius:8px;font-style:normal;font-size:12px;color:var(--tx2);padding:1px 12px;direction:ltr;text-align:start}
+.mock .bd{padding:20px;display:grid;gap:12px}
+.mock .chat{background:var(--bg2);border-radius:14px;padding:11px 16px;font-size:14px;overflow:hidden;white-space:nowrap;width:0;animation:ty 3s steps(34) .6s forwards}
+@keyframes ty{to{width:100%}}
+.mock .blk{border-radius:12px;background:linear-gradient(100deg,#eceeff,#e2fbf7);opacity:0;transform:scale(.94);animation:pop .5s ease forwards}
+.mock .b1{height:84px;animation-delay:3.8s}.mock .b2{height:36px;width:62%;animation-delay:4.2s}
+.mock .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.mock .b3{height:64px}
+.mock .row .b3:nth-child(1){animation-delay:4.6s}.mock .row .b3:nth-child(2){animation-delay:4.8s}.mock .row .b3:nth-child(3){animation-delay:5s}
+.mock .live{position:absolute;bottom:16px;inset-inline-end:16px;opacity:0;animation:pop .5s ease 5.6s forwards}
+@keyframes pop{to{opacity:1;transform:none}}
+.sec{padding:72px 0}.sec h2{font-size:clamp(28px,3.6vw,42px);line-height:1.2;letter-spacing:-.025em;margin-bottom:10px}.sec .sub{color:var(--tx2);margin-bottom:34px;max-width:56ch;font-size:17px}
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.bento{display:grid;gap:18px;grid-template-columns:repeat(6,1fr)}
+.bento .card:nth-child(1){grid-column:span 4;background:linear-gradient(135deg,#f3f4ff,#eafbf8)}
+.bento .card:nth-child(2){grid-column:span 2}
+.bento .card:nth-child(3),.bento .card:nth-child(4),.bento .card:nth-child(5){grid-column:span 2}
+.bento .card:nth-child(6){grid-column:span 6;background:var(--tx);color:#fff;border-color:var(--tx)}.bento .card:nth-child(6) p{color:#b8bcc6}
+.bento .card h3{font-size:20px}
+.card{background:#fff;border:1px solid var(--bd);border-radius:20px;padding:24px;box-shadow:var(--sh)}
+.card.h{transition:transform .25s,box-shadow .25s,border-color .25s}.card.h:hover{transform:translateY(-4px);border-color:#d6d9ff;box-shadow:0 24px 44px -24px rgba(36,51,255,.35)}
+.card h3{font-size:17px;margin-bottom:6px;letter-spacing:-.01em}.card p{color:var(--tx2);font-size:14.5px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:s}
+.steps .card{position:relative;padding-top:56px}
+.steps .card::before{counter-increment:s;content:counter(s);position:absolute;top:18px;inset-inline-start:22px;width:30px;height:30px;border-radius:50%;background:var(--g);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.faq details{border-bottom:1px solid var(--bd);padding:16px 0}
+.faq summary{cursor:pointer;font-weight:500;font-size:16px;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.faq summary::after{content:"+";color:var(--ac);font-size:22px;line-height:1;transition:transform .25s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq p{color:var(--tx2);margin-top:10px;max-width:70ch}
+.cta{margin:30px 0 10px;border-radius:28px;padding:56px 28px;text-align:center;color:#fff;background:var(--g);background-size:200% 100%;animation:sh 10s linear infinite}
+.cta h2{margin-bottom:8px}.cta p{opacity:.9;margin-bottom:24px}
+.cta .btn{background:#fff;color:var(--ac)}
+.price{font-size:38px;font-weight:700;letter-spacing:-.03em}.price small{font-size:14px;color:var(--tx2);font-weight:400}
+.chip{display:inline-block;padding:2px 11px;border-radius:99px;font-size:12px;font-weight:500;background:var(--bg2);border:1px solid var(--bd)}
+.chip.ok{background:#ecfdf3;color:var(--ok);border-color:#bbf7d0}.chip.wa{background:#fffbeb;color:#b45309;border-color:#fde68a}.chip.er{background:#fef2f2;color:var(--er);border-color:#fecaca}
+.soon{text-align:center;padding:90px 0}
+input,select,textarea{width:100%;padding:11px 14px;border:1px solid var(--bd);border-radius:12px;background:#fff;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(36,51,255,.1);outline:0}
+textarea{min-height:100px;resize:vertical}
+textarea.code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.55;min-height:420px;direction:ltr;text-align:left}
+label{display:block;font-size:13px;color:var(--tx2);margin:14px 0 6px;font-weight:500}
+.auth{max-width:420px;margin:72px auto;padding:32px}
+.dash{display:grid;grid-template-columns:240px 1fr;gap:32px;padding:30px 0 10px;min-height:72vh}
+.side{display:grid;gap:3px;align-content:start;position:sticky;top:92px;height:max-content}
+.side a{display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:12px;color:var(--tx2);font-weight:500;transition:.2s}
+.side a svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.side a:hover{background:var(--bg2);color:var(--tx)}
+.side a.on{background:#f1f2ff;color:var(--ac)}
+.ph{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.ph h1,.dash h2{font-size:26px;letter-spacing:-.02em;line-height:1.3}.ph p{color:var(--tx2);font-size:14px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--bd);margin-bottom:24px;overflow-x:auto}
+.tabs a{padding:10px 16px;color:var(--tx2);font-weight:500;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.2s}
+.tabs a:hover{color:var(--tx)}.tabs a.on{color:var(--ac);border-color:var(--ac)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:22px}
+.stat b{display:block;font-size:34px;letter-spacing:-.03em;line-height:1.2}.stat span{color:var(--tx2);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:start;padding:12px 14px;border-bottom:1px solid var(--bd)}th{color:var(--tx2);font-weight:500;background:var(--bg2);font-size:13px}
+tbody tr{transition:background .15s}tbody tr:hover{background:#fafbfc}tbody tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto;border:1px solid var(--bd);border-radius:16px;background:#fff;box-shadow:var(--sh)}
+.row2{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row2>*{flex:0 0 auto}
+.sk{height:96px;border-radius:18px;background:linear-gradient(90deg,var(--bg2) 25%,#eef0f3 50%,var(--bg2) 75%);background-size:200% 100%;animation:sk 1.2s infinite}
+@keyframes sk{to{background-position:-200% 0}}
+.empty{text-align:center;color:var(--tx2);padding:48px 14px;border:1.5px dashed var(--bd);border-radius:20px;background:var(--bg2)}
+#toast{position:fixed;bottom:24px;inset-inline:0;display:grid;place-items:center;gap:8px;pointer-events:none;z-index:50}
+#toast div{background:var(--tx);color:#fff;padding:11px 20px;border-radius:14px;animation:in .25s ease;max-width:90vw;box-shadow:0 18px 40px -16px rgba(0,0,0,.5)}
+#toast div.e{background:var(--er)}
+iframe{width:100%;height:440px;border:1px solid var(--bd);border-radius:16px;background:#fff;transition:width .35s}
+.edit{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+footer{border-top:1px solid var(--bd);padding:30px 0;color:var(--tx2);font-size:14px;margin-top:50px;background:var(--bg2)}
+@media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:44px}.dash{grid-template-columns:1fr}.side{display:flex;overflow-x:auto;position:static}.side a{white-space:nowrap}nav .links{display:none}.bento .card,.bento .card:nth-child(n){grid-column:span 6}.steps{grid-template-columns:1fr}.edit{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.mock .chat{width:100%}.mock .blk,.mock .live{opacity:1;transform:none}}
+
+.logo small{display:block;font-size:9px;letter-spacing:.32em;color:var(--tx2);font-weight:500;line-height:1}
+.logo span{line-height:1.15}
+.ics{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-inline-end:8px}
+body.appmode nav,body.appmode footer,body.appmode #bar{display:none}
+.app{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
+.sb{background:#fff;border-inline-end:1px solid var(--bd);padding:22px 16px 18px;display:flex;flex-direction:column;gap:5px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb .logo{padding:2px 10px 22px}
+.sb a.it{display:flex;gap:12px;align-items:center;padding:11px 14px;border-radius:13px;color:var(--tx2);font-weight:500;transition:.2s}
+.sb a.it:hover{background:var(--bg2);color:var(--tx);transform:translateX(0)}
+.sb a.it.on{background:var(--g);color:#fff;box-shadow:0 12px 24px -12px var(--ac)}
+.promo{margin-top:auto;border-radius:18px;padding:18px;background:var(--g);color:#fff;position:relative;overflow:hidden}
+.promo p{font-size:13px;opacity:.9;margin:4px 0 12px}.promo .btn{background:#fff;color:var(--ac)}
+.sb .lo{margin-top:10px}
+.mn{background:var(--bg2);min-width:0}
+.tb{display:flex;align-items:center;gap:12px;padding:14px 28px;background:rgba(247,248,250,.85);backdrop-filter:blur(14px);position:sticky;top:0;z-index:15}
+.search{flex:1;max-width:560px;position:relative}
+.search .ics{position:absolute;top:13px;inset-inline-start:14px;color:var(--tx2)}
+.search input{padding-inline-start:42px;border-radius:14px}
+.sres{position:absolute;top:50px;inset-inline:0;background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);overflow:hidden;z-index:20}
+.sres a{display:flex;justify-content:space-between;padding:10px 14px}.sres a:hover{background:var(--bg2)}.sres small{color:var(--tx2)}
+.ib{width:42px;height:42px;border-radius:13px;border:1px solid var(--bd);background:#fff;display:grid;place-items:center;cursor:pointer;position:relative;color:var(--tx)}
+.ib em{position:absolute;top:-5px;inset-inline-end:-5px;background:var(--er);color:#fff;font-size:11px;font-style:normal;border-radius:99px;min-width:19px;height:19px;display:grid;place-items:center;padding:0 4px}
+.who{display:flex;gap:10px;align-items:center;line-height:1.3}.who small{display:block;color:var(--tx2);font-size:12px}
+.av{width:40px;height:40px;border-radius:50%;background:var(--g);color:#fff;display:grid;place-items:center;font-weight:700}
+.ct{padding:6px 28px 44px}
+.banner{border-radius:24px;padding:32px 36px;color:#fff;background:var(--g);position:relative;overflow:hidden;display:flex;align-items:center;gap:24px;justify-content:space-between}
+.banner::after{content:"";position:absolute;inset-inline-end:-70px;top:-80px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,.14)}
+.banner h1{font-size:28px;letter-spacing:-.02em}.banner p{opacity:.92;margin:4px 0 14px}.banner .chip{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff}
+.banner svg.bl{width:96px;height:96px;filter:drop-shadow(0 10px 20px rgba(0,0,0,.2));flex:none}.banner svg.bl path{fill:#fff!important}
+.ico{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:#eef0ff;color:var(--ac);flex:none}
+.statc{display:flex;gap:14px;align-items:center;margin-bottom:6px}.big{font-size:28px;letter-spacing:-.03em;display:block;line-height:1.2}
+.spark{width:100%;height:38px;display:block}
+.dgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;margin-top:18px}
+.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+.s4{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px;margin-top:18px}
+.rg{display:flex;gap:4px;background:var(--bg2);padding:4px;border-radius:12px;flex-wrap:wrap}
+.rg button,.rg a{border:0;background:transparent;padding:5px 13px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--tx2);font-weight:500}
+.rg .on{background:#fff;color:var(--ac);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.draw{stroke-dasharray:1000;stroke-dashoffset:1000;animation:dr 1.4s ease forwards}@keyframes dr{to{stroke-dashoffset:0}}
+.bar{display:grid;grid-template-columns:minmax(70px,1.2fr) 2fr auto;gap:10px;align-items:center;margin:9px 0;font-size:13.5px}
+.bar div{height:8px;background:var(--bg2);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--g);border-radius:9px}
+.li{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--bd)}.li:last-child{border:0}.li small{color:var(--tx2);display:block}
+.pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}.pills span{display:flex;gap:8px;align-items:center;color:var(--tx2);font-weight:500;background:#fff;border:1px solid var(--bd);padding:7px 14px;border-radius:99px;font-size:14px}.pills .ics{color:var(--ac)}
+.svc{padding:34px;background:linear-gradient(135deg,#f3f4ff,#eafbf8);margin-top:10px}.svc h2{font-size:34px;margin:10px 0 6px}.svc>p{color:var(--tx2)}
+.ctr{text-align:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.minip{display:grid;grid-template-columns:120px 1fr;min-height:200px}.minip aside{background:var(--bg2);padding:12px;display:grid;gap:8px;align-content:start}.minip aside i{height:22px;border-radius:7px;background:#e6e8ee}.minip aside i:first-child{background:var(--g)}
+.minip main{padding:14px;display:grid;gap:10px;align-content:start;animation:none}.minip main i{height:46px;border-radius:10px;background:linear-gradient(100deg,#eceeff,#e2fbf7)}
+.chk{display:grid;gap:10px;margin-top:14px}.chk div{display:flex;gap:10px;align-items:center}.chk .ics{color:var(--ok)}
+.plan ul{list-style:none;padding:0;margin:14px 0 18px;display:grid;gap:8px;color:var(--tx2);font-size:14px}.plan li::before{content:"✓";color:var(--ok);margin-inline-end:8px;font-weight:700}
+.fcols{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px}.fcols a{display:block;padding:3px 0}.fcols a:hover{color:var(--ac)}.fcols b{color:var(--tx);display:block;margin-bottom:6px}
+body.dark{--bg:#0f1330;--bg2:#0b0e24;--tx:#eef0ff;--tx2:#9aa0c0;--bd:#232850;--sh:none}
+body.dark .card,body.dark .sb,body.dark .tw,body.dark input,body.dark select,body.dark textarea,body.dark .btn.s,body.dark .ib,body.dark .sres,body.dark .pills span,body.dark .btn.d,body.dark .mock,body.dark .rg .on,body.dark .empty{background:#151a3d}
+body.dark .tb{background:rgba(11,14,36,.85)}body.dark th{background:#0f1330}body.dark .chip{background:#1b2150}body.dark .ico{background:#1b2150}
+body.dark nav{background:rgba(15,19,48,.8)}body.dark footer{background:#0b0e24}body.dark .svc{background:#151a3d}body.dark tbody tr:hover{background:#1a2048}
+body.dark .bento .card:nth-child(1){background:#151a3d}body.dark .bento .card:nth-child(6){background:#000}
+@media(max-width:1100px){.c4,.c5,.c6,.c7,.c8{grid-column:span 12}}
+@media(max-width:900px){.app{grid-template-columns:1fr}.sb{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:10px;gap:4px}.sb .logo,.promo,.sb .lo{display:none}.sb a.it{white-space:nowrap}.ct{padding:6px 14px 30px}.tb{padding:10px 14px}.who div:last-child{display:none}.banner svg.bl{display:none}.grid2,.fcols{grid-template-columns:1fr}}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 16px}
+.fcard h3{margin:26px 0 2px;font-size:16px}.fcard h3:first-child{margin-top:0}
+.dom{display:flex;direction:ltr}.dom input{border-radius:12px 0 0 12px;direction:ltr;text-align:left}.dom span{display:grid;place-items:center;padding:0 16px;background:var(--bg2);border:1px solid var(--bd);border-inline-start:0;border-radius:0 12px 12px 0;color:var(--tx2);white-space:nowrap}
+.sw{display:flex;gap:10px;flex-wrap:wrap}.sw label{margin:0;cursor:pointer}.sw input{display:none}.sw i{display:block;width:40px;height:40px;border-radius:12px;border:3px solid transparent;box-shadow:0 0 0 1px var(--bd);transition:.15s}.sw input:checked+i{border-color:var(--tx);transform:scale(1.08)}
+.tpls{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.tpl{cursor:pointer;margin:0!important;display:block}.tpl input{position:absolute;opacity:0;pointer-events:none}
+.tpl .thumb{width:100%;aspect-ratio:10/7;overflow:hidden;border:2px solid var(--bd);border-radius:14px;position:relative;background:#fff;transition:.2s}
+.tpl .thumb iframe{width:1000px;height:700px;border:0;border-radius:0;transform:scale(.21);transform-origin:top left;pointer-events:none;position:absolute;top:0;left:0}
+[dir=rtl] .tpl .thumb iframe{left:auto;right:0;transform-origin:top right}
+.tpl:hover .thumb{border-color:#c9cdf9}.tpl input:checked+.thumb{border-color:var(--ac);box-shadow:0 0 0 4px rgba(36,51,255,.14)}
+.tpl b{display:block;margin-top:8px;font-weight:500;color:var(--tx)}
+.app{grid-template-columns:1fr}.ct{max-width:1180px;margin:auto}
+.tb .logo{margin-inline-end:6px}.tb .logo span{display:none}
+.dots{font-size:22px;line-height:1;letter-spacing:1px;font-weight:700;transition:transform .2s}.dots:hover{transform:scale(1.08)}
+body.noscroll{overflow:hidden}
+.sheet{position:fixed;inset:0;z-index:60}
+.sheet-bg{position:absolute;inset:0;background:rgba(15,19,48,.45);backdrop-filter:blur(8px);animation:fadeIn .25s ease}
+.sheet-p{position:absolute;top:70px;inset-inline-end:22px;width:min(440px,calc(100vw - 28px));max-height:calc(100vh - 90px);overflow:auto;background:#fff;border:1px solid var(--bd);border-radius:26px;padding:20px;box-shadow:0 40px 80px -30px rgba(36,51,255,.45);animation:pop2 .32s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes fadeIn{from{opacity:0}}@keyframes pop2{from{opacity:0;transform:translateY(-14px) scale(.92)}}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.sheet-g{margin-bottom:14px}.sheet-g>small{display:block;color:var(--tx2);font-size:12px;margin:6px 4px 8px;font-weight:500}
+.sheet-i{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet-i a{display:flex;flex-direction:column;gap:10px;align-items:flex-start;padding:14px;border-radius:18px;background:var(--bg2);border:1px solid transparent;font-weight:500;opacity:0;animation:rise .4s ease forwards;transition:transform .2s,border-color .2s,background .2s}
+.sheet-i a:hover{transform:translateY(-3px);border-color:#c9ceff;background:#f1f2ff}.sheet-i a.on{background:var(--g);color:#fff}
+.sheet-i a .ico{width:38px;height:38px;border-radius:12px}.sheet-i a.on .ico{background:rgba(255,255,255,.22);color:#fff}
+@keyframes rise{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}
+.sheet-f{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;padding-top:14px;border-top:1px solid var(--bd)}
+body.dark .sheet-p{background:#151a3d}body.dark .sheet-i a:hover{background:#1b2150}
+.tcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:12px 0 22px}
+.tc{cursor:pointer;margin:0}.tc input{position:absolute;opacity:0;width:0}
+.tc>div{display:flex;flex-direction:column;gap:6px;padding:20px;border:2px solid var(--bd);border-radius:22px;background:#fff;transition:transform .25s,border-color .25s,box-shadow .25s;height:100%}
+.tc .te{font-size:34px;line-height:1}.tc small{color:var(--tx2);font-size:13px;line-height:1.5}
+.tc:hover>div{transform:translateY(-4px);box-shadow:0 20px 40px -24px rgba(36,51,255,.5)}
+.tc input:checked+div{border-color:var(--ac);background:linear-gradient(135deg,#f3f4ff,#eafbf8);box-shadow:0 20px 44px -22px rgba(36,51,255,.55)}
+.tc input:focus-visible+div{outline:2px solid var(--ac);outline-offset:3px}
+body.dark .tc>div{background:#151a3d}body.dark .tc input:checked+div{background:#1b2150}
+.bo{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:radial-gradient(circle at 30% 20%,rgba(91,75,255,.35),transparent 55%),radial-gradient(circle at 80% 80%,rgba(0,194,168,.3),transparent 50%),rgba(12,14,36,.82);backdrop-filter:blur(14px);animation:fadeIn .3s ease;padding:20px}
+.bo-c{width:min(480px,100%);background:rgba(255,255,255,.96);border-radius:32px;padding:38px 30px;text-align:center;box-shadow:0 50px 100px -30px rgba(0,0,0,.6);animation:pop2 .45s cubic-bezier(.2,.9,.3,1.2)}
+body.dark .bo-c{background:#151a3d}
+.bo-c h2{font-size:28px;letter-spacing:-.02em;margin:18px 0 6px}.bo-c p{color:var(--tx2);margin-bottom:18px;word-break:break-word}
+.orb{position:relative;width:96px;height:96px;margin:auto}.orb i{position:absolute;inset:0;border-radius:50%;background:var(--g);opacity:.5;animation:orb 2.4s ease-in-out infinite}
+.orb i:nth-child(2){animation-delay:.8s;filter:blur(6px)}.orb i:nth-child(3){inset:22px;opacity:1;animation:none;box-shadow:0 0 40px var(--ac2)}
+@keyframes orb{0%,100%{transform:scale(.7);opacity:.6}50%{transform:scale(1.15);opacity:.15}}
+.bo.ok .orb i:nth-child(1),.bo.ok .orb i:nth-child(2){animation:none;opacity:.25}.bo.ok .orb i:nth-child(3){background:linear-gradient(135deg,#16a34a,#00c2a8);box-shadow:0 0 50px #16a34a88;animation:beat 1.2s ease 2}
+@keyframes beat{50%{transform:scale(1.15)}}
+.bo-s{list-style:none;padding:0;display:grid;gap:10px;text-align:start;margin:6px 0 18px}
+.bo-s li{display:flex;gap:12px;align-items:center;padding:12px 16px;border-radius:14px;background:var(--bg2);color:var(--tx2);transition:.35s}
+.bo-s li::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid #c3c8d4;flex:none}
+.bo-s li.now{background:#f1f2ff;color:var(--tx);font-weight:500}.bo-s li.now::before{border-color:var(--ac);border-top-color:transparent;animation:spin .8s linear infinite}
+.bo-s li.done{color:var(--tx)}.bo-s li.done::before{content:"✓";border:0;background:var(--ok);color:#fff;width:20px;height:20px;display:grid;place-items:center;font-size:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bo-a{margin-top:6px}.bo.err .orb i:nth-child(3){background:linear-gradient(135deg,#dc2626,#f59e0b);box-shadow:0 0 40px #dc262666}.bo.err .orb i:nth-child(1),.bo.err .orb i:nth-child(2){animation:none}
+.conf{position:absolute;top:-10px;width:10px;height:16px;border-radius:3px;animation:fall 2.4s ease-in forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.2}}
+.pricecard{margin-top:12px;padding:16px;border-radius:18px;background:linear-gradient(135deg,#f3f4ff,#eafbf8);border:1px solid #d6d9ff}
+.pricecard strong{display:block;font-size:34px;letter-spacing:-.03em;line-height:1.2}.pricecard small{color:var(--tx2)}.pricecard p{margin:8px 0 14px;color:var(--tx2);font-size:14px}
+body.dark .pricecard{background:#1b2150;border-color:#2a3170}
+.rq{margin-bottom:14px}
+@media(prefers-reduced-motion:reduce){.sheet-i a{opacity:1}.orb i,.conf{animation:none!important}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#v">تخطي إلى المحتوى / Skip to content</a>
+<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#2433ff"/><stop offset="1" stop-color="#00c2a8"/></linearGradient></defs></svg>
+<div id="bar" hidden></div>
+<nav><div class="wrap">
+  <a class="logo" href="#/"><i>ا</i><span>ابتكار</span></a>
+  <div class="links" id="links"></div><div class="sp"></div>
+  <button class="btn s sm" data-act="lang" id="langbtn">EN</button>
+  <span id="auth"></span>
+</div></nav>
+<main id="v"></main>
+<footer><div class="wrap" id="foot"></div></footer>
+<div id="toast"></div>
+
+<script>
+const SB_URL='https://ppegbmqkcdwopakewetl.supabase.co';
+const SB_KEY='sb_publishable_5Ch9XW29qSLTxPuqvVVBnA_jjHsHtu0';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+
+const T={
+ar:{home:'الرئيسية',pricing:'الباقات',apps:'التطبيقات',login:'دخول',signup:'إنشاء حساب',logout:'خروج',dash:'لوحتي',admin:'الإدارة',
+h1:'ابتكر موقعك بمحادثة',sub:'صف ما تريد بكلماتك، ونجهّز لك موقعاً كاملاً تعدّله وتنشره وتتابعه من مكان واحد.',start:'ابدأ مجاناً',see:'شاهد الباقات',
+f1:'إنشاء بالمحادثة',f1d:'اكتب فكرتك بالعربية أو الإنجليزية ويصلك موقع جاهز للمعاينة.',f2:'تعديل سهل',f2d:'غيّر الألوان والنصوص بجملة، وارجع لأي نسخة سابقة.',f3:'نطاقات ونسخ',f3d:'اربط نطاقك وتابع حالة الموقع وأرجع لأي نسخة سابقة.',f4:'تحكم كامل',f4d:'فريق وصلاحيات وفواتير وتحليلات في لوحة واحدة.',
+perMo:'/ شهر',sites:'مواقع',storage:'ميغابايت',free:'مجاني',choose:'اختر الباقة',
+soon:'قريباً',appsT:'ابتكار للتطبيقات',appsD:'أنشئ تطبيقات Android وiOS بنفس السهولة. اترك بريدك وسنخبرك عند الإطلاق.',email:'البريد الإلكتروني',notify:'أبلغني',notified:'سجلنا اهتمامك، سنراسلك عند الإطلاق.',
+pass:'كلمة المرور',name:'الاسم',noacc:'ليس لديك حساب؟',haveacc:'لديك حساب؟',checkmail:'أرسلنا رابط التفعيل إلى بريدك.',
+mysites:'مواقعي',newsite:'موقع جديد',sname:'اسم الموقع',stype:'نوع الموقع',create:'إنشاء الموقع',
+nosites:'ما عندك مواقع بعد. أنشئ أول موقع الآن.',desc:'صف الموقع الذي تريده',build:'ابنِ الموقع',building:'جارٍ البناء...',preview:'معاينة',
+publish:'نشر',pubna:'النشر غير مفعّل: خادم الاستضافة لم يُربط بعد',draft:'مسودة',building_:'قيد الإنشاء',published:'منشور',stopped:'متوقف',
+saved:'تم الحفظ',err:'حدث خطأ',nosvc:'خدمة الإنشاء غير مهيّأة بعد',quota:'استنفدت حدّ الشهر',
+users:'المستخدمون',allsites:'كل المواقع',banners:'البانرات',plans:'الباقات',engine:'المحرك',audit:'سجل المراجعة',overview:'نظرة عامة',
+role:'الدور',status:'الحالة',suspend:'إيقاف',activate:'تفعيل',add:'إضافة',del:'حذف',place:'المكان',text:'النص',link:'رابط',active:'فعّال',
+provider:'المزود',kind:'النوع',endpoint:'العنوان (اختياري)',model:'النموذج',setkey:'حفظ المفتاح',test:'اختبار الاتصال',enable:'تفعيل',disable:'تعطيل',
+keyph:'المفتاح السري',health:'الاتصال',notcfg:'غير مهيّأ',healthy:'متصل',degraded:'متقطع',down:'منقطع',priority:'الأولوية',
+price:'السعر',save:'حفظ',views:'مشاهدات',clicks:'نقرات',when:'الوقت',action:'العملية',totalU:'المستخدمون',totalS:'المواقع',totalSub:'الاشتراكات',usage:'طلبات هذا الشهر',
+rights:'جميع الحقوق محفوظة',noaccess:'لا تملك صلاحية الدخول هنا.',loginreq:'سجّل الدخول للمتابعة.',support:'الدعم',notes:'الإشعارات',billing:'الفواتير',newticket:'إرسال التذكرة',subject:'الموضوع',message:'الرسالة',send:'إرسال',open:'مفتوحة',in_progress:'قيد المعالجة',waiting_customer:'بانتظارك',resolved:'تم الحل',closed:'مغلقة',nonotes:'لا إشعارات.',readall:'تعليم الكل كمقروء',quote_ready:'وصلك عرض سعر لطلب تعديل',ticket_reply:'ردّ الدعم على تذكرتك',site_down:'موقعك متوقف',invoices:'الفواتير',amount:'المبلغ',paid:'مدفوعة',pending:'بانتظار الدفع',failed:'فشلت',refunded:'مستردة',markpaid:'تأكيد الدفع',manualpay:'الدفع حالياً بتحويل يدوي. افتح تذكرة دعم وأرسل تفاصيل التحويل، وسيؤكدها الفريق.',customer:'العميل',analytics:'الزيارات (آخر 30 يوماً)',visits:'مشاهدات',uniq:'زوار',toppages:'أكثر الصفحات',versions:'النسخ السابقة',restore:'استرجاع',reqmod:'طلب تعديل',requests:'طلبات التعديل',quote:'تسعير',accept:'قبول',reject:'رفض',monitor:'المراقبة',runcheck:'فحص الآن',checked:'تم فحص المواقع',level:'المستوى',simple:'بسيط',medium:'متوسط',advanced:'متقدم',major:'تطوير كبير',nodata:'لا بيانات بعد',tickets:'التذاكر',invs:'الفواتير',sent:'أُرسل',submitted:'مرسل',quoted:'تم التسعير',approved:'موافق عليه',rejected:'مرفوض',in_progress_:'قيد التنفيذ',done:'منجز',tab_overview:'نظرة عامة',tab_editor:'المحرر',tab_analytics:'الزيارات',tab_versions:'النسخ',tab_requests:'طلبات التعديل',tab_domains:'النطاقات',howT:'ثلاث خطوات',s1:'صف فكرتك',s1d:'اكتب ما تريد بكلماتك، بالعربية أو الإنجليزية.',s2:'عاين وعدّل',s2d:'يصلك موقع جاهز للمعاينة. غيّر أي شيء بجملة أو من المحرر.',s3:'انشر وتابع',s3d:'اربط نطاقك وتابع الزيارات والنسخ من لوحتك.',f5:'عربي وإنجليزي',f5d:'واجهات من اليمين لليسار والعكس، وتبديل فوري.',f6:'بياناتك معزولة',f6d:'كل عميل يرى بياناته فقط، والصلاحيات تُفرض داخل قاعدة البيانات نفسها.',faqT:'أسئلة شائعة',q1:'كيف أدفع؟',a1:'حالياً بتحويل يدوي: تفتح تذكرة دعم وترسل تفاصيل التحويل ونؤكدها لك.',q2:'هل بياناتي آمنة؟',a2:'نعم. كل عميل يرى مواقعه فقط، والمفاتيح السرية تُحفظ مشفّرة على الخادم.',q3:'هل أستطيع التعديل بنفسي؟',a3:'نعم. من محرر الموقع تعدّل الكود مباشرة مع معاينة حيّة، أو تطلب التعديل بجملة.',q4:'ماذا عن التطبيقات؟',a4:'ابتكار للتطبيقات قادم قريباً، وتستطيع تسجيل اهتمامك.',ctaT:'جاهز تبدأ؟',ctaD:'أنشئ حسابك وابنِ أول موقع في دقائق.',dev_d:'حاسوب',dev_t:'لوحي',dev_m:'جوال',editc:'صف التعديل المطلوب',applyc:'طبّق التعديل',previewReady:'جاهز للمعاينة. اضغط حفظ لاعتماده.',domain:'النطاق',adddom:'إضافة نطاق',domnote:'سيبدأ التحقق من النطاق بعد ربط خادم الاستضافة.',rename:'تغيير الاسم',delsite:'حذف الموقع',delwarn:'سيُحذف الموقع وإصداراته ونطاقاته نهائياً. هل أنت متأكد؟',settings:'الإعدادات',open_:'فتح',superonly:'للمدير العام فقط',hello:'أهلاً بك،',dashT:'لوحة التحكم',navAnalytics:'التحليلات',adminsub:'تحكّم كامل بالمنصة والعملاء والمواقع من مكان واحد.',custsub:'تابع مواقعك وزوارك وطلباتك بسهولة.',dbok:'قاعدة البيانات متصلة',dberr:'تعذّر الاتصال بقاعدة البيانات',revenue:'إجمالي الإيرادات',openT:'تذاكر مفتوحة',pubN:'منشورة',visits30:'زيارات (90 يوماً)',signups:'التسجيلات',byStatus:'المواقع حسب الحالة',latestReq:'أحدث الطلبات',servers:'السيرفرات',serversEmpty:'لم يُربط أي سيرفر بعد.',activity:'آخر النشاط',viewAll:'عرض الكل',r7:'7 أيام',r30:'30 يوماً',r90:'90 يوماً',devices:'الأجهزة',referrers:'المصادر',countries:'الدول',direct:'مباشر',allsitesf:'كل المواقع',planUse:'استخدام الباقة',noplan:'لا توجد باقة فعّالة',searchph:'ابحث في لوحة التحكم...',profile:'الملف الشخصي',changepw:'تغيير كلمة المرور',logoutall:'خروج من كل الأجهزة',delreq:'طلب حذف الحساب',delreqd:'سيصل طلبك للفريق ويُنفَّذ وفق سياسة الاحتفاظ.',promoT:'ابتكار.. نصنع المستقبل معاً',promoD:'ابتكار للتطبيقات قادم قريباً',addsrv:'إضافة سيرفر',region:'المنطقة',notverified:'غير مُتحقَّق منه',srvbusy:'عليه مواقع نشطة، انقلها أولاً.',ppv:'صفحات لكل زائر',reqs:'طلبات شهرياً',newusers:'مستخدمون جدد',newsites:'مواقع جديدة',usageReq:'طلبات الإنشاء',paidRev:'إيرادات مدفوعة',topsites:'أكثر المواقع زيارة',
+h1a:'حوّل فكرتك إلى',h1b:'موقع احترافي في ساعات',pill1:'إنشاء سريع',pill2:'تعديل فوري',pill3:'دعم مستمر',pill4:'جودة احترافية',topsvc:'خدمتنا الأبرز',svcWeb:'ابتكار ويب',svcD:'منصة لبناء موقعك وإدارته بسهولة. صف فكرتك وتابع كل التفاصيل من لوحة العميل.',sv1:'إنشاء سريع',sv1d:'حوّل فكرتك إلى موقع جاهز للمعاينة.',sv2:'تعديل فوري',sv2d:'اطلب أي تعديل وشاهده مباشرة.',sv3:'لوحة العميل',sv3d:'تابع مشروعك وطلباتك وفواتيرك.',cpT:'لوحة العميل',cp1:'متابعة حالة المشروع لحظة بلحظة.',cp2:'معاينة موقعك مباشرة.',cp3:'طلب تعديلات وتسعيرها بوضوح.',cp4:'إدارة الفواتير والتواصل مع الدعم.',plansT:'خطط الأسعار',plansD:'اختر الخطة المناسبة لاحتياجاتك.',colSite:'الموقع',colAcc:'الحساب',settingsT:'إعدادات المنصة',baseurl:'عنوان خادم المواقع',baseurlh:'عنوان الـ Worker بعد نشره، مثل https://ibtikar-sites.اسمك.workers.dev',hostna:'النشر غير مفعّل: لم يُضبط عنوان خادم المواقع بعد.',unpublish:'إلغاء النشر',publishing:'جارٍ النشر والتحقق من الرابط...',pubok:'تم النشر وتحقّقنا أن الرابط يعمل',pubfail:'فشل التحقق من النشر',openlive:'فتح الموقع',deploys:'سجل النشر',hosting_not_configured:'الاستضافة غير مهيّأة بعد',nothing_to_publish:'ابنِ الصفحة أو احفظ كوداً في المحرر أولاً',page_too_large:'الصفحة كبيرة جداً',deploy_ok:'تم نشر موقعك',deploy_failed:'فشل نشر موقعك',queued:'بالانتظار',live:'يعمل',rolled_back:'تم التراجع',failed:'فشل',invalidurl:'اكتب عنواناً يبدأ بـ https://',wiz_title:'إنشاء موقع جديد',wiz_sub:'عبّئ بيانات نشاطك وسنبني لك الموقع تلقائياً، بدون كتابة أي أوامر.',sec_basic:'المعلومات الأساسية',sec_contact:'التواصل',sec_social:'الشبكات الاجتماعية',sec_content:'المحتوى',sec_look:'المظهر',f_name:'اسم النشاط',f_tag:'شعار أو جملة قصيرة',f_desc:'وصف النشاط',f_sub:'اسم النطاق (رابط موقعك)',f_phone:'رقم الهاتف',f_wa:'رقم واتساب',f_email:'البريد الإلكتروني',f_addr:'العنوان / المدينة',f_hours:'ساعات العمل',f_ig:'إنستغرام',f_fb:'فيسبوك',f_tt:'تيك توك',f_tg:'تيليجرام',f_items:'الخدمات أو المنتجات',f_items_h:'سطر لكل عنصر: الاسم | السعر | وصف قصير',f_lang:'لغة الموقع',l_ar:'عربي',l_en:'English',l_both:'عربي وإنجليزي',f_color:'اللون الرئيسي',f_style:'النمط',st_modern:'عصري',st_classic:'كلاسيكي',st_bold:'جريء',sub_ok:'متاح',sub_taken:'غير متاح أو غير صالح',sub_hint:'أحرف إنجليزية صغيرة وأرقام وشرطة، من 3 إلى 30',createSite:'إنشاء الموقع',wz_save:'جارٍ حفظ البيانات...',wz_gen:'جارٍ بناء الصفحات...',rebuild:'حفظ وإعادة بناء الموقع',rebuildw:'إعادة البناء تستبدل الصفحة الحالية، وتبقى نسختها السابقة في تبويب النسخ.',tab_details:'بيانات الموقع',ty_store:'متجر',ty_company:'شركة',ty_restaurant:'مطعم',ty_clinic:'عيادة',ty_portfolio:'معرض أعمال',ty_blog:'مدونة',ty_landing:'صفحة هبوط',ty_education:'تعليم',ty_other:'أخرى',invalid_slug:'اسم النطاق غير صالح',site_limit_reached:'وصلت للحد الأقصى من المواقع في باقتك',yoursite:'رابط موقعك'},
+en:{home:'Home',pricing:'Pricing',apps:'Apps',login:'Log in',signup:'Sign up',logout:'Log out',dash:'My dashboard',admin:'Admin',
+h1:'Build your website by talking',sub:'Describe what you want in your own words. Get a complete site you can edit, publish and track from one place.',start:'Start free',see:'See plans',
+f1:'Create by chat',f1d:'Write your idea in Arabic or English and get a site ready to preview.',f2:'Easy edits',f2d:'Change colors and text with a sentence, roll back to any version.',f3:'Domains and versions',f3d:'Connect your domain, follow site status and roll back to any version.',f4:'Full control',f4d:'Team, permissions, billing and analytics in one panel.',
+perMo:'/ month',sites:'sites',storage:'MB',free:'Free',choose:'Choose plan',
+soon:'Coming soon',appsT:'IBTIKAR Apps',appsD:'Create Android and iOS apps just as easily. Leave your email and we will tell you at launch.',email:'Email',notify:'Notify me',notified:'Got it. We will email you at launch.',
+pass:'Password',name:'Name',noacc:'No account?',haveacc:'Have an account?',checkmail:'We sent an activation link to your email.',
+mysites:'My websites',newsite:'New website',sname:'Website name',stype:'Website type',create:'Create website',
+nosites:'No websites yet. Create your first one.',desc:'Describe the website you want',build:'Build site',building:'Building...',preview:'Preview',
+publish:'Publish',pubna:'Publishing is off: hosting server not connected yet',draft:'Draft',building_:'Building',published:'Published',stopped:'Stopped',
+saved:'Saved',err:'Something went wrong',nosvc:'Site builder is not configured yet',quota:'Monthly limit reached',
+users:'Users',allsites:'All websites',banners:'Banners',plans:'Plans',engine:'Engine',audit:'Audit log',overview:'Overview',
+role:'Role',status:'Status',suspend:'Suspend',activate:'Activate',add:'Add',del:'Delete',place:'Placement',text:'Text',link:'Link',active:'Active',
+provider:'Provider',kind:'Type',endpoint:'Endpoint (optional)',model:'Model',setkey:'Save key',test:'Test connection',enable:'Enable',disable:'Disable',
+keyph:'Secret key',health:'Connection',notcfg:'Not configured',healthy:'Connected',degraded:'Unstable',down:'Down',priority:'Priority',
+price:'Price',save:'Save',views:'Views',clicks:'Clicks',when:'When',action:'Action',totalU:'Users',totalS:'Websites',totalSub:'Subscriptions',usage:'Requests this month',
+rights:'All rights reserved',noaccess:'You do not have access here.',loginreq:'Log in to continue.',support:'Support',notes:'Notifications',billing:'Billing',newticket:'Send ticket',subject:'Subject',message:'Message',send:'Send',open:'Open',in_progress:'In progress',waiting_customer:'Waiting for you',resolved:'Resolved',closed:'Closed',nonotes:'No notifications.',readall:'Mark all as read',quote_ready:'You received a quote for a modification request',ticket_reply:'Support replied to your ticket',site_down:'Your website is down',invoices:'Invoices',amount:'Amount',paid:'Paid',pending:'Awaiting payment',failed:'Failed',refunded:'Refunded',markpaid:'Confirm payment',manualpay:'Payment is by manual transfer for now. Open a support ticket with the transfer details and the team will confirm it.',customer:'Customer',analytics:'Visits (last 30 days)',visits:'Views',uniq:'Visitors',toppages:'Top pages',versions:'Previous versions',restore:'Restore',reqmod:'Request a modification',requests:'Modification requests',quote:'Quote',accept:'Accept',reject:'Reject',monitor:'Monitoring',runcheck:'Check now',checked:'Websites checked',level:'Level',simple:'Simple',medium:'Medium',advanced:'Advanced',major:'Major development',nodata:'No data yet',tickets:'Tickets',invs:'Invoices',sent:'Sent',submitted:'Submitted',quoted:'Quoted',approved:'Approved',rejected:'Rejected',in_progress_:'In progress',done:'Done',tab_overview:'Overview',tab_editor:'Editor',tab_analytics:'Analytics',tab_versions:'Versions',tab_requests:'Requests',tab_domains:'Domains',howT:'Three steps',s1:'Describe your idea',s1d:'Write what you want in your own words, in Arabic or English.',s2:'Preview and edit',s2d:'Get a site ready to preview. Change anything with a sentence or in the editor.',s3:'Publish and track',s3d:'Connect your domain and follow visits and versions from your panel.',f5:'Arabic and English',f5d:'Right-to-left and left-to-right layouts with instant switching.',f6:'Your data stays yours',f6d:'Every customer sees only their own data, enforced inside the database itself.',faqT:'Common questions',q1:'How do I pay?',a1:'For now by manual transfer: open a support ticket with the transfer details and we confirm it.',q2:'Is my data safe?',a2:'Yes. Each customer sees only their own sites, and secret keys are stored encrypted on the server.',q3:'Can I edit it myself?',a3:'Yes. Edit the code directly in the site editor with a live preview, or request a change in a sentence.',q4:'What about apps?',a4:'IBTIKAR Apps is coming soon. You can register your interest.',ctaT:'Ready to start?',ctaD:'Create your account and build your first site in minutes.',dev_d:'Desktop',dev_t:'Tablet',dev_m:'Mobile',editc:'Describe the change you want',applyc:'Apply change',previewReady:'Ready to preview. Press Save to approve.',domain:'Domain',adddom:'Add domain',domnote:'Domain verification starts once the hosting server is connected.',rename:'Rename',delsite:'Delete website',delwarn:'The website, its versions and domains will be deleted permanently. Are you sure?',settings:'Settings',open_:'Open',superonly:'Super admin only',hello:'Welcome,',dashT:'Dashboard',navAnalytics:'Analytics',adminsub:'Full control of the platform, customers and websites in one place.',custsub:'Follow your sites, visitors and requests with ease.',dbok:'Database connected',dberr:'Cannot reach the database',revenue:'Total revenue',openT:'Open tickets',pubN:'Published',visits30:'Visits (90 days)',signups:'Sign-ups',byStatus:'Websites by status',latestReq:'Latest requests',servers:'Servers',serversEmpty:'No server connected yet.',activity:'Recent activity',viewAll:'View all',r7:'7 days',r30:'30 days',r90:'90 days',devices:'Devices',referrers:'Sources',countries:'Countries',direct:'Direct',allsitesf:'All sites',planUse:'Plan usage',noplan:'No active plan',searchph:'Search the dashboard...',profile:'Profile',changepw:'Change password',logoutall:'Log out of all devices',delreq:'Request account deletion',delreqd:'Your request goes to the team and is handled under the retention policy.',promoT:'IBTIKAR.. building the future together',promoD:'IBTIKAR Apps is coming soon',addsrv:'Add server',region:'Region',notverified:'Not verified',srvbusy:'It hosts active sites, move them first.',ppv:'Pages per visitor',reqs:'requests / month',newusers:'New users',newsites:'New websites',usageReq:'Build requests',paidRev:'Paid revenue',topsites:'Top visited sites',
+h1a:'Turn your idea into',h1b:'a professional site in hours',pill1:'Fast creation',pill2:'Instant edits',pill3:'Ongoing support',pill4:'Professional quality',topsvc:'Featured service',svcWeb:'IBTIKAR Web',svcD:'A platform to build and manage your website with ease. Describe your idea and follow every detail from your panel.',sv1:'Fast creation',sv1d:'Turn your idea into a site ready to preview.',sv2:'Instant edits',sv2d:'Request any change and see it right away.',sv3:'Customer panel',sv3d:'Follow your project, requests and invoices.',cpT:'Customer panel',cp1:'Follow project status moment by moment.',cp2:'Preview your site live.',cp3:'Request changes with clear pricing.',cp4:'Manage invoices and talk to support.',plansT:'Pricing plans',plansD:'Pick the plan that fits your needs.',colSite:'Site',colAcc:'Account',settingsT:'Platform settings',baseurl:'Sites host address',baseurlh:'Your Worker address after deploying it, e.g. https://ibtikar-sites.yourname.workers.dev',hostna:'Publishing is off: the sites host address is not set yet.',unpublish:'Unpublish',publishing:'Publishing and verifying the link...',pubok:'Published and the link was verified',pubfail:'Publish verification failed',openlive:'Open site',deploys:'Deployment history',hosting_not_configured:'Hosting is not configured yet',nothing_to_publish:'Build the page or save code in the editor first',page_too_large:'The page is too large',deploy_ok:'Your website was published',deploy_failed:'Publishing your website failed',queued:'Queued',live:'Live',rolled_back:'Rolled back',failed:'Failed',invalidurl:'Enter an address starting with https://',wiz_title:'Create a new website',wiz_sub:'Fill in your business details and we build the site for you automatically. No commands to write.',sec_basic:'Basic information',sec_contact:'Contact',sec_social:'Social media',sec_content:'Content',sec_look:'Look',f_name:'Business name',f_tag:'Slogan or short line',f_desc:'Business description',f_sub:'Domain name (your site link)',f_phone:'Phone number',f_wa:'WhatsApp number',f_email:'Email',f_addr:'Address / city',f_hours:'Working hours',f_ig:'Instagram',f_fb:'Facebook',f_tt:'TikTok',f_tg:'Telegram',f_items:'Services or products',f_items_h:'One line per item: Name | Price | Short description',f_lang:'Site language',l_ar:'Arabic',l_en:'English',l_both:'Arabic and English',f_color:'Main color',f_style:'Style',st_modern:'Modern',st_classic:'Classic',st_bold:'Bold',sub_ok:'Available',sub_taken:'Unavailable or invalid',sub_hint:'Lowercase English letters, numbers and hyphens, 3 to 30',createSite:'Create website',wz_save:'Saving details...',wz_gen:'Building pages...',rebuild:'Save and rebuild the site',rebuildw:'Rebuilding replaces the current page, and its previous version stays in the Versions tab.',tab_details:'Site details',ty_store:'Store',ty_company:'Company',ty_restaurant:'Restaurant',ty_clinic:'Clinic',ty_portfolio:'Portfolio',ty_blog:'Blog',ty_landing:'Landing page',ty_education:'Education',ty_other:'Other',invalid_slug:'Invalid domain name',site_limit_reached:'You reached the site limit of your plan',yoursite:'Your site link'}
+};
+Object.assign(T.ar,{tpl_title:'اختر القالب',tpl_sub:'اضغط على التصميم الذي يعجبك. تقدر تعدّل كل شيء بعد الإنشاء.',designed:'تم تصميم موقعك بتصميم مخصّص لنشاطك',designed_tpl:'تم إنشاء موقعك من القالب المختار',tn_shop:'متجر عصري',tn_shopdark:'متجر داكن',tn_food:'مطعم ومقهى',tn_clinic:'عيادة ومركز طبي',tn_corp:'شركة',tn_port:'معرض أعمال',tn_land:'صفحة تعريفية',lasterr:'سبب الفشل'});
+Object.assign(T.en,{tpl_title:'Choose a template',tpl_sub:'Tap the design you like. You can change everything after creating.',designed:'Your website was custom designed for your business',designed_tpl:'Your website was created from the chosen template',tn_shop:'Modern store',tn_shopdark:'Dark store',tn_food:'Restaurant and cafe',tn_clinic:'Clinic and medical center',tn_corp:'Company',tn_port:'Portfolio',tn_land:'Landing page',lasterr:'Failure reason'});
+Object.assign(T.ar,{sections:'الأقسام',bo_building:'موقعك قيد البناء',bo_building_s:'نجهّز موقعك الآن، لحظات فقط...',bo_s1:'حفظ بياناتك',bo_s2:'تصميم موقعك',bo_s3:'المراجعة النهائية',bo_ready:'موقعك جاهز',bo_ready_ai:'تم تصميم موقعك. اضغط إرسال لنشره.',bo_ready_tpl:'موقعك جاهز بتصميم أساسي. اضغط إرسال لنشره.',bo_live:'تم النشر',bo_manage:'إدارة الموقع',bo_publishing:'جارٍ نشر موقعك...',mr_ask:'ماذا تريد أن نغيّر في موقعك؟',mr_ph:'مثال: غيّر رقم الهاتف، أضف قسماً للعروض...',mr_send:'إرسال الطلب',mr_price:'السعر',mr_accept:'موافق، نفّذ',mr_getprice:'احسب السعر',mr_apply:'نفّذ التعديل',mr_analyzing:'جارٍ تحليل طلبك وتسعيره...',mr_priced:'تم تسعير طلبك',mr_wait:'استلمنا طلبك وسيصلك السعر قريباً',mr_applying:'جارٍ تنفيذ التعديل',mr_applying_s:'لحظات ويكون جاهزاً...',mr_done:'تم التعديل',mr_done_s:'راجع موقعك. يمكنك الرجوع لأي نسخة سابقة من قسم النسخ.',budget_exceeded:'وصلت لحد الاستخدام لهذا الشهر. رقّ باقتك للمتابعة.',service_not_configured:'الخدمة غير جاهزة حالياً',all_providers_failed:'تعذّر التنفيذ الآن، حاول بعد قليل',invalid_output:'لم تكتمل النتيجة بالجودة المطلوبة، حاول مرة أخرى',not_pending:'تم تسعير هذا الطلب مسبقاً',not_approved:'يجب الموافقة على السعر أولاً',page_too_large_for_edit:'الصفحة كبيرة على التعديل الآلي',pick_type:'ما نوع موقعك؟',tyd_company:'موقع رسمي لشركتك',tyd_store:'اعرض منتجاتك واستقبل الطلبات',tyd_landing:'صفحة تعريفية بك أو بمشروعك',tyd_restaurant:'منيو إلكتروني لمطعمك',prompts:'التعليمات',prompts_h:'التعليمات الأساسية التي تُرسل مع كل موقع، وتعليمات كل نوع. يمكنك لصق النسخة الكاملة هنا وحفظها.',aicfg:'حدود الاستهلاك والتسعير',freeb:'ميزانية الباقة المجانية بالدولار',bounds:'حدود أسعار التعديل لكل مستوى (JSON)',markup:'معامل الربح فوق تكلفة التوكن (مثال: 4 يعني أربعة أضعاف)',aireq:'التسعير آلي بالكامل من الذكاء الاصطناعي حسب تكلفة التوكن الفعلية ضرب هذا المعامل. لا يوجد تسعير يدوي.',retryprice:'إعادة التسعير آلياً',pricing_now:'جارٍ التسعير...',appsSuperOnly:'مرئي للمدير العام فقط حالياً',preset_t:'ربط مزود بنقرة واحدة',preset_k:'المفتاح السري',preset_cin:'تكلفة الإدخال لكل مليون توكن (اختياري)',preset_cout:'تكلفة الإخراج لكل مليون توكن (اختياري)',preset_btn:'حفظ وتفعيل واختبار',preset_ok:'تم الربط والمزود يعمل',preset_note:'أدخل التكلفة حتى يحسب النظام ميزانية كل موقع بدقة.',contracts:'العقود',contractsT:'عقود العملاء',ctr_new:'عقد جديد',ctr_customer:'العميل',ctr_title:'عنوان العقد (اختياري)',ctr_file:'صورة أو PDF العقد المعتمد',ctr_create:'إنشاء ورفع',ctr_number:'رقم العقد',ctr_status:'الحالة',ctr_send:'إرسال',ctr_copylink:'نسخ الرابط',ctr_wa:'إرسال واتساب',ctr_approve:'اعتماد',ctr_viewsigned:'فتح النسخة الموقعة',ctr_viewesign:'فتح التوقيع الإلكتروني',ctr_vieworig:'فتح العقد الأصلي',ctr_none:'لا توجد عقود حتى الآن',ctr_draft:'مسودة',ctr_sent:'مرسل',ctr_awaiting_signature:'بانتظار التوقيع',ctr_received_signed:'مستلم وموقّع',ctr_approved:'معتمد',ctr_void:'ملغى',ctr_linkcopied:'تم نسخ الرابط',ctr_openlink:'رابط العقد الخاص بك',ctr_sign_title:'توقيع العقد',ctr_sign_sub:'افتح العقد، اقرأه بعناية، ثم وقّع بإحدى الطريقتين أدناه',ctr_notfound:'الرابط غير صحيح أو انتهت صلاحيته',ctr_already:'تم استلام هذا العقد موقّعاً من قبل، شكراً لك',ctr_upload_signed:'رفع نسخة موقعة (صورة أو PDF)',ctr_upload_btn:'رفع النسخة الموقعة',ctr_esign_h:'أو وقّع إلكترونياً هنا',ctr_esign_name:'الاسم الكامل',ctr_esign_clear:'مسح',ctr_esign_btn:'تأكيد التوقيع',ctr_thanks:'تم استلام توقيعك بنجاح. سيتواصل معك فريق ابتكار عند الاعتماد.',ctr_yourcopy:'نسخة PDF/صورة العقد الأصلي متاحة لك دائماً من هذه الصفحة.'});Object.assign(T.en,{sections:'Sections',bo_building:'Your website is being built',bo_building_s:'Preparing your site, just a moment...',bo_s1:'Saving your details',bo_s2:'Designing your site',bo_s3:'Final review',bo_ready:'Your website is ready',bo_ready_ai:'Your site is designed. Press Send to publish it.',bo_ready_tpl:'Your site is ready with a basic design. Press Send to publish it.',bo_live:'Published',bo_manage:'Manage site',bo_publishing:'Publishing your site...',mr_ask:'What would you like us to change on your site?',mr_ph:'Example: change the phone number, add an offers section...',mr_send:'Send request',mr_price:'Price',mr_accept:'Agree, do it',mr_getprice:'Get price',mr_apply:'Apply the change',mr_analyzing:'Analyzing and pricing your request...',mr_priced:'Your request is priced',mr_wait:'We got your request and the price will reach you soon',mr_applying:'Applying the change',mr_applying_s:'Almost ready...',mr_done:'Change applied',mr_done_s:'Check your site. You can roll back to any earlier version from the Versions section.',budget_exceeded:'You reached this month usage limit. Upgrade your plan to continue.',service_not_configured:'The service is not ready yet',all_providers_failed:'Could not complete now, try again shortly',invalid_output:'The result did not meet the quality bar, please try again',not_pending:'This request was already priced',not_approved:'Approve the price first',page_too_large_for_edit:'The page is too large for automatic edits',pick_type:'What kind of website?',tyd_company:'An official site for your company',tyd_store:'Show your products and take orders',tyd_landing:'An intro page for you or your project',tyd_restaurant:'An online menu for your restaurant',prompts:'Instructions',prompts_h:'The core instructions sent with every site, and the instructions for each type. Paste the full versions here and save.',aicfg:'Usage and pricing limits',freeb:'Free plan budget in USD',bounds:'Modification price bounds per level (JSON)',markup:'Markup over raw token cost (e.g. 4 = four times)',aireq:'Pricing is fully automatic from the AI, from real token cost times this markup. No manual pricing.',retryprice:'Re-price automatically',pricing_now:'Pricing...',appsSuperOnly:'Visible to the super admin only for now',preset_t:'Connect a provider in one click',preset_k:'Secret key',preset_cin:'Input cost per 1M tokens (optional)',preset_cout:'Output cost per 1M tokens (optional)',preset_btn:'Save, enable and test',preset_ok:'Connected and working',preset_note:'Enter the costs so the system can budget each site accurately.',contracts:'Contracts',contractsT:'Customer contracts',ctr_new:'New contract',ctr_customer:'Customer',ctr_title:'Contract title (optional)',ctr_file:'Approved contract image or PDF',ctr_create:'Create & upload',ctr_number:'Contract #',ctr_status:'Status',ctr_send:'Send',ctr_copylink:'Copy link',ctr_wa:'Send via WhatsApp',ctr_approve:'Approve',ctr_viewsigned:'Open signed copy',ctr_viewesign:'Open e-signature',ctr_vieworig:'Open original contract',ctr_none:'No contracts yet',ctr_draft:'Draft',ctr_sent:'Sent',ctr_awaiting_signature:'Awaiting signature',ctr_received_signed:'Received & signed',ctr_approved:'Approved',ctr_void:'Void',ctr_linkcopied:'Link copied',ctr_openlink:'Your contract link',ctr_sign_title:'Sign contract',ctr_sign_sub:'Open the contract, read it carefully, then sign using one of the options below',ctr_notfound:'This link is invalid or has expired',ctr_already:'This contract was already received signed, thank you',ctr_upload_signed:'Upload a signed copy (image or PDF)',ctr_upload_btn:'Upload signed copy',ctr_esign_h:'Or sign electronically here',ctr_esign_name:'Full name',ctr_esign_clear:'Clear',ctr_esign_btn:'Confirm signature',ctr_thanks:'Your signature was received. The IBTIKAR team will contact you once approved.',ctr_yourcopy:'A copy of the original contract is always available to you on this page.'});
+let L=localStorage.getItem('lang')||'ar';
+const t=k=>T[L][k]??k;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=s=>document.querySelector(s);
+const ROLES=['customer','super_admin','admin','technical_manager','developer','ai_supervisor','support_manager','support_agent','billing_manager','content_manager','marketing_manager'];
+const STAFF_ADMIN=['super_admin','admin'];
+let me=null,prof=null;
+
+function toast(m,e){const d=document.createElement('div');d.textContent=m;if(e)d.className='e';$('#toast').append(d);setTimeout(()=>d.remove(),3200)}
+const fail=e=>toast(((e&&e.message)&&(T[L][e.message]||e.message))||t('err'),1);
+const skel=()=>'<div class="grid"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>';
+const planName=p=>L==='ar'?p.name_ar:p.name_en;
+const fmtD=d=>new Date(d).toLocaleString(L==='ar'?'ar':'en',{dateStyle:'medium',timeStyle:'short'});
+const stChip=s=>`<span class="chip ${s==='published'?'ok':s==='stopped'?'er':'wa'}">${t(s==='building'?'building_':s)}</span>`;
+
+async function loadMe(){
+  const {data}=await sb.auth.getSession();me=data.session?.user||null;prof=null;
+  if(me){const r=await sb.from('profiles').select('*').eq('id',me.id).maybeSingle();prof=r.data}
+}
+const isAdm=()=>prof&&STAFF_ADMIN.includes(prof.role);
+const isSuper=()=>prof&&prof.role==='super_admin';
+
+function chrome(){
+  document.documentElement.lang=L;document.documentElement.dir=L==='ar'?'rtl':'ltr';
+  $('#langbtn').textContent=L==='ar'?'EN':'ع';
+  const h=location.hash||'#/';
+  $('#links').innerHTML=[['#/',t('home')],['#/pricing',t('pricing')],...(isSuper()?[['#/apps',t('apps')]]:[])].map(([a,n])=>`<a href="${a}" class="${h===a?'on':''}">${n}</a>`).join('');
+  $('#auth').innerHTML=me?`<a class="btn s sm" href="#/app">${t('dash')}</a> ${isAdm()?`<a class="btn s sm" href="#/admin">${t('admin')}</a>`:''} <button class="btn s sm" data-act="logout">${t('logout')}</button>`
+    :`<a class="btn s sm" href="#/login">${t('login')}</a> <a class="btn p sm" href="#/signup">${t('signup')}</a>`;
+  $('nav .logo').innerHTML=LOGO+'<span>ابتكار<small>IBTIKAR</small></span>';
+  $('#foot').innerHTML=`<div class="fcols"><div><b>ابتكار IBTIKAR</b>${t('svcD')}</div><div><b>${t('colSite')}</b><a href="#/">${t('home')}</a><a href="#/pricing">${t('pricing')}</a><a href="#/apps">${t('apps')}</a></div><div><b>${t('colAcc')}</b><a href="#/login">${t('login')}</a><a href="#/signup">${t('signup')}</a></div></div><p style="margin-top:22px">© ${new Date().getFullYear()} ابتكار IBTIKAR — ${t('rights')}</p>`;
+}
+async function banner(){
+  const now=new Date().toISOString();
+  const {data}=await sb.from('banners').select('*').eq('placement','announcement').eq('active',true).order('sort').limit(5);
+  const b=(data||[]).find(x=>(!x.starts_at||x.starts_at<=now)&&(!x.ends_at||x.ends_at>=now));
+  const el=$('#bar');
+  if(!b){el.hidden=true;return}
+  el.hidden=false;el.innerHTML=b.link?`<a href="${esc(b.link)}" data-bid="${b.id}">${esc(L==='ar'?b.title_ar:b.title_en)||''}</a>`:esc(L==='ar'?b.title_ar:b.title_en);
+  if(b.bg&&/^#[0-9a-f]{3,8}$/i.test(b.bg))el.style.background=b.bg;
+  sb.from('banners').update({views:b.views+1}).eq('id',b.id).then(()=>{});
+}
+
+/* ---------- public views ---------- */
+async function vHome(){
+  const {data:pl}=await sb.from('plans').select('*').eq('active',true).order('sort');
+  return `<div class="heroW"><div class="wrap"><section class="hero"><div><h1>${t('h1a')} <span>${t('h1b')}</span></h1><p class="lead">${t('sub')}</p><div class="row2"><a class="btn p lg" href="#/signup">${t('start')}</a><a class="btn s lg" href="#/pricing">${t('see')}</a></div>
+  <div class="pills">${[['bolt',1],['pulse',2],['chat',3],['grid',4]].map(([i,n])=>`<span>${ic(i)}${t('pill'+n)}</span>`).join('')}</div></div>
+  <div class="mock"><div class="top"><b></b><b></b><b></b><em>flowers.example</em></div><div class="bd"><div class="chat">${L==='ar'?'متجر ورد بسيط مع صفحة تواصل':'A small flower shop with a contact page'}</div><div class="blk b1"></div><div class="blk b2"></div><div class="row"><div class="blk b3"></div><div class="blk b3"></div><div class="blk b3"></div></div></div><span class="chip ok live">${t('published')}</span></div></section></div></div>
+  <div class="wrap"><section class="card svc"><span class="chip">${t('topsvc')}</span><h2>${t('svcWeb')}</h2><p>${t('svcD')}</p><br><div class="grid">${[1,2,3].map(i=>`<div class="card h"><h3>${t('sv'+i)}</h3><p>${t('sv'+i+'d')}</p></div>`).join('')}</div></section>
+  <section class="sec"><h2 class="ctr">${t('howT')}</h2><div class="sub"></div><div class="steps">${[1,2,3].map(i=>`<div class="card"><h3>${t('s'+i)}</h3><p>${t('s'+i+'d')}</p></div>`).join('')}</div></section>
+  <section class="sec"><div class="grid2"><div><h2>${t('cpT')}</h2><div class="chk">${[1,2,3,4].map(i=>`<div>${ic('bolt')}<span>${t('cp'+i)}</span></div>`).join('')}</div></div>
+  <div class="mock"><div class="minip"><aside><i></i><i></i><i></i><i></i></aside><main><i></i><i></i><i style="width:60%"></i></main></div></div></div></section>
+  <section class="sec"><h2 class="ctr">${t('plansT')}</h2><div class="sub ctr" style="margin-inline:auto;text-align:center">${t('plansD')}</div>${planCards(pl)}</section>
+  <section class="sec faq"><h2>${t('faqT')}</h2><div class="sub"></div>${[1,2,3,4].map(i=>`<details><summary>${t('q'+i)}</summary><p>${t('a'+i)}</p></details>`).join('')}</section>
+  <section class="cta"><h2>${t('ctaT')}</h2><p>${t('ctaD')}</p><a class="btn lg" href="#/signup">${t('start')}</a></section></div>`;
+}
+async function vPricing(){
+  const {data}=await sb.from('plans').select('*').eq('active',true).order('sort');
+  return `<div class="wrap sec"><h2>${t('pricing')}</h2><div class="sub">${t('plansD')}</div>${planCards(data)}</div>`;
+}
+function vApps(){
+  if(!isSuper())return `<div class="wrap soon"><h2>${t('soon')}</h2></div>`;
+  return `<div class="wrap soon"><span class="chip wa">${t('soon')} · ${t('appsSuperOnly')}</span><h2 style="font-size:36px;margin:14px 0 6px">${t('appsT')}</h2><p style="color:var(--tx2);max-width:48ch;margin:0 auto 22px">${t('appsD')}</p>
+  <form data-form="interest" class="row2" style="justify-content:center"><input style="width:280px" type="email" required name="email" placeholder="${t('email')}"><button class="btn p">${t('notify')}</button></form></div>`;
+}
+function vAuth(mode){
+  const su=mode==='signup';
+  return `<div class="auth card"><h2>${su?t('signup'):t('login')}</h2><form data-form="${mode}">
+  ${su?`<label>${t('name')}</label><input name="name" required>`:''}<label>${t('email')}</label><input type="email" name="email" required>
+  <label>${t('pass')}</label><input type="password" name="pass" required minlength="8"><br><br><button class="btn p" style="width:100%;justify-content:center">${su?t('signup'):t('login')}</button></form>
+  <p style="margin-top:14px;font-size:14px;color:var(--tx2)">${su?t('haveacc'):t('noacc')} <a style="color:var(--ac)" href="#/${su?'login':'signup'}">${su?t('login'):t('signup')}</a></p></div>`;
+}
+
+/* ---------- customer ---------- */
+const SIDE_C=()=>[['#/app',t('dashT')],['#/app/sites',t('mysites')],['#/app/new',t('newsite')],['#/app/analytics',t('navAnalytics')],['#/app/requests',t('requests')],['#/app/support',t('support')],['#/app/notes',t('notes')],['#/app/billing',t('billing')],['#/app/contracts',t('contracts')],['#/app/settings',t('profile')]];
+const ICP={grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',globe:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',plus:'M12 5v14M5 12h14',chat:'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z',bell:'M18 16v-5a6 6 0 1 0-12 0v5l-2 2h16zM10 20a2 2 0 0 0 4 0',card:'M3 6h18v12H3zM3 10h18',users:'M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M21 20v-2a4 4 0 0 0-3-3.9',flag:'M4 4v17M4 4h12l-2 4 2 4H4',price:'M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',bolt:'M13 2L4 14h7l-1 8 9-12h-7z',pulse:'M3 12h4l3-8 4 16 3-8h4',list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',chart:'M4 20V10M10 20V4M16 20v-7M22 20H2',server:'M3 4h18v6H3zM3 14h18v6H3zM7 7h.01M7 17h.01',gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1',moon:'M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z',search:'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3'};
+const ICH={'#/app':'grid','#/app/sites':'globe','#/app/new':'plus','#/app/analytics':'chart','#/app/requests':'list','#/app/support':'chat','#/app/notes':'bell','#/app/billing':'card','#/app/contracts':'card','#/app/settings':'gear','#/admin':'grid','#/admin/analytics':'chart','#/admin/users':'users','#/admin/sites':'globe','#/admin/requests':'list','#/admin/tickets':'chat','#/admin/invoices':'card','#/admin/contracts':'card','#/admin/banners':'flag','#/admin/plans':'price','#/admin/servers':'server','#/admin/monitor':'pulse','#/admin/engine':'bolt','#/admin/audit':'list','#/admin/settings':'gear','#/admin/prompts':'list'};
+const DAY=864e5;let ST={},UNREAD=0;
+const LOGO=`<svg viewBox="0 0 40 40" width="34" height="34"><path d="M3 35 17 7q3-5 6 0l14 28h-8L20 17 11 35z" fill="url(#lg)"/><path d="m14 35 6-11 6 11z" fill="url(#lg)" opacity=".5"/></svg>`;
+const ic=n=>`<svg viewBox="0 0 24 24" class="ics"><path d="${ICP[n]}"/></svg>`;
+let SHEET_EXTRA=null;
+const TYPE4=[['company','🏢'],['store','🛍️'],['landing','✨'],['restaurant','🍽️']];
+const typeCards=sel=>`<h3>${t('pick_type')}</h3><div class="tcards">${TYPE4.map(([k,e])=>`<label class="tc"><input type="radio" name="type" value="${k}" ${(TYPE4.some(x=>x[0]===sel)?sel:'company')===k?'checked':''}><div><span class="te">${e}</span><b>${t('ty_'+k)}</b><small>${t('tyd_'+k)}</small></div></label>`).join('')}</div>`;
+function topbar(){
+  const ini=(prof&&prof.full_name||'?').trim().charAt(0).toUpperCase();
+  return `<header class="tb"><a class="logo" href="#/app">${LOGO}<span>ابتكار<small>IBTIKAR</small></span></a><div class="search">${ic('search')}<input id="gs" placeholder="${t('searchph')}" autocomplete="off"><div id="sres" class="sres" hidden></div></div><span class="sp"></span>
+  <a class="ib" href="#/app/notes" aria-label="${t('notes')}">${ic('bell')}${UNREAD?`<em>${UNREAD}</em>`:''}</a><button class="ib dots" data-act="menu" aria-label="${t('sections')}" aria-haspopup="true">&#8942;</button>
+  <div class="who"><div class="av">${esc(ini)}</div><div><b>${esc(prof&&prof.full_name||'')}</b><small>${esc(prof&&prof.role||'')}</small></div></div></header>`;
+}
+function shell(side,cur,body){
+  const adm=cur.startsWith('#/admin'),ex=SHEET_EXTRA;SHEET_EXTRA=null;
+  const cell=(h,n,i,on)=>`<a href="${h}" class="${on?'on':''}" style="animation-delay:${i*35}ms"><div class="ico">${ic(ICH[h]||'grid')}</div>${n}</a>`;
+  let k=0;
+  return `<div class="app"><div class="mn">${topbar()}<div class="ct">${body}</div></div>
+  <div class="sheet" id="sheet" hidden><div class="sheet-bg" data-act="menu"></div><div class="sheet-p" role="menu"><div class="sheet-h"><b>${t('sections')}</b><button class="ib" data-act="menu" aria-label="close">&#10005;</button></div>
+  ${ex?`<div class="sheet-g"><small>${esc(ex.title)}</small><div class="sheet-i">${ex.items.map(([h,n,i])=>`<a href="${h}" class="${h===ex.cur?'on':''}" style="animation-delay:${(k++)*35}ms"><div class="ico">${ic(i)}</div>${n}</a>`).join('')}</div></div>`:''}
+  <div class="sheet-g"><small>${ex?t('mysites'):t('sections')}</small><div class="sheet-i">${side.map(([h,n])=>cell(h,n,k++,cur===h)).join('')}</div></div>
+  <div class="sheet-f">${isAdm()&&!adm?`<a class="btn s sm" href="#/admin">${t('admin')}</a>`:''}${adm?`<a class="btn s sm" href="#/app">${t('dash')}</a>`:''}<button class="btn s sm" data-act="theme">&#9790;</button><button class="btn s sm" data-act="lang">${L==='ar'?'EN':'ع'}</button><button class="btn s sm" data-act="logout">${t('logout')}</button></div></div></div></div>`;
+}
+/* ----- build / publish overlay ----- */
+function boOpen(title,sub,stages){let el=$('#bo');if(!el){el=document.createElement('div');el.id='bo';document.body.append(el)}
+  el.className='bo';el.innerHTML=`<div class="bo-c" role="dialog" aria-live="polite"><div class="orb"><i></i><i></i><i></i></div><h2>${esc(title)}</h2><p>${esc(sub||'')}</p>${stages&&stages.length?`<ul class="bo-s">${stages.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}<div class="row2 bo-a" style="justify-content:center"></div></div>`}
+function boStage(i){document.querySelectorAll('#bo .bo-s li').forEach((li,j)=>{li.className=j<i?'done':j===i?'now':''})}
+function boSet(title,sub){const el=$('#bo');if(!el)return;el.querySelector('h2').textContent=title;el.querySelector('p').textContent=sub||''}
+function boDone(title,sub,btns,err){const el=$('#bo');if(!el)return;el.className='bo '+(err?'err':'ok');boSet(title,sub);document.querySelectorAll('#bo .bo-s li').forEach(li=>li.className=err?li.className:'done');el.querySelector('.bo-a').innerHTML=btns.join('');
+  if(!err&&!matchMedia('(prefers-reduced-motion:reduce)').matches){for(let i=0;i<46;i++){const c=document.createElement('i');c.className='conf';c.style.left=Math.random()*100+'%';c.style.background=['#2433ff','#00c2a8','#f59e0b','#5b4bff','#16a34a'][i%5];c.style.animationDelay=Math.random()*.6+'s';el.append(c);setTimeout(()=>c.remove(),3200)}}}
+function boClose(){const el=$('#bo');if(el)el.remove()}
+async function runApply(id,sid){
+  boOpen(t('mr_applying'),t('mr_applying_s'),[]);
+  try{const j=await fnPost('ai-gateway',{action:'apply',request_id:id});if(!j.ok)throw new Error(t(j.error||'err'));
+    boDone(t('mr_done'),t('mr_done_s'),[`<button class="btn p lg" data-act="boview" data-id="${sid||''}">${t('preview')}</button>`,`<button class="btn s lg" data-act="boclose">${t('close')||'×'}</button>`])}
+  catch(x){boDone(t('pubfail').replace(/.*/,t('err')),x.message,[`<button class="btn p lg" data-act="aiapply" data-id="${id}" data-site="${sid||''}">${t('mr_apply')}</button>`,`<button class="btn s lg" data-act="boclose">×</button>`],true)}
+}
+/* ----- chart helpers ----- */
+function series(rows,n,val,key){key=key||'created_at';const out=Array(n).fill(0),t0=Date.now();
+  rows.forEach(r=>{const i=n-1-Math.floor((t0-new Date(r[key]).getTime())/DAY);if(i>=0&&i<n)out[i]+=val?Number(val(r))||0:1});return out}
+function lbls(n){return [...Array(n)].map((_,i)=>new Date(Date.now()-(n-1-i)*DAY).toLocaleDateString(L==='ar'?'ar':'en',{month:'short',day:'numeric'}))}
+function area(vals,labels,h){h=h||200;
+  const w=640,p=30,mx=Math.max(1,...vals),n=vals.length;
+  const X=i=>p+(n===1?0:i*(w-2*p)/(n-1)),Y=v=>h-26-(v/mx)*(h-52);
+  const pts=vals.map((v,i)=>[X(i),Y(v)]);
+  const line=pts.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join('');
+  const grid=[0,.5,1].map(f=>`<line x1="${p}" x2="${w-p}" y1="${Y(mx*f)}" y2="${Y(mx*f)}" stroke="var(--bd)"/><text x="2" y="${Y(mx*f)+4}" font-size="10" fill="var(--tx2)">${Math.round(mx*f)}</text>`).join('');
+  const step=Math.max(1,Math.ceil(n/7));
+  const xl=labels.map((l,i)=>i%step===0?`<text x="${X(i)}" y="${h-6}" font-size="10" text-anchor="middle" fill="var(--tx2)">${l}</text>`:'').join('');
+  const dots=pts.map((q,i)=>`<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="${n>31?2:4}" fill="#fff" stroke="var(--ac)" stroke-width="2"><title>${labels[i]}: ${vals[i]}</title></circle>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;direction:ltr"><defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2433ff" stop-opacity=".28"/><stop offset="1" stop-color="#2433ff" stop-opacity="0"/></linearGradient></defs>${grid}<path d="${line}L${X(n-1).toFixed(1)} ${h-26}L${X(0).toFixed(1)} ${h-26}Z" fill="url(#ga)"/><path d="${line}" pathLength="1000" fill="none" stroke="var(--ac)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" class="draw"/>${dots}${xl}</svg>`;
+}
+function spark(v){const w=120,h=38,mx=Math.max(1,...v),n=v.length;const pts=v.map((x,i)=>[i*w/(n-1||1),h-3-(x/mx)*(h-8)]);const l=pts.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join('');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${l}L${w} ${h}L0 ${h}Z" fill="var(--ac)" opacity=".1"/><path d="${l}" fill="none" stroke="var(--ac)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`}
+function donut(items,center,lab){const tot=items.reduce((a,x)=>a+x.v,0),C=2*Math.PI*52;let off=0;
+  const arcs=tot?items.map(x=>{const len=x.v/tot*C;const el=`<circle r="52" cx="70" cy="70" fill="none" stroke="${x.c}" stroke-width="18" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 70 70)"><title>${esc(x.l)}: ${x.v}</title></circle>`;off+=len;return el}).join(''):'';
+  return `<div class="row2" style="gap:20px;flex-wrap:nowrap"><svg viewBox="0 0 140 140" width="150" height="150" style="flex:none"><circle r="52" cx="70" cy="70" fill="none" stroke="var(--bd)" stroke-width="18"/>${arcs}<text x="70" y="72" text-anchor="middle" font-size="24" font-weight="700" fill="var(--tx)">${center}</text><text x="70" y="90" text-anchor="middle" font-size="11" fill="var(--tx2)">${esc(lab||'')}</text></svg>
+  <div style="display:grid;gap:8px;font-size:14px">${items.map(x=>`<div><i class="dot" style="background:${x.c}"></i>${esc(x.l)} <b>${tot?Math.round(x.v/tot*100):0}%</b></div>`).join('')}</div></div>`}
+const statCard=(i,lab,val,vals,pre)=>`<div class="card"><div class="statc"><div class="ico">${ic(i)}</div><div><b class="big">${pre||''}<span data-count="${Math.round(val)}">0</span></b><span style="color:var(--tx2);font-size:13px">${lab}</span></div></div>${spark(vals)}</div>`;
+function chartBox(id,v,l,title,n){n=n||30;ST[id]={v,l};return `<div class="card"><div class="row2"><h3>${title}</h3><span class="sp"></span><div class="rg">${[7,30,90].map(x=>`<button class="${x===n?'on':''}" data-act="range" data-id="${id}" data-n="${x}">${t('r'+x)}</button>`).join('')}</div></div><br><div id="ch-${id}">${area(v.slice(-n),l.slice(-n))}</div></div>`}
+const topList=(m,fmt)=>{fmt=fmt||(x=>esc(x));const e=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,6),mx=e[0]?e[0][1]:1;return e.length?e.map(([k,c])=>`<div class="bar"><span>${fmt(k)}</span><div><i style="width:${(c/mx*100).toFixed(0)}%"></i></div><b>${c}</b></div>`).join(''):`<div style="color:var(--tx2)">${t('nodata')}</div>`};
+function analyticsBlock(E){
+  const n=90,v=series(E,n),l=lbls(n),uq=new Set(E.map(e=>e.visitor)).size;
+  const cnt=k=>{const m={};E.forEach(e=>{const x=e[k];if(x!=null&&x!=='')m[x]=(m[x]||0)+1});return m};
+  const host=x=>{try{return new URL(x).hostname}catch(e){return x}};
+  const ref={};E.forEach(e=>{const k=e.referrer?host(e.referrer):t('direct');ref[k]=(ref[k]||0)+1});
+  const dcol={desktop:'#2433ff',mobile:'#00c2a8',tablet:'#f59e0b'},dev=cnt('device');
+  return `<div class="stats"><div class="card stat"><b data-count="${E.length}">0</b><span>${t('visits')}</span></div><div class="card stat"><b data-count="${uq}">0</b><span>${t('uniq')}</span></div><div class="card stat"><b>${uq?(E.length/uq).toFixed(1):'0'}</b><span>${t('ppv')}</span></div></div>
+  <div class="dgrid" style="margin-top:0"><div class="c8">${chartBox('vis',v,l,t('visits'),30)}</div><div class="c4 card"><h3>${t('devices')}</h3><br>${donut(Object.entries(dev).map(([k,x])=>({l:k,v:x,c:dcol[k]||'#9aa0c0'})),E.length,t('visits'))}</div>
+  <div class="c4 card"><h3>${t('toppages')}</h3><br>${topList(cnt('path'))}</div><div class="c4 card"><h3>${t('referrers')}</h3><br>${topList(ref)}</div><div class="c4 card"><h3>${t('countries')}</h3><br>${topList(cnt('country'))}</div></div>`;
+}
+const EVSEL='path,visitor,device,country,referrer,created_at,website_id';
+const since=n=>new Date(Date.now()-n*DAY).toISOString();
+const STC={draft:'#9aa0c0',building:'#f59e0b',published:'#00c2a8',stopped:'#dc2626'};
+const statusItems=W=>['published','building','draft','stopped'].map(k=>({l:t(k==='building'?'building_':k),v:W.filter(w=>w.status===k).length,c:STC[k]}));
+const reqRow=r=>`<tr><td>${esc(r.websites&&r.websites.name)}<br><small style="color:var(--tx2)">${esc(r.profiles&&r.profiles.full_name||'')}</small></td><td>${esc(r.description||'').slice(0,60)}</td><td><span class="chip">${t(r.status==='in_progress'?'in_progress_':r.status)}</span></td></tr>`;
+
+async function vCDash(){
+  const [ws,tk,sub,nt]=await Promise.all([
+    sb.from('websites').select('id,name,status,site_type,created_at,updated_at').order('updated_at',{ascending:false}),
+    sb.from('support_tickets').select('id,status').neq('status','closed'),
+    sb.from('subscriptions').select('plans(name_ar,name_en,websites_limit)').eq('status','active').limit(1),
+    sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(5)]);
+  const W=ws.data||[],ids=W.map(w=>w.id);let E=[];
+  if(ids.length){const r=await sb.from('site_events').select(EVSEL).in('website_id',ids).gte('created_at',since(90)).limit(10000);E=r.data||[]}
+  const v=series(E,90),l=lbls(90),plan=sub.data&&sub.data[0]&&sub.data[0].plans,lim=plan&&plan.websites_limit||0;
+  return shell(SIDE_C(),'#/app',`<div class="banner"><div><h1>${t('hello')} ${esc(prof.full_name||'')}</h1><p>${t('custsub')}</p><a class="btn" style="background:#fff;color:var(--ac)" href="#/app/new">${t('newsite')}</a></div>${LOGO.replace('class="','class="').replace('<svg','<svg class="bl"')}</div>
+  <div class="s4">${statCard('globe',t('totalS'),W.length,series(W,14))}${statCard('bolt',t('pubN'),W.filter(w=>w.status==='published').length,series(W.filter(w=>w.status==='published'),14,null,'updated_at'))}${statCard('chart',t('visits30'),E.length,v.slice(-14))}${statCard('chat',t('openT'),(tk.data||[]).length,[0,0,0,0,0,0,0])}</div>
+  <div class="dgrid"><div class="c8">${chartBox('cv',v,l,t('visits'),30)}</div><div class="c4 card"><h3>${t('byStatus')}</h3><br>${donut(statusItems(W),W.length,t('mysites'))}</div>
+  <div class="c7 card"><div class="row2"><h3>${t('mysites')}</h3><span class="sp"></span><a style="color:var(--ac)" href="#/app/sites">${t('viewAll')}</a></div>${W.length?W.slice(0,5).map(w=>`<a class="li" href="#/app/site/${w.id}"><div class="ico">${ic('globe')}</div><div style="flex:1"><b>${esc(w.name)}</b><small>${fmtD(w.updated_at)}</small></div>${stChip(w.status)}</a>`).join(''):`<div class="empty">${t('nosites')}</div>`}</div>
+  <div class="c5 card"><h3>${t('planUse')}</h3><br>${plan?`<div class="bar" style="grid-template-columns:auto 1fr auto"><span>${esc(planName(plan))}</span><div><i style="width:${lim?Math.min(100,W.length/lim*100):0}%"></i></div><b>${W.length}/${lim}</b></div>`:`<div style="color:var(--tx2)">${t('noplan')}</div>`}<br><h3>${t('notes')}</h3>${(nt.data||[]).length?(nt.data||[]).map(n=>`<div class="li"><div style="flex:1">${esc(t(n.title))}<small>${fmtD(n.created_at)}</small></div></div>`).join(''):`<div style="color:var(--tx2)">${t('nonotes')}</div>`}</div></div>`);
+}
+async function vADash(){
+  const cnt=async tb=>(await sb.from(tb).select('*',{count:'exact',head:true})).count||0;
+  const [us,ws,inv,tk,rq,sv,au,nU,nW]=await Promise.all([
+    sb.from('profiles').select('created_at').gte('created_at',since(90)).limit(5000),
+    sb.from('websites').select('status,created_at').limit(5000),
+    sb.from('invoices').select('amount,created_at').eq('status','paid').limit(5000),
+    sb.from('support_tickets').select('id').neq('status','closed').limit(2000),
+    sb.from('modification_requests').select('id,status,description,websites(name),profiles!user_id(full_name)').order('created_at',{ascending:false}).limit(5),
+    sb.from('servers').select('*').order('created_at').limit(5),
+    sb.from('audit_logs').select('action,created_at').order('created_at',{ascending:false}).limit(6),
+    cnt('profiles'),cnt('websites')]);
+  const W=ws.data||[],U=us.data||[],I=inv.data||[],rev=I.reduce((a,x)=>a+Number(x.amount),0),ok=!us.error&&!ws.error;
+  return shell(SIDE_A(),'#/admin',`<div class="banner"><div><h1>${t('hello')} ${esc(prof.full_name||'')}</h1><p>${t('adminsub')}</p><span class="chip">● ${ok?t('dbok'):t('dberr')}</span></div>${LOGO.replace('<svg','<svg class="bl"')}</div>
+  <div class="s4">${statCard('card',t('revenue'),rev,series(I,14,x=>x.amount),'$')}${statCard('users',t('totalU'),nU,series(U,14))}${statCard('globe',t('totalS'),nW,series(W,14))}${statCard('chat',t('openT'),(tk.data||[]).length,[0,0,0,0,0,0,0])}</div>
+  <div class="dgrid"><div class="c8">${chartBox('su',series(U,90),lbls(90),t('signups'),30)}</div><div class="c4 card"><h3>${t('byStatus')}</h3><br>${donut(statusItems(W),W.length,t('allsites'))}</div>
+  <div class="c7 card"><div class="row2"><h3>${t('latestReq')}</h3><span class="sp"></span><a style="color:var(--ac)" href="#/admin/requests">${t('viewAll')}</a></div>${tbl([t('sname'),t('message'),t('status')],(rq.data||[]).map(reqRow))}</div>
+  <div class="c5 card"><div class="row2"><h3>${t('servers')}</h3><span class="sp"></span><a style="color:var(--ac)" href="#/admin/servers">${t('viewAll')}</a></div>${(sv.data||[]).length?(sv.data||[]).map(x=>`<div class="li"><div class="ico">${ic('server')}</div><div style="flex:1"><b>${esc(x.name)}</b><small>${esc(x.region||'')}</small></div><span class="chip ${x.status==='online'?'ok':'wa'}">${x.status==='not_verified'?t('notverified'):esc(x.status)}</span></div>`).join(''):`<div class="empty" style="margin-top:12px">${t('serversEmpty')}</div>`}
+  <br><h3>${t('activity')}</h3>${(au.data||[]).map(a=>`<div class="li"><div style="flex:1">${esc(a.action)}<small>${fmtD(a.created_at)}</small></div></div>`).join('')}</div></div>`);
+}
+async function vCAnalytics(sid){
+  const {data:ws}=await sb.from('websites').select('id,name').order('name');
+  const W=ws||[],pick=sid&&W.find(w=>w.id===sid),ids=pick?[sid]:W.map(w=>w.id);let E=[];
+  if(ids.length){const r=await sb.from('site_events').select(EVSEL).in('website_id',ids).gte('created_at',since(90)).limit(10000);E=r.data||[]}
+  const chips=`<div class="rg" style="margin-bottom:18px"><a class="${pick?'':'on'}" href="#/app/analytics">${t('allsitesf')}</a>${W.map(w=>`<a class="${w.id===sid?'on':''}" href="#/app/analytics/${w.id}">${esc(w.name)}</a>`).join('')}</div>`;
+  return shell(SIDE_C(),'#/app/analytics',`<div class="ph"><h1>${t('navAnalytics')}</h1></div>${chips}${E.length?analyticsBlock(E):`<div class="empty">${t('nodata')}</div>`}`);
+}
+async function vAAnalytics(){
+  const [ev,us,ws,ai,inv]=await Promise.all([sb.from('site_events').select(EVSEL).gte('created_at',since(90)).limit(15000),
+    sb.from('profiles').select('created_at').gte('created_at',since(90)).limit(5000),sb.from('websites').select('created_at').gte('created_at',since(90)).limit(5000),
+    sb.from('ai_usage').select('created_at').eq('status','ok').gte('created_at',since(90)).limit(10000),sb.from('invoices').select('amount,created_at').eq('status','paid').gte('created_at',since(90)).limit(5000)]);
+  const E=ev.data||[],U=us.data||[],W=ws.data||[],A=ai.data||[],I=inv.data||[],by={};
+  E.forEach(e=>by[e.website_id]=(by[e.website_id]||0)+1);
+  const top=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,6);let names={};
+  if(top.length){const r=await sb.from('websites').select('id,name').in('id',top.map(x=>x[0]));(r.data||[]).forEach(x=>names[x.id]=x.name)}
+  return shell(SIDE_A(),'#/admin/analytics',`<div class="ph"><h1>${t('navAnalytics')}</h1></div>
+  <div class="s4" style="margin-top:0">${statCard('users',t('newusers'),U.length,series(U,14))}${statCard('globe',t('newsites'),W.length,series(W,14))}${statCard('bolt',t('usageReq'),A.length,series(A,14))}${statCard('card',t('paidRev'),I.reduce((a,x)=>a+Number(x.amount),0),series(I,14,x=>x.amount),'$')}</div><br>
+  ${E.length?analyticsBlock(E):`<div class="empty">${t('nodata')}</div>`}<div class="card" style="margin-top:18px"><h3>${t('topsites')}</h3><br>${topList(Object.fromEntries(top.map(([k,c])=>[names[k]||k,c])))}</div>`);
+}
+async function vSites(){
+  const {data}=await sb.from('websites').select('*').order('created_at',{ascending:false});
+  return shell(SIDE_C(),'#/app/sites',`<div class="ph"><h1>${t('mysites')}</h1><span class="sp"></span><a class="btn p" href="#/app/new">${t('newsite')}</a></div>`+(data&&data.length?`<div class="grid">${data.map(w=>`<a class="card h" href="#/app/site/${w.id}"><div class="row2"><h3>${esc(w.name)}</h3><span class="sp"></span>${stChip(w.status)}</div><p>${esc(w.site_type||'')}</p><p style="font-size:12px;margin-top:10px">${fmtD(w.updated_at)}</p></a>`).join('')}</div>`:`<div class="empty">${t('nosites')}<br><br><a class="btn p" href="#/app/new">${t('newsite')}</a></div>`));
+}
+async function vCRequests(){
+  const {data}=await sb.from('modification_requests').select('*,websites(name)').order('created_at',{ascending:false});
+  return shell(SIDE_C(),'#/app/requests',`<div class="ph"><h1>${t('requests')}</h1></div>`+tbl([t('sname'),t('message'),t('status'),t('price'),''],(data||[]).map(r=>`<tr><td>${esc(r.websites&&r.websites.name)}</td><td>${esc(r.description).slice(0,80)}</td><td><span class="chip">${t(r.status==='in_progress'?'in_progress_':r.status)}</span></td><td>${r.final_price!=null?Number(r.final_price):'—'}</td><td class="row2">${r.status==='quoted'?`<button class="btn p sm" data-act="aiaccept" data-id="${r.id}">${t('accept')}</button><button class="btn d sm" data-act="respond" data-id="${r.id}" data-to="false">${t('reject')}</button>`:''}</td></tr>`)));
+}
+function vSettings(){
+  return shell(SIDE_C(),'#/app/settings',`<div class="ph"><h1>${t('profile')}</h1></div><div class="grid">
+  <form data-form="profile" class="card"><label style="margin-top:0">${t('name')}</label><input name="name" value="${esc(prof.full_name||'')}" required maxlength="80"><br><br><button class="btn p">${t('save')}</button></form>
+  <form data-form="password" class="card"><label style="margin-top:0">${t('changepw')}</label><input type="password" name="pass" required minlength="8" autocomplete="new-password"><br><br><button class="btn p">${t('save')}</button></form>
+  <div class="card"><button class="btn s" data-act="logoutall">${t('logoutall')}</button><br><br><p style="font-size:13px;color:var(--tx2);margin-bottom:10px">${t('delreqd')}</p><button class="btn d" data-act="delreq">${t('delreq')}</button></div></div>`);
+}
+
+async function vAPrompts(){
+  const [{data:pr},{data:st}]=await Promise.all([sb.from('ai_prompts').select('*'),sb.from('platform_settings').select('key,value').in('key',['ai.quote_bounds','ai.free_budget_usd','ai.cost_markup'])]);
+  const sv=k=>((st||[]).find(x=>x.key===k)||{}).value||'';
+  return shell(SIDE_A(),'#/admin/prompts',`<div class="ph"><h1>${t('prompts')}</h1></div><p style="color:var(--tx2);margin-bottom:16px">${t('prompts_h')}</p>`+
+  ['master','company','store','landing','restaurant'].map(k=>{const p=(pr||[]).find(x=>x.key===k);return p?`<div class="card" style="margin-bottom:16px"><div class="row2"><h3>${esc(p.title)}</h3><span class="chip">${k}</span><span class="sp"></span><button class="btn p sm" data-act="saveprompt" data-key="${k}">${t('save')}</button></div><textarea id="pr_${k}" style="min-height:240px;margin-top:12px" maxlength="60000">${esc(p.body)}</textarea></div>`:''}).join('')+
+  `<form data-form="aicfg" class="card"><h3>${t('aicfg')}</h3><p style="color:var(--tx2);font-size:13px;margin:0 0 10px">${t('aireq')}</p><label>${t('markup')}</label><input name="markup" type="number" min="1" step="0.1" value="${esc(sv('ai.cost_markup')||'4')}"><label>${t('freeb')}</label><input name="free" type="number" min="0" step="0.01" value="${esc(sv('ai.free_budget_usd')||'0.25')}"><label>${t('bounds')}</label><textarea name="bounds" dir="ltr" style="min-height:90px">${esc(sv('ai.quote_bounds'))}</textarea><br><br><button class="btn p">${t('save')}</button></form>`);
+}
+const presetForm=()=>`<form data-form="preset" class="card" style="margin-bottom:18px"><h3>${t('preset_t')}</h3><div class="row2" style="margin-top:12px"><select name="kind" style="width:auto"><option value="gemini">Gemini</option><option value="openai">OpenAI</option><option value="anthropic">Claude</option><option value="deepseek">DeepSeek</option></select><input name="key" type="password" required autocomplete="off" placeholder="${t('preset_k')}" style="width:300px;direction:ltr"></div><div class="row2" style="margin-top:10px"><input name="cin" type="number" min="0" step="0.0001" placeholder="${t('preset_cin')}" style="width:270px"><input name="cout" type="number" min="0" step="0.0001" placeholder="${t('preset_cout')}" style="width:270px"></div><p style="color:var(--tx2);font-size:13px;margin:10px 0">${t('preset_note')}</p><button class="btn p">${t('preset_btn')}</button></form>`;
+async function vAServers(){
+  const {data}=await sb.from('servers').select('*').order('created_at');
+  return shell(SIDE_A(),'#/admin/servers',`<div class="ph"><h1>${t('servers')}</h1></div><form data-form="server" class="card row2" style="margin-bottom:16px"><input name="name" required placeholder="${t('name')}" style="width:220px"><input name="region" placeholder="${t('region')}" style="width:160px"><button class="btn p sm">${t('addsrv')}</button></form>`+
+    tbl([t('name'),t('region'),t('status'),''],(data||[]).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.region||'')}</td><td><span class="chip ${x.status==='online'?'ok':'wa'}">${x.status==='not_verified'?t('notverified'):esc(x.status)}</span></td><td><button class="btn d sm" data-act="delsrv" data-id="${x.id}">${t('del')}</button></td></tr>`)));
+}
+const planCards=d=>`<div class="grid">${(d||[]).map(p=>`<div class="card h plan"><h3>${esc(planName(p))}</h3><div class="price">${Number(p.price)===0?t('free'):'$'+Number(p.price)} ${Number(p.price)?`<small>${t('perMo')}</small>`:''}</div><ul><li>${p.websites_limit} ${t('sites')}</li><li>${p.storage_mb} ${t('storage')}</li><li>${p.ai_requests_limit} ${t('reqs')}</li></ul><a class="btn s" href="#/signup" style="width:100%">${t('choose')}</a></div>`).join('')}</div>`;
+
+async function vApp0(sub){
+  if(!me)return `<div class="wrap sec">${t('loginreq')}</div>`;
+  if(sub==='new'){
+    return shell(SIDE_C(),'#/app/new',`<h2>${t('newsite')}</h2><form data-form="newsite" class="card" style="max-width:520px;margin-top:14px">
+    <label>${t('sname')}</label><input name="name" required maxlength="80"><label>${t('stype')}</label>
+    <select name="type"><option>store</option><option>portfolio</option><option>company</option><option>blog</option><option>landing</option></select><br><br><button class="btn p">${t('create')}</button></form>`);
+  }
+  if(sub&&sub.startsWith('site/')){
+    const id=sub.slice(5);const {data:w}=await sb.from('websites').select('*').eq('id',id).maybeSingle();
+    if(!w)return `<div class="wrap sec">404</div>`;
+    const html=w.config?.html;
+    return shell(SIDE_C(),'',`<div class="row2"><h2>${esc(w.name)}</h2>${stChip(w.status)}<span class="sp"></span>${w.status==='published'&&w.url?`<a class="btn s" href="${esc(w.url)}" target="_blank" rel="noopener">${t('openlive')}</a><button class="btn d" data-act="unpublish" data-id="${id}">${t('unpublish')}</button>`:''}<button class="btn p" data-act="publish" data-id="${id}" ${hostOk&&html?'':'disabled'} title="${esc(hostOk?'':t('hostna'))}">${t('publish')}</button></div>
+    <p style="color:var(--tx2);font-size:13px;margin:4px 0 14px">${t('pubna')}</p>
+    <form data-form="build" data-id="${w.id}"><label>${t('desc')}</label><textarea name="prompt" required maxlength="4000"></textarea><br><br><button class="btn p" id="bb">${t('build')}</button></form>
+    <br><h3>${t('preview')}</h3><br>${html?`<iframe sandbox srcdoc="${esc(html)}"></iframe>`:`<div class="empty">—</div>`}`);
+  }
+  const {data}=await sb.from('websites').select('*').order('created_at',{ascending:false});
+  return shell(SIDE_C(),'#/app',`<h2>${t('mysites')}</h2><br>${data&&data.length?`<div class="grid">${data.map(w=>`<a class="card h" href="#/app/site/${w.id}"><h3>${esc(w.name)}</h3><p>${esc(w.site_type||'')}</p><br>${stChip(w.status)}</a>`).join('')}</div>`
+    :`<div class="empty">${t('nosites')}<br><br><a class="btn p" href="#/app/new">${t('newsite')}</a></div>`}`);
+}
+
+/* ---------- admin ---------- */
+const SIDE_A=()=>[['#/admin',t('dashT')],['#/admin/analytics',t('navAnalytics')],['#/admin/users',t('users')],['#/admin/sites',t('allsites')],['#/admin/requests',t('requests')],['#/admin/tickets',t('tickets')],['#/admin/invoices',t('invs')],['#/admin/contracts',t('contracts')],['#/admin/banners',t('banners')],['#/admin/plans',t('plans')],['#/admin/servers',t('servers')],['#/admin/monitor',t('monitor')],['#/admin/engine',t('engine')],['#/admin/prompts',t('prompts')],['#/admin/settings',t('settingsT')],['#/admin/audit',t('audit')]].filter(x=>isSuper()||!['#/admin/plans','#/admin/engine','#/admin/settings','#/admin/prompts'].includes(x[0]));
+const tbl=(h,rows)=>`<div class="tw"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.join('')||`<tr><td colspan="${h.length}" style="text-align:center;color:var(--tx2)">—</td></tr>`}</tbody></table></div>`;
+
+async function vAdmin0(sub){
+  if(!me)return `<div class="wrap sec">${t('loginreq')}</div>`;
+  if(!isAdm())return `<div class="wrap sec">${t('noaccess')}</div>`;
+  const cur='#/admin'+(sub?'/'+sub:'');let body='';
+  if(!sub){
+    const c=async tb=>(await sb.from(tb).select('*',{count:'exact',head:true})).count??0;
+    const since=new Date();since.setUTCDate(1);since.setUTCHours(0,0,0,0);
+    const [u,s,sub_,use]=await Promise.all([c('profiles'),c('websites'),c('subscriptions'),sb.from('ai_usage').select('*',{count:'exact',head:true}).gte('created_at',since.toISOString()).then(r=>r.count??0)]);
+    body=`<div class="stats">${[[t('totalU'),u],[t('totalS'),s],[t('totalSub'),sub_],[t('usage'),use]].map(([n,v])=>`<div class="card stat"><b data-count="${v}">0</b><span>${n}</span></div>`).join('')}</div>`;
+  }
+  if(sub==='users'){
+    const {data}=await sb.from('profiles').select('*').order('created_at',{ascending:false}).limit(200);
+    body=tbl([t('name'),t('role'),t('status'),''],(data||[]).map(p=>`<tr><td>${esc(p.full_name)}</td>
+    <td><select data-chg="role" ${isSuper()?'':'disabled title="'+t('superonly')+'"'} data-id="${p.id}">${ROLES.map(r=>`<option ${r===p.role?'selected':''}>${r}</option>`).join('')}</select></td>
+    <td><span class="chip ${p.status==='active'?'ok':'er'}">${p.status}</span></td>
+    <td><button class="btn s sm" data-act="ustatus" data-id="${p.id}" data-to="${p.status==='active'?'suspended':'active'}">${p.status==='active'?t('suspend'):t('activate')}</button></td></tr>`));
+  }
+  if(sub==='sites'){
+    const {data}=await sb.from('websites').select('*,profiles(full_name)').order('created_at',{ascending:false}).limit(200);
+    body=tbl([t('sname'),t('name'),t('status'),t('when')],(data||[]).map(w=>`<tr><td>${esc(w.name)}</td><td>${esc(w.profiles?.full_name)}</td><td>${stChip(w.status)}</td><td>${fmtD(w.updated_at)}</td></tr>`));
+  }
+  if(sub==='banners'){
+    const {data}=await sb.from('banners').select('*').order('sort');
+    body=`<form data-form="banner" class="card row2" style="margin-bottom:16px"><select name="placement"><option>announcement</option><option>hero</option><option>promo</option><option>dashboard</option></select>
+    <input name="ar" placeholder="${t('text')} (ع)" style="width:200px"><input name="en" placeholder="${t('text')} (EN)" style="width:200px"><input name="link" placeholder="${t('link')}" style="width:180px"><button class="btn p sm">${t('add')}</button></form>`+
+    tbl([t('place'),t('text'),t('views'),t('clicks'),''],(data||[]).map(b=>`<tr><td>${esc(b.placement)}</td><td>${esc(b.title_ar||b.title_en)}</td><td>${b.views}</td><td>${b.clicks}</td>
+    <td class="row2"><button class="btn s sm" data-act="btoggle" data-id="${b.id}" data-to="${!b.active}">${b.active?t('disable'):t('enable')}</button><button class="btn d sm" data-act="bdel" data-id="${b.id}">${t('del')}</button></td></tr>`));
+  }
+  if(sub==='plans'){
+    const {data}=await sb.from('plans').select('*').order('sort');
+    body=tbl([t('plans'),t('price'),t('sites'),''],(data||[]).map(p=>`<tr><td>${esc(planName(p))}</td><td><input type="number" min="0" step="0.01" value="${p.price}" style="width:100px" id="pp${p.id}"></td><td>${p.websites_limit}</td>
+    <td><button class="btn s sm" data-act="pprice" data-id="${p.id}">${t('save')}</button></td></tr>`));
+  }
+  if(sub==='engine'){
+    const [{data:pr},{data:md}]=await Promise.all([sb.from('ai_providers').select('*').order('priority'),sb.from('ai_models').select('*')]);
+    body=presetForm()+`<form data-form="provider" class="card row2" style="margin-bottom:16px"><input name="name" required placeholder="${t('provider')}" style="width:160px">
+    <select name="kind">${['openai','gemini','anthropic','deepseek','xai','custom'].map(k=>`<option>${k}</option>`).join('')}</select>
+    <input name="endpoint" placeholder="${t('endpoint')}" style="width:220px"><input name="priority" type="number" value="100" style="width:90px" title="${t('priority')}"><button class="btn p sm">${t('add')}</button></form>`+
+    (pr||[]).map(p=>{const ms=(md||[]).filter(m=>m.provider_id===p.id);return `<div class="card" style="margin-bottom:14px"><div class="row2"><h3>${esc(p.name)}</h3><span class="chip">${p.kind}</span>
+    <span class="chip ${p.health==='healthy'?'ok':p.health==='not_configured'?'':'er'}">${t(p.health==='not_configured'?'notcfg':p.health)}</span><span class="chip ${p.enabled?'ok':''}">${p.enabled?t('active'):'off'}</span></div>${p.last_error?`<small style="color:var(--er);display:block;margin-top:8px" dir="ltr">${t('lasterr')}: ${esc(p.last_error)}</small>`:''}
+    <div class="row2" style="margin-top:12px"><input type="password" id="k${p.id}" placeholder="${t('keyph')}" autocomplete="off" style="width:260px"><button class="btn s sm" data-act="setkey" data-id="${p.id}">${t('setkey')}</button>
+    <button class="btn s sm" data-act="ptest" data-id="${p.id}">${t('test')}</button><button class="btn s sm" data-act="ptoggle" data-id="${p.id}" data-to="${!p.enabled}">${p.enabled?t('disable'):t('enable')}</button></div>
+    <div class="row2" style="margin-top:12px">${ms.map(m=>`<span class="chip">${esc(m.model_id)}</span>`).join('')}<input id="m${p.id}" placeholder="${t('model')}" style="width:200px"><button class="btn s sm" data-act="addmodel" data-id="${p.id}">${t('add')}</button></div></div>`}).join('');
+  }
+  if(sub==='audit'){
+    const {data}=await sb.from('audit_logs').select('*').order('created_at',{ascending:false}).limit(100);
+    body=tbl([t('when'),t('action'),''],(data||[]).map(a=>`<tr><td>${fmtD(a.created_at)}</td><td>${esc(a.action)}</td><td>${esc(a.entity||'')}</td></tr>`));
+  }
+  return shell(SIDE_A(),cur,body);
+}
+
+
+/* ---------- support / notifications / billing / site extras ---------- */
+const TS=['open','in_progress','waiting_customer','resolved','closed'];
+async function thread(id,back,staff){
+  const {data:tk}=await sb.from('support_tickets').select('*').eq('id',id).maybeSingle();
+  if(!tk)return '<div class="empty">404</div>';
+  const {data:ms}=await sb.from('ticket_messages').select('*,profiles(full_name)').eq('ticket_id',id).order('created_at');
+  return `<div class="row2"><a href="${back}" style="color:var(--ac)">${L==='ar'?'→':'←'}</a><h2>${esc(tk.subject)}</h2>${staff?`<select style="width:auto" data-chg="tstatus" data-id="${id}">${TS.map(x=>`<option value="${x}" ${x===tk.status?'selected':''}>${t(x)}</option>`).join('')}</select>`:`<span class="chip">${t(tk.status)}</span>`}</div>
+  <div style="display:grid;gap:10px;margin:16px 0">${(ms||[]).map(m=>`<div class="card"><small style="color:var(--tx2)">${esc(m.profiles?.full_name)} · ${fmtD(m.created_at)}</small><p style="color:var(--tx);white-space:pre-wrap">${esc(m.body)}</p></div>`).join('')}</div>
+  <form data-form="reply" data-id="${id}"><textarea name="body" required maxlength="4000"></textarea><br><br><button class="btn p">${t('send')}</button></form>`;
+}
+
+async function saveHtml(id,html,note){
+  const w=await sb.from('websites').select('config').eq('id',id).single();
+  const up=await sb.from('websites').update({config:{...(w.data?.config||{}),html},updated_at:new Date().toISOString()}).eq('id',id);if(up.error)throw up.error;
+  const vv=await sb.from('website_versions').select('version').eq('website_id',id).order('version',{ascending:false}).limit(1);
+  const ins=await sb.from('website_versions').insert({website_id:id,version:(vv.data?.[0]?.version||0)+1,snapshot:{html},note:(note||'').slice(0,200),created_by:me.id});if(ins.error)throw ins.error;
+}
+async function gw(body){
+  const {data:s}=await sb.auth.getSession();
+  const r=await fetch(SB_URL+'/functions/v1/ai-gateway',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+s.session.access_token,apikey:SB_KEY},body:JSON.stringify(body)});
+  const j=await r.json();
+  if(!r.ok)throw new Error(j.error==='service_not_configured'?t('nosvc'):j.error==='quota_exceeded'?t('quota'):(j.error||t('err')));
+  return j;
+}
+async function fnPost(name,body){
+  const {data:s}=await sb.auth.getSession();
+  const r=await fetch(SB_URL+'/functions/v1/'+name,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+s.session.access_token,apikey:SB_KEY},body:JSON.stringify(body)});
+  return r.json().catch(()=>({}));
+}
+const cleanHtml=x=>(x||'').replace(/^```html?\s*/i,'').replace(/```\s*$/,'').trim();
+async function vSite(id,tab){
+  const {data:w}=await sb.from('websites').select('*').eq('id',id).maybeSingle();
+  const S=SIDE_C();
+  if(!w)return shell(S,'#/app/sites',`<div class="empty">404</div>`);
+  const tabs=['overview','details','analytics','versions','requests','domains'],html=w.config?.html||'';
+  const TI={overview:'globe',details:'list',analytics:'chart',versions:'pulse',requests:'chat',domains:'server'};SHEET_EXTRA={title:w.name,cur:'#/app/site/'+id+'/'+tab,items:tabs.map(x=>['#/app/site/'+id+'/'+x,t('tab_'+x),TI[x]])};
+  const {data:pss}=await sb.from('platform_settings').select('key,value').in('key',['public.sites_base_url','public.sites_root_domain']);const root=((pss||[]).find(x=>x.key==='public.sites_root_domain')||{}).value||'';const hostOk=!!(pss&&pss.length);
+  const head=`<div class="ph"><div><h1>${esc(w.name)}</h1><p>${esc(w.site_type||'')}</p></div>${stChip(w.status)}<span class="sp"></span>${w.status==='published'&&w.url?`<a class="btn s" href="${esc(w.url)}" target="_blank" rel="noopener">${t('openlive')}</a><button class="btn d" data-act="unpublish" data-id="${id}">${t('unpublish')}</button>`:''}<button class="btn p" data-act="publish" data-id="${id}" ${hostOk&&html?'':'disabled'} title="${esc(hostOk?'':t('hostna'))}">${t('publish')}</button></div>
+  <div class="row2" style="margin:-6px 0 18px"><button class="btn s" data-act="menu"><b class="dots" style="font-size:18px">&#8942;</b> ${t('tab_'+tab)}</button></div>`;
+  let b='';
+  if(tab==='overview'){
+    const {data:dps}=await sb.from('deployments').select('*').eq('website_id',id).order('created_at',{ascending:false}).limit(5);
+    b=`${hostOk?'':`<p style="color:var(--tx2);margin-bottom:16px">${t('hostna')}</p>`}
+    <div class="card row2"><span style="color:var(--tx2)">${t('yoursite')}</span><b dir="ltr">${w.slug&&root?esc(w.slug)+'.'+esc(root):'—'}</b><span class="sp"></span><a class="btn s" href="#/app/site/${id}/details">${t('tab_details')}</a></div>
+    <br><h3>${t('preview')}</h3><br>${html?`<iframe sandbox srcdoc="${esc(html)}"></iframe>`:`<div class="empty">—</div>`}
+    <br><h3>${t('settings')}</h3><form data-form="rename" data-id="${id}" class="card row2" style="margin:12px 0"><input name="name" value="${esc(w.name)}" required maxlength="80" style="width:260px"><button class="btn s">${t('rename')}</button><button type="button" class="btn d" data-act="delsite" data-id="${id}">${t('delsite')}</button></form><br><h3>${t('deploys')}</h3><br>${tbl([t('status'),t('message'),t('when')],(dps||[]).map(x=>`<tr><td><span class="chip ${x.status==='live'?'ok':x.status==='failed'?'er':'wa'}">${t(x.status)}</span></td><td>${esc(x.log||'')}</td><td>${fmtD(x.created_at)}</td></tr>`))}`;
+  }
+  if(tab==='details'){
+    const bf=(w.config&&w.config.brief)||{name:w.name,type:w.site_type};
+    b=`<form data-form="details" data-id="${id}" class="card fcard" style="max-width:900px"><div class="row2"><span style="color:var(--tx2)">${t('f_sub')}</span><b dir="ltr">${w.slug&&root?esc(w.slug)+'.'+esc(root):'—'}</b></div>${briefFields(bf)}<p style="color:var(--tx2);font-size:13px;margin-top:18px">${t('rebuildw')}</p><br><button class="btn p">${t('rebuild')}</button></form>`;
+  }
+  if(tab==='analytics'){
+    const {data}=await sb.from('site_events').select(EVSEL).eq('website_id',id).gte('created_at',since(90)).limit(10000);
+    b=(data&&data.length)?analyticsBlock(data):`<div class="empty">${t('nodata')}</div>`;
+  }
+  if(tab==='versions'){
+    const {data}=await sb.from('website_versions').select('version,note,created_at').eq('website_id',id).order('version',{ascending:false}).limit(30);
+    b=tbl(['#',t('message'),t('when'),''],(data||[]).map(v=>`<tr><td>${v.version}</td><td>${esc(v.note||'')}</td><td>${fmtD(v.created_at)}</td><td><button class="btn s sm" data-act="restore" data-site="${id}" data-v="${v.version}">${t('restore')}</button></td></tr>`));
+  }
+  if(tab==='requests'){
+    const {data}=await sb.from('modification_requests').select('*').eq('website_id',id).order('created_at',{ascending:false});
+    b=`<form data-form="modreq" data-id="${id}" class="card" style="margin-bottom:18px"><label style="margin-top:0">${t('mr_ask')}</label><textarea name="d" required maxlength="2000" placeholder="${esc(t('mr_ph'))}"></textarea><br><br><button class="btn p">${t('mr_send')}</button></form>`+
+    (data||[]).map(r=>`<div class="card rq"><div class="row2"><b>${esc(r.description).slice(0,140)}</b><span class="sp"></span><span class="chip">${t(r.status==='in_progress'?'in_progress_':r.status)}</span></div>${r.status==='quoted'?`<div class="pricecard"><small>${t('mr_price')}</small><strong>$${Number(r.final_price)}</strong><p>${esc(r.ai_reason||'')}</p><div class="row2"><button class="btn p" data-act="aiaccept" data-id="${r.id}" data-site="${id}">${t('mr_accept')}</button><button class="btn d" data-act="respond" data-id="${r.id}" data-to="false">${t('reject')}</button></div></div>`:''}${r.status==='submitted'?`<br><button class="btn s sm" data-act="aiquote" data-id="${r.id}">${t('mr_getprice')}</button>`:''}${r.status==='approved'?`<br><button class="btn p sm" data-act="aiapply" data-id="${r.id}" data-site="${id}">${t('mr_apply')}</button>`:''}</div>`).join('');
+  }
+  if(tab==='domains'){
+    const {data}=await sb.from('domains').select('*').eq('website_id',id).order('created_at');
+    b=`<p style="color:var(--tx2);margin-bottom:14px">${t('domnote')}</p><form data-form="domain" data-id="${id}" class="card row2" style="margin-bottom:16px"><input name="host" required placeholder="example.com" pattern="[A-Za-z0-9.-]+\\.[A-Za-z]{2,}" style="width:280px;direction:ltr"><button class="btn p">${t('adddom')}</button></form>`+
+    tbl([t('domain'),t('status'),''],(data||[]).map(d=>`<tr><td dir="ltr" style="text-align:start">${esc(d.hostname)}</td><td><span class="chip wa">${esc(d.status)}</span></td><td><button class="btn d sm" data-act="deldom" data-id="${d.id}">${t('del')}</button></td></tr>`));
+  }
+  return shell(S,'#/app/sites',head+b);
+}
+
+
+const COLORS=['#2433ff','#0f766e','#b45309','#be123c','#7c3aed','#111827'];
+const TYPES=['store','company','restaurant','clinic','portfolio','blog','landing','education','other'];
+function briefFields(b){
+  b=b||{};const v=k=>esc(b[k]||'');
+  const inp=(k,lab,ph,type,req)=>`<div><label>${t(lab)}</label><input name="${k}" value="${v(k)}" ${req?'required':''} ${type?`type="${type}"`:''} ${ph?`placeholder="${ph}"`:''} maxlength="200"></div>`;
+  return `${typeCards(b.type)}<h3>${t('sec_basic')}</h3><div class="fg">${inp('name','f_name','','',1)}${inp('tag','f_tag')}</div>
+  <label>${t('f_desc')}</label><textarea name="desc" required maxlength="1200">${v('desc')}</textarea>
+  <div class="fg"><div><label>${t('f_lang')}</label><select name="lang">${['ar','en','both'].map(x=>`<option value="${x}" ${(b.lang||L)===x?'selected':''}>${t('l_'+x)}</option>`).join('')}</select></div></div>
+  <h3>${t('sec_contact')}</h3><div class="fg">${inp('phone','f_phone','','tel',1)}${inp('wa','f_wa','','tel')}${inp('email','f_email','','email')}${inp('addr','f_addr')}${inp('hours','f_hours')}</div>
+  <h3>${t('sec_social')}</h3><div class="fg">${inp('ig','f_ig','@')}${inp('fb','f_fb')}${inp('tt','f_tt','@')}${inp('tg','f_tg','@')}</div>
+  <h3>${t('sec_content')}</h3><label>${t('f_items')}</label><textarea name="items" maxlength="4000" placeholder="${t('f_items_h')}">${v('items')}</textarea>
+  <h3>${t('sec_look')}</h3><label>${t('f_color')}</label><div class="sw">${COLORS.map(c=>`<label><input type="radio" name="color" value="${c}" ${(b.color||COLORS[0])===c?'checked':''}><i style="background:${c}"></i></label>`).join('')}</div>
+  <label>${t('f_style')}</label><select name="style">${['modern','classic','bold'].map(x=>`<option value="${x}" ${b.style===x?'selected':''}>${t('st_'+x)}</option>`).join('')}</select>`;
+}
+function genSite(b){
+  const TL={ar:{about:'من نحن',services:'خدماتنا ومنتجاتنا',contact:'تواصل معنا',call:'اتصل بنا',wa:'واتساب',hours:'ساعات العمل',addr:'العنوان',email:'البريد الإلكتروني',follow:'تابعنا'},en:{about:'About us',services:'Our offering',contact:'Contact us',call:'Call us',wa:'WhatsApp',hours:'Working hours',addr:'Address',email:'Email',follow:'Follow us'}};
+  const both=b.lang==='both',lg=b.lang==='en'?'en':'ar',e=esc;
+  const c=/^#[0-9a-f]{6}$/i.test(b.color||'')?b.color:'#2433ff';
+  const sh=(h,f)=>'#'+[1,3,5].map(i=>Math.round(parseInt(h.substr(i,2),16)*f).toString(16).padStart(2,'0')).join('');
+  const lb=k=>both?`<span data-ar="${TL.ar[k]}" data-en="${TL.en[k]}">${TL[lg][k]}</span>`:TL[lg][k];
+  const intl=x=>{let q=String(x||'').trim().replace(/[^\d+]/g,'');if(!q)return'';if(q[0]==='+')return q.slice(1);if(q.startsWith('00'))return q.slice(2);if(q[0]==='0')return '218'+q.slice(1);return q.length<=9?'218'+q:q};const tel=x=>intl(x)?'tel:+'+intl(x):'',dg=x=>intl(x);
+  const soc=(v,base)=>{v=String(v||'').trim();if(!v)return'';return /^https?:\/\//i.test(v)?v:base+encodeURIComponent(v.replace(/^@/,''))};
+  const links=[['Instagram',soc(b.ig,'https://instagram.com/')],['Facebook',soc(b.fb,'https://facebook.com/')],['TikTok',soc(b.tt,'https://tiktok.com/@')],['Telegram',soc(b.tg,'https://t.me/')]].filter(x=>x[1]);
+  const items=String(b.items||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,40).map(x=>{const p=x.split('|').map(y=>y.trim());return{n:p[0],p:p[1],d:p[2]}});
+  const st=b.style==='classic'?{r:'6px',h:'Georgia,"Amiri",serif',hero:`background:${c}12;color:#171717;border-bottom:3px solid ${c}`,hb:'#171717'}:b.style==='bold'?{r:'4px',h:'inherit',hero:'background:#0b1020;color:#fff',hb:'#fff'}:{r:'18px',h:'inherit',hero:`background:linear-gradient(135deg,${c},${sh(c,.45)});color:#fff`,hb:'#fff'};
+  const css=`*{box-sizing:border-box;margin:0}body{font:16px/1.8 'IBM Plex Sans Arabic',system-ui,sans-serif;color:#171717;background:#fff}a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid #eaecef;display:flex;align-items:center;gap:20px;padding:14px 5vw;z-index:5}
+.lg{font-size:20px;font-weight:700;font-family:${st.h}}header nav{display:flex;gap:18px;margin-inline-start:auto;font-size:15px}header nav a:hover{color:${c}}
+#lt{border:1px solid #eaecef;background:#fff;border-radius:${st.r};padding:4px 12px;cursor:pointer}
+.hero{${st.hero};padding:12vh 5vw;text-align:center}.hero h1{font-size:clamp(34px,6vw,64px);line-height:1.15;font-family:${st.h};letter-spacing:-.02em}.hero p{font-size:19px;opacity:.9;max-width:640px;margin:16px auto 28px}
+.btn{display:inline-block;padding:12px 26px;border-radius:${st.r};font-weight:600;margin:4px;background:${c};color:#fff;border:2px solid ${c}}.hero .btn.o{background:transparent;border-color:currentColor;color:${st.hb}}
+section.s{padding:9vh 5vw;max-width:1100px;margin:auto}section.s h2{font-size:32px;margin-bottom:18px;font-family:${st.h}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}.card{border:1px solid #eaecef;border-radius:${st.r};padding:22px}.card h3{font-size:18px;margin-bottom:6px}.card b{color:${c}}.card p{color:#666;font-size:15px}
+.ct li{list-style:none;padding:12px 0;border-bottom:1px solid #eaecef;display:flex;gap:12px;flex-wrap:wrap}.ct li b{min-width:130px}
+.acc{border:1px solid #eaecef;border-radius:${st.r};overflow:hidden;margin-top:10px}
+.acc-it{border-bottom:1px solid #eaecef}.acc-it:last-child{border-bottom:0}
+.acc-h{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:14px;width:100%;padding:18px 22px;cursor:pointer;font-size:19px;font-weight:600;font-family:${st.h};transition:background .2s}
+.acc-h:hover{background:${c}0d}.acc-h:focus-visible{outline:2px solid ${c};outline-offset:-2px}
+.acc-dots{flex:none;width:30px;height:30px;border-radius:50%;background:${c};color:#fff;display:grid;place-items:center;font-size:17px;line-height:1;transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.acc-it[data-open="1"] .acc-dots{transform:rotate(90deg)}
+.acc-h span{flex:1}.acc-sub{font-weight:400;font-size:14px;color:#8a8f98}
+.acc-b{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s cubic-bezier(.4,0,.2,1)}
+.acc-it[data-open="1"] .acc-b{grid-template-rows:1fr}
+.acc-b>div{overflow:hidden}.acc-b .pad{padding:0 22px 22px}
+.it{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px dashed #eaecef}.it:last-child{border-bottom:0}.it b{color:${c};white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.acc-dots{transition:none}.acc-b{transition:none}}
+footer{background:#0b1020;color:#cfd3dd;text-align:center;padding:28px 5vw;font-size:14px}footer a{margin:0 8px;color:#fff}`;
+  const nav=`<a href="#about">${lb('about')}</a>${items.length?`<a href="#services">${lb('services')}</a>`:''}<a href="#contact">${lb('contact')}</a>`;
+  const cta=`${b.phone?`<a class="btn" href="${e(tel(b.phone))}">${lb('call')}</a>`:''}${dg(b.wa)?`<a class="btn o" href="https://wa.me/${dg(b.wa)}" target="_blank" rel="noopener">${lb('wa')}</a>`:''}`;
+  const rows=[[b.phone,'call',`<a href="${e(tel(b.phone))}" dir="ltr">${e(b.phone)}</a>`],[dg(b.wa),'wa',`<a href="https://wa.me/${dg(b.wa)}" target="_blank" rel="noopener" dir="ltr">${e(b.wa)}</a>`],[b.email,'email',`<a href="mailto:${e(b.email)}">${e(b.email)}</a>`],[b.addr,'addr',e(b.addr)],[b.hours,'hours',e(b.hours)]].filter(r=>r[0]).map(r=>`<li><b>${lb(r[1])}</b><span>${r[2]}</span></li>`).join('');
+  const js=both?`<script>(function(){var l="${lg}";document.getElementById("lt").onclick=function(){l=l==="ar"?"en":"ar";document.documentElement.lang=l;document.documentElement.dir=l==="ar"?"rtl":"ltr";document.querySelectorAll("[data-ar]").forEach(function(x){x.textContent=x.getAttribute("data-"+l)})}})()<\/script>`:'';
+  const accJs=`<script>(function(){document.querySelectorAll(".acc-h").forEach(function(h){h.addEventListener("click",function(){var it=h.closest(".acc-it"),open=it.getAttribute("data-open")==="1";it.setAttribute("data-open",open?"0":"1");h.setAttribute("aria-expanded",String(!open))})});document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener("click",function(){var t=document.querySelector(a.getAttribute("href"));if(t&&t.classList.contains("acc-it")){t.setAttribute("data-open","1");var h=t.querySelector(".acc-h");if(h)h.setAttribute("aria-expanded","true")}})})})()<\/script>`;
+  return `<!doctype html><html lang="${lg}" dir="${lg==='ar'?'rtl':'ltr'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${e(b.name)}</title><meta name="description" content="${e(String(b.desc||'').slice(0,150))}"><meta property="og:title" content="${e(b.name)}"><meta name="theme-color" content="${c}"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet"><style>${css}</style></head><body>
+<header><a class="lg" href="#">${e(b.name)}</a><nav>${nav}</nav>${both?'<button id="lt" type="button">EN / ع</button>':''}</header>
+<section class="hero"><h1>${e(b.name)}</h1><p>${e(b.tag||b.desc)}</p><div>${cta}</div></section>
+<section class="s"><div class="acc">
+<div class="acc-it" data-open="1" id="about"><button class="acc-h" type="button" aria-expanded="true"><b class="acc-dots">&#8942;</b><span>${lb('about')}</span></button><div class="acc-b"><div><p class="pad">${e(b.desc)}</p></div></div></div>
+${items.length?`<div class="acc-it" id="services"><button class="acc-h" type="button" aria-expanded="false"><b class="acc-dots">&#8942;</b><span>${lb('services')}</span><small class="acc-sub">${items.length}</small></button><div class="acc-b"><div><div class="pad">${items.map(i=>`<div class="it"><span>${e(i.n)}${i.d?`<br><small style="color:#8a8f98">${e(i.d)}</small>`:''}</span>${i.p?`<b>${e(i.p)}</b>`:''}</div>`).join('')}</div></div></div>`:''}
+<div class="acc-it" id="contact"><button class="acc-h" type="button" aria-expanded="false"><b class="acc-dots">&#8942;</b><span>${lb('contact')}</span></button><div class="acc-b"><div><ul class="ct pad" style="padding-top:0">${rows}</ul></div></div></div>
+</div></section>
+<footer>${links.length?`<p style="margin-bottom:10px">${lb('follow')}: ${links.map(l=>`<a href="${e(l[1])}" target="_blank" rel="noopener">${l[0]}</a>`).join('')}</p>`:''}© ${new Date().getFullYear()} ${e(b.name)}</footer>${js}${accJs}</body></html>`;
+}
+
+/* ---------- templates and custom design generation ---------- */
+const TEMPLATES=[
+ {id:'shop',type:'store',style:'modern',color:'#2433ff',dir:'Modern online-store landing page: bright clean layout, bold hero with a strong call to action, offer grid, trust points, WhatsApp order button.'},
+ {id:'shopdark',type:'store',style:'bold',color:'#7c3aed',dir:'Dark, premium store landing page: near-black background, vivid accent, large type, glowing hover effects, product/offer cards.'},
+ {id:'food',type:'restaurant',style:'classic',color:'#b45309',dir:'Warm restaurant or cafe page: serif headings, cream background, appetizing menu-style sections, opening hours highlighted.'},
+ {id:'clinic',type:'clinic',style:'modern',color:'#0f766e',dir:'Calm clinic or medical center page: airy whitespace, soft teal accents, reassuring tone, services list, easy appointment call button.'},
+ {id:'corp',type:'company',style:'classic',color:'#111827',dir:'Serious corporate page: restrained palette, structured sections, confident headings, services and contact clearly separated.'},
+ {id:'port',type:'portfolio',style:'bold',color:'#be123c',dir:'Creative portfolio page: expressive big typography, asymmetric grid, strong accent color, playful hover motion.'},
+ {id:'land',type:'landing',style:'modern',color:'#2433ff',dir:'Single-purpose landing page: one clear promise, benefits row, social proof placeholders avoided, strong repeated call to action.'}];
+function tplGallery(){
+  const sample=tp=>({name:'Royal',tag:L==='en'?'Your slogan here':'شعارك هنا',desc:L==='en'?'A short description of your business.':'وصف مختصر لنشاطك.',type:tp.type,style:tp.style,color:tp.color,lang:L==='en'?'en':'ar',phone:'0910000000',wa:'0910000000',items:L==='en'?'First item\nSecond item\nThird item':'الخدمة الأولى\nالخدمة الثانية\nالخدمة الثالثة'});
+  return `<h3>${t('tpl_title')}</h3><p style="color:var(--tx2);font-size:14px;margin:4px 0 14px">${t('tpl_sub')}</p><div class="tpls">${TEMPLATES.map((tp,i)=>`<label class="tpl"><input type="radio" name="tpl" value="${tp.id}" ${i===0?'checked':''}><div class="thumb"><iframe sandbox tabindex="-1" srcdoc="${esc(genSite(sample(tp)))}"></iframe></div><b>${t('tn_'+tp.id)}</b></label>`).join('')}</div><br>`;
+}
+const intlNum=x=>{let q=String(x||'').trim().replace(/[^\d+]/g,'');if(!q)return'';if(q[0]==='+')return q.slice(1);if(q.startsWith('00'))return q.slice(2);if(q[0]==='0')return '218'+q.slice(1);return q.length<=9?'218'+q:q};
+async function buildSite(id,b,note){
+  await saveHtml(id,genSite(b),note||'initial');           // a working page always exists first
+  try{const j=await fnPost('ai-gateway',{action:'build',website_id:id});if(j&&j.ok)return'ai'}catch(e){}
+  return'tpl';
+}
+
+async function vNewSite(){
+  const {data:rt}=await sb.from('platform_settings').select('value').eq('key','public.sites_root_domain').maybeSingle();
+  const root=rt&&rt.value||'';
+  return shell(SIDE_C(),'#/app/new',`<div class="ph"><div><h1>${t('wiz_title')}</h1><p>${t('wiz_sub')}</p></div></div>
+  <form data-form="wizard" class="card fcard" style="max-width:1000px"><h3>${t('f_sub')}</h3><div class="dom"><input id="sl" name="sub" required minlength="3" maxlength="30" pattern="[a-z0-9\\-]{3,30}" placeholder="royal" autocomplete="off" autocapitalize="off"><span>${root?'.'+esc(root):''}</span></div>
+  <div id="slst" style="font-size:13px;margin:6px 0 0;color:var(--tx2)">${t('sub_hint')}</div><div style="font-size:13px;margin-top:4px;color:var(--tx2)" dir="ltr">https://<b id="slp">royal</b>${root?'.'+esc(root):''}</div>
+  ${briefFields({lang:L})}<br><br><button class="btn p lg">${t('createSite')}</button></form>`);
+}
+
+async function vApp(sub){
+  if(!me)return vApp0(sub);
+  const S=SIDE_C();
+  if(sub==='new')return vNewSite();
+  if(!sub)return vCDash();
+  if(sub==='sites')return vSites();
+  if(sub==='analytics'||sub.startsWith('analytics/'))return vCAnalytics(sub.slice(10));
+  if(sub==='requests')return vCRequests();
+  if(sub==='settings')return vSettings();
+  if(sub==='support'){
+    const {data}=await sb.from('support_tickets').select('*').order('created_at',{ascending:false});
+    return shell(S,'#/app/support',`<h2>${t('support')}</h2><form data-form="ticket" class="card" style="margin:14px 0;max-width:560px"><label>${t('subject')}</label><input name="subject" required maxlength="140"><label>${t('message')}</label><textarea name="body" required maxlength="4000"></textarea><br><br><button class="btn p">${t('newticket')}</button></form>`+
+      (data&&data.length?`<div class="grid">${data.map(x=>`<a class="card h" href="#/app/support/${x.id}"><h3>${esc(x.subject)}</h3><span class="chip">${t(x.status)}</span></a>`).join('')}</div>`:''));
+  }
+  if(sub&&sub.startsWith('support/'))return shell(S,'#/app/support',await thread(sub.slice(8),'#/app/support',false));
+  if(sub==='notes'){
+    const {data}=await sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(50);
+    return shell(S,'#/app/notes',`<div class="row2"><h2>${t('notes')}</h2><span class="sp"></span><button class="btn s sm" data-act="readall">${t('readall')}</button></div><br>`+
+      (data&&data.length?`<div style="display:grid;gap:10px">${data.map(n=>`<div class="card" style="${n.read_at?'opacity:.6':''}"><b>${esc(t(n.title))}</b> ${n.body?'· '+esc(n.body):''}<br><small style="color:var(--tx2)">${fmtD(n.created_at)}</small></div>`).join('')}</div>`:`<div class="empty">${t('nonotes')}</div>`));
+  }
+  if(sub==='billing'){
+    const {data}=await sb.from('invoices').select('*').order('created_at',{ascending:false});
+    return shell(S,'#/app/billing',`<h2>${t('invoices')}</h2><p style="color:var(--tx2);margin:6px 0 16px">${t('manualpay')}</p>`+tbl([t('when'),t('amount'),t('status')],(data||[]).map(i=>`<tr><td>${fmtD(i.created_at)}</td><td>${Number(i.amount)} ${esc(i.currency)}</td><td><span class="chip ${i.status==='paid'?'ok':i.status==='failed'?'er':'wa'}">${t(i.status)}</span></td></tr>`)));
+  }
+  if(sub==='contracts')return vCContracts();
+  if(sub&&sub.startsWith('site/')){const [sid,tab]=sub.slice(5).split('/');return vSite(sid,tab||'overview')}
+  return vApp0(sub);
+}
+async function vCContracts(){
+  const {data}=await sb.from('contracts').select('*').order('created_at',{ascending:false});
+  const chip=s=>`<span class="chip ${s==='approved'?'ok':s==='void'?'er':s==='received_signed'?'ok':'wa'}">${t('ctr_'+s)}</span>`;
+  return shell(SIDE_C(),'#/app/contracts',`<h2>${t('contractsT')}</h2><br>`+
+  (data&&data.length?`<div style="display:grid;gap:10px">${data.map(c=>`<div class="card"><div class="row2"><b>${esc(c.contract_number)}</b><span class="sp"></span>${chip(c.status)}</div>${c.title?`<p>${esc(c.title)}</p>`:''}<small style="color:var(--tx2)">${fmtD(c.created_at)}</small><br><br>
+  <div class="row2">${c.share_token&&['sent','awaiting_signature'].includes(c.status)?`<a class="btn p sm" href="#/c/${c.share_token}">${t('ctr_sign_title')}</a>`:''}${c.original_path?`<button class="btn s sm" data-act="ctrfile" data-id="${c.id}" data-which="original">${t('ctr_vieworig')}</button>`:''}${c.signed_path?`<button class="btn s sm" data-act="ctrfile" data-id="${c.id}" data-which="signed">${t('ctr_viewsigned')}</button>`:''}${c.esign_image_path?`<button class="btn s sm" data-act="ctrfile" data-id="${c.id}" data-which="esign">${t('ctr_viewesign')}</button>`:''}</div></div>`).join('')}</div>`:`<div class="empty">${t('ctr_none')}</div>`));
+}
+async function vAdmin(sub){
+  if(!me||!isAdm())return vAdmin0(sub);
+  const S=SIDE_A();
+  if(!sub)return vADash();
+  if(sub==='analytics')return vAAnalytics();
+  if(sub==='servers')return vAServers();
+  if(sub==='prompts')return vAPrompts();
+  if(sub==='settings'){
+    if(!isSuper())return `<div class="wrap sec">${t('noaccess')}</div>`;
+    const {data}=await sb.from('platform_settings').select('value').eq('key','public.sites_base_url').maybeSingle();
+    return shell(S,'#/admin/settings',`<div class="ph"><h1>${t('settingsT')}</h1></div><form data-form="platform" class="card" style="max-width:640px"><label style="margin-top:0">${t('baseurl')}</label><input name="url" value="${esc(data&&data.value||'')}" placeholder="https://" dir="ltr" required><p style="color:var(--tx2);font-size:13px;margin-top:8px">${t('baseurlh')}</p><br><button class="btn p">${t('save')}</button></form>`);
+  }
+  if((sub==='plans'||sub==='engine'||sub==='settings'||sub==='prompts')&&!isSuper())return `<div class="wrap sec">${t('noaccess')}</div>`;
+  if(sub==='sites'){
+    const {data}=await sb.from('websites').select('*,profiles(full_name)').order('created_at',{ascending:false}).limit(300);
+    return shell(S,'#/admin/sites',`<h2>${t('allsites')}</h2><br>`+tbl([t('sname'),t('customer'),t('status'),t('when'),''],(data||[]).map(w=>`<tr><td>${esc(w.name)}</td><td>${esc(w.profiles?.full_name)}</td>
+    <td><select style="width:auto" data-chg="wstatus" data-id="${w.id}">${['draft','building','stopped','published'].map(x=>`<option value="${x}" ${x===w.status?'selected':''} ${x==='published'&&w.status!=='published'?'disabled':''}>${t(x==='building'?'building_':x)}</option>`).join('')}</select></td><td>${fmtD(w.updated_at)}</td>
+    <td><a class="btn s sm" href="#/app/site/${w.id}">${t('open_')}</a></td></tr>`)));
+  }
+  if(sub==='tickets'){
+    const {data}=await sb.from('support_tickets').select('*,profiles!user_id(full_name)').order('created_at',{ascending:false}).limit(200);
+    return shell(S,'#/admin/tickets',`<h2>${t('tickets')}</h2><br>`+tbl([t('subject'),t('customer'),t('status'),''],(data||[]).map(x=>`<tr><td>${esc(x.subject)}</td><td>${esc(x.profiles?.full_name)}</td><td><span class="chip">${t(x.status)}</span></td><td><a class="btn s sm" href="#/admin/tickets/${x.id}">${t('open')}</a></td></tr>`)));
+  }
+  if(sub&&sub.startsWith('tickets/'))return shell(S,'#/admin/tickets',await thread(sub.slice(8),'#/admin/tickets',true));
+  if(sub==='requests'){
+    const {data}=await sb.from('modification_requests').select('*,websites(name),profiles!user_id(full_name)').order('created_at',{ascending:false}).limit(200);
+    return shell(S,'#/admin/requests',`<h2>${t('requests')}</h2><br>`+tbl([t('sname'),t('message'),t('level'),t('status'),t('price'),''],(data||[]).map(r=>`<tr><td>${esc(r.websites?.name)}<br><small>${esc(r.profiles?.full_name)}</small></td><td>${esc(r.description).slice(0,90)}</td><td>${t(r.level)}</td><td><span class="chip">${t(r.status==='in_progress'?'in_progress_':r.status)}</span></td>
+    <td>${r.final_price!=null?Number(r.final_price):'—'}${r.ai_reason?'<br><small style="color:var(--tx2)">'+esc(r.ai_reason)+'</small>':''}</td>
+    <td>${['submitted','analyzing'].includes(r.status)?`<button class="btn s sm" data-act="quote" data-id="${r.id}">${t('retryprice')}</button>`:''}</td></tr>`)));
+  }
+  if(sub==='invoices'){
+    const [{data},{data:us}]=await Promise.all([sb.from('invoices').select('*,profiles(full_name)').order('created_at',{ascending:false}).limit(200),sb.from('profiles').select('id,full_name').order('full_name').limit(500)]);
+    return shell(S,'#/admin/invoices',`<h2>${t('invs')}</h2><form data-form="invoice" class="card row2" style="margin:14px 0"><select name="user" required>${(us||[]).map(u=>`<option value="${u.id}">${esc(u.full_name)}</option>`).join('')}</select>
+    <input name="amount" type="number" min="0.01" step="0.01" required placeholder="${t('amount')}" style="width:120px"><button class="btn p sm">${t('add')}</button></form>`+
+    tbl([t('customer'),t('amount'),t('status'),''],(data||[]).map(i=>`<tr><td>${esc(i.profiles?.full_name)}</td><td>${Number(i.amount)} ${esc(i.currency)}</td><td><span class="chip ${i.status==='paid'?'ok':'wa'}">${t(i.status)}</span></td><td>${i.status==='pending'?`<button class="btn s sm" data-act="paid" data-id="${i.id}">${t('markpaid')}</button>`:''}</td></tr>`)));
+  }
+  if(sub==='monitor'){
+    const {data}=await sb.from('uptime_checks').select('*,websites(name)').order('checked_at',{ascending:false}).limit(60);
+    return shell(S,'#/admin/monitor',`<div class="row2"><h2>${t('monitor')}</h2><span class="sp"></span><button class="btn p sm" data-act="runcheck">${t('runcheck')}</button></div><br>`+tbl([t('sname'),t('status'),'ms',t('when')],(data||[]).map(c=>`<tr><td>${esc(c.websites?.name)}</td><td><span class="chip ${c.ok?'ok':'er'}">${c.status_code??esc(c.error||'')}</span></td><td>${c.latency_ms??''}</td><td>${fmtD(c.checked_at)}</td></tr>`)));
+  }
+  if(sub==='contracts')return vAContracts();
+  return vAdmin0(sub);
+}
+async function vAContracts(){
+  const [{data},{data:us}]=await Promise.all([
+    sb.from('contracts').select('*,profiles!customer_id(full_name)').order('created_at',{ascending:false}).limit(300),
+    sb.from('profiles').select('id,full_name').eq('role','customer').order('full_name').limit(1000)
+  ]);
+  const chip=s=>`<span class="chip ${s==='approved'?'ok':s==='void'?'er':s==='received_signed'?'ok':'wa'}">${t('ctr_'+s)}</span>`;
+  const row=c=>{
+    const link=location.origin+location.pathname+'#/c/'+c.share_token;
+    return `<tr><td>${esc(c.contract_number)}</td><td>${esc(c.profiles?.full_name)}</td><td>${esc(c.title||'')}</td><td>${chip(c.status)}</td>
+    <td style="white-space:nowrap">
+    ${c.original_path&&c.status==='draft'?`<button class="btn p sm" data-act="ctrsend" data-id="${c.id}">${t('ctr_send')}</button>`:''}
+    ${['sent','awaiting_signature'].includes(c.status)?`<button class="btn s sm" data-act="ctrcopy" data-link="${esc(link)}">${t('ctr_copylink')}</button> <a class="btn s sm" target="_blank" href="https://wa.me/?text=${encodeURIComponent(link)}">${t('ctr_wa')}</a>`:''}
+    ${c.signed_path||c.esign_image_path?`<button class="btn s sm" data-act="ctrfile" data-id="${c.id}" data-which="${c.signed_path?'signed':'esign'}">${t('ctr_viewsigned')}</button>`:''}
+    ${c.status==='received_signed'?`<button class="btn p sm" data-act="ctrapprove" data-id="${c.id}">${t('ctr_approve')}</button>`:''}
+    ${c.original_path?`<button class="btn s sm" data-act="ctrfile" data-id="${c.id}" data-which="original">${t('ctr_vieworig')}</button>`:''}
+    </td></tr>`;
+  };
+  return shell(SIDE_A(),'#/admin/contracts',`<div class="ph"><h1>${t('contractsT')}</h1></div>
+  <form data-form="contract" class="card" style="max-width:640px;margin-bottom:16px"><h3 style="margin-top:0">${t('ctr_new')}</h3>
+  <label>${t('ctr_customer')}</label><select name="customer" required>${(us||[]).map(u=>`<option value="${u.id}">${esc(u.full_name)}</option>`).join('')}</select>
+  <label>${t('ctr_title')}</label><input name="title" maxlength="140">
+  <label>${t('ctr_file')}</label><input type="file" name="file" accept="application/pdf,image/jpeg,image/png,image/webp" required>
+  <br><br><button class="btn p">${t('ctr_create')}</button></form>`+
+  tbl([t('ctr_number'),t('customer'),t('ctr_title'),t('ctr_status'),''],(data||[]).map(row)));
+}
+
+
+/* ---------- public site host: the same app serves <name>.ibtkar.ly ---------- */
+const ROOT_DOMAIN='ibtkar.ly';
+async function showSite(slug){
+  const r=await sb.rpc('get_published_site',{p_slug:slug}),row=r.data&&r.data[0];
+  if(!row){document.open();document.write('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font:18px system-ui;display:grid;place-items:center;min-height:100vh;margin:0">404</body>');document.close();return}
+  const tr='<script>try{if(navigator.doNotTrack!=="1"){fetch('+JSON.stringify(SB_URL+'/functions/v1/track')+',{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({site:'+JSON.stringify(row.website_id)+',path:location.pathname,ref:document.referrer}),keepalive:true})}}catch(e){}<\/script>';
+  let h=row.html;h=/<\/body>/i.test(h)?h.replace(/<\/body>/i,tr+'</body>'):h+tr;
+  document.open();document.write(h);document.close();
+}
+const HOSTED=(()=>{const m=location.hostname.match(/^([a-z0-9-]+)\.ibtkar\.ly$/);return m&&!['app','www'].includes(m[1])?m[1]:null})();
+
+/* ---------- public contract signing page: #/c/<share_token> ---------- */
+async function ctrGet(token,which){
+  const r=await fetch(SB_URL+'/functions/v1/contract-file?token='+encodeURIComponent(token)+'&which='+which,{headers:{apikey:SB_KEY}});
+  return r.json();
+}
+async function ctrPost(body){
+  const r=await fetch(SB_URL+'/functions/v1/contract-file',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY},body:JSON.stringify(body)});
+  return r.json().catch(()=>({}));
+}
+async function vContract(token){
+  const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if(!UUID.test(token))return `<div class="wrap sec"><div class="empty">${t('ctr_notfound')}</div></div>`;
+  const j=await ctrGet(token,'meta');
+  if(!j.contract)return `<div class="wrap sec"><div class="empty">${t('ctr_notfound')}</div></div>`;
+  const c=j.contract;
+  const done=c.has_signed||c.has_esign;
+  const canSign=['sent','awaiting_signature'].includes(c.status)&&!done;
+  return `<div class="wrap sec" style="max-width:640px;margin-inline:auto">
+  <h2>${t('ctr_sign_title')}</h2><p style="color:var(--tx2)">${t('ctr_sign_sub')}</p>
+  <div class="card" style="margin:16px 0"><div class="row2"><b>${esc(c.contract_number)}</b><span class="sp"></span><span class="chip ${done?'ok':'wa'}">${t('ctr_'+c.status)}</span></div>${c.title?`<p>${esc(c.title)}</p>`:''}
+  <br><button class="btn p" data-act="ctrpub" data-which="original" data-token="${esc(token)}">${t('ctr_vieworig')}</button>
+  <p style="color:var(--tx2);font-size:13px;margin-top:10px">${t('ctr_yourcopy')}</p></div>
+  ${done?`<div class="card ok" style="text-align:center;padding:26px">${t('ctr_already')}<br><br>${t('ctr_thanks')}</div>`:canSign?`
+  <div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">${t('ctr_upload_signed')}</h3>
+  <form data-form="csign" data-token="${esc(token)}"><input type="file" name="file" accept="application/pdf,image/jpeg,image/png,image/webp" required><br><br><button class="btn p">${t('ctr_upload_btn')}</button></form></div>
+  <div class="card"><h3 style="margin-top:0">${t('ctr_esign_h')}</h3>
+  <canvas id="esigncv" width="560" height="200" style="width:100%;max-width:560px;height:200px;border:1px dashed var(--bd);border-radius:10px;touch-action:none;background:#fff"></canvas>
+  <div class="row2" style="margin-top:8px"><input id="esignname" placeholder="${t('ctr_esign_name')}" style="flex:1"><button class="btn s sm" data-act="esignclear">${t('ctr_esign_clear')}</button></div>
+  <br><button class="btn p" data-act="esignsubmit" data-token="${esc(token)}">${t('ctr_esign_btn')}</button></div>`:''}
+  </div>`;
+}
+function wireSignPad(cv){
+  const ctx=cv.getContext('2d');ctx.lineWidth=2.4;ctx.lineCap='round';ctx.strokeStyle='#111';
+  let drawing=false,lx=0,ly=0;
+  const pos=e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*(cv.width/r.width),y=(e.clientY-r.top)*(cv.height/r.height);return [x,y]};
+  cv.onpointerdown=e=>{drawing=true;[lx,ly]=pos(e)};
+  cv.onpointermove=e=>{if(!drawing)return;const [x,y]=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(x,y);ctx.stroke();[lx,ly]=[x,y]};
+  cv.onpointerup=()=>drawing=false;cv.onpointerleave=()=>drawing=false;
+}
+
+/* ---------- router ---------- */
+let busy=0;
+async function render(opts){
+  opts=opts||{};const keep=!!opts.keep;const sy=keep?window.scrollY:0;
+  const n=++busy;chrome();const v=$('#v');
+  const h=(location.hash||'#/').slice(2),[a,...r]=h.split('/'),sub=r.join('/');
+  const am=!!me&&!!prof&&(a==='app'||(a==='admin'&&isAdm()));
+  document.body.classList.toggle('appmode',am);
+  if(!keep)v.innerHTML=`<div class="wrap sec">${skel()}</div>`;
+  if(am){const c=await sb.from('notifications').select('*',{count:'exact',head:true}).is('read_at',null);UNREAD=c.count||0}
+  if(a==='s'){await showSite(sub.split('/')[0]);return}
+  let html;
+  try{
+    html=a===''?await vHome():a==='pricing'?await vPricing():a==='apps'?vApps():a==='login'?vAuth('login'):a==='signup'?vAuth('signup'):a==='app'?await vApp(sub):a==='admin'?await vAdmin(sub):a==='c'?await vContract(sub.split('/')[0]):await vHome();
+  }catch(e){html=`<div class="wrap sec">${t('err')}</div>`}
+  if(n!==busy)return;
+  if(!keep){v.style.animation='none';v.offsetHeight;v.style.animation=''}
+  v.innerHTML=html;
+  v.querySelectorAll('[data-count]').forEach(el=>{const to=+el.dataset.count,t0=performance.now();(function f(now){const p=Math.min((now-t0)/700,1);el.textContent=Math.round(to*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)})(t0)});
+  const cv=$('#esigncv');if(cv&&!cv._wired){cv._wired=true;wireSignPad(cv)}
+  if(keep)scrollTo(0,sy);else scrollTo(0,0);
+}
+addEventListener('hashchange',render);
+
+/* ---------- actions ---------- */
+async function audit(action,entity,meta){await sb.from('audit_logs').insert({actor_id:me.id,action,entity,meta})}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');
+  const lk=e.target.closest('[data-bid]');if(lk)sb.rpc&&sb.from('banners').select('clicks').eq('id',lk.dataset.bid).maybeSingle().then(r=>r.data&&sb.from('banners').update({clicks:r.data.clicks+1}).eq('id',lk.dataset.bid));
+  if(!b)return;const a=b.dataset.act,id=b.dataset.id;b.disabled=true;
+  try{
+    if(a==='lang'){L=L==='ar'?'en':'ar';localStorage.setItem('lang',L);await banner();return render({keep:true})}
+    if(a==='logout'){await sb.auth.signOut();me=prof=null;location.hash='#/';return render({keep:true})}
+    if(a==='ustatus'){const r=await sb.from('profiles').update({status:b.dataset.to}).eq('id',id);if(r.error)throw r.error;await audit('user.status','profiles',{id,to:b.dataset.to})}
+    if(a==='btoggle'){const r=await sb.from('banners').update({active:b.dataset.to==='true'}).eq('id',id);if(r.error)throw r.error;await audit('banner.toggle','banners',{id})}
+    if(a==='bdel'){if(!confirm(t('del')+'?'))return;const r=await sb.from('banners').delete().eq('id',id);if(r.error)throw r.error;await audit('banner.delete','banners',{id})}
+    if(a==='pprice'){const v=parseFloat($('#pp'+id).value);if(isNaN(v)||v<0)throw new Error(t('err'));const r=await sb.from('plans').update({price:v}).eq('id',id);if(r.error)throw r.error;await audit('plan.price','plans',{id,v})}
+    if(a==='ptoggle'){const r=await sb.from('ai_providers').update({enabled:b.dataset.to==='true'}).eq('id',id);if(r.error)throw r.error;await audit('provider.toggle','ai_providers',{id})}
+    if(a==='addmodel'){const v=$('#m'+id).value.trim();if(!v)throw new Error(t('model'));const r=await sb.from('ai_models').insert({provider_id:id,model_id:v});if(r.error)throw r.error}
+    if(a==='setkey'){const el=$('#k'+id),v=el.value.trim();const r=await sb.rpc('admin_set_provider_key',{p_provider:id,p_key:v});el.value='';if(r.error)throw r.error}
+    if(a==='ptest'){const {data:s}=await sb.auth.getSession();const r=await fetch(SB_URL+'/functions/v1/ai-gateway',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+s.session.access_token,apikey:SB_KEY},body:JSON.stringify({action:'test',provider_id:id})});const j=await r.json();if(!j.ok)throw new Error(j.error||t('err'));}
+    if(a==='publish'){const r=await sb.rpc('request_publish',{p_site:id});if(r.error)throw new Error(t(r.error.message));toast(t('publishing'));const j=await fnPost('verify-publish',{deployment_id:r.data});if(!j.ok)throw new Error(t('pubfail')+': '+(j.error||''));toast(t('pubok'));render({keep:true});return}
+    if(a==='unpublish'){if(!confirm(t('unpublish')+'?'))return;const r=await sb.rpc('unpublish_website',{p_site:id});if(r.error)throw new Error(t(r.error.message))}
+    if(a==='menu'){const sh=$('#sheet');if(sh){sh.hidden=!sh.hidden;document.body.classList.toggle('noscroll',!sh.hidden)}b.disabled=false;return}
+    if(a==='boclose'){boClose();render({keep:true});return}
+    if(a==='boview'){boClose();const hh='#/app/site/'+id+'/overview';if(!id){location.hash='#/app/sites';render({keep:true});return}if(location.hash===hh)render({keep:true});else location.hash=hh;return}
+    if(a==='bopublish'){const sid=id;boOpen(t('bo_publishing'),'',[]);
+      try{const r=await sb.rpc('request_publish',{p_site:sid});if(r.error)throw new Error(t(r.error.message));const j=await fnPost('verify-publish',{deployment_id:r.data});if(!j.ok)throw new Error(t('pubfail')+': '+(j.error||''));
+        boDone(t('bo_live'),j.url,[`<a class="btn p lg" href="${esc(j.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`])}
+      catch(x){boDone(t('pubfail'),x.message,[`<button class="btn p lg" data-act="bopublish" data-id="${sid}">${t('send')}</button>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`],true)}
+      return}
+    if(a==='aiquote'){const j=await fnPost('ai-gateway',{action:'quote',request_id:id});if(!j.ok)throw new Error(t(j.error||'err'))}
+    if(a==='aiaccept'){const r=await sb.rpc('respond_quote',{p_id:id,p_accept:true});if(r.error)throw r.error;await runApply(id,b.dataset.site);return}
+    if(a==='aiapply'){await runApply(id,b.dataset.site);return}
+    if(a==='saveprompt'){const ta=$('#pr_'+b.dataset.key);if(!ta||ta.value.trim().length<20)throw new Error(t('err'));const r=await sb.from('ai_prompts').update({body:ta.value,updated_by:me.id,updated_at:new Date().toISOString()}).eq('key',b.dataset.key);if(r.error)throw r.error;await audit('prompt.update','ai_prompts',{key:b.dataset.key});toast(t('saved'));b.disabled=false;return}
+    if(a==='theme'){document.body.classList.toggle('dark');localStorage.setItem('theme',document.body.classList.contains('dark')?'dark':'light');b.disabled=false;return}
+    if(a==='range'){const c=ST[b.dataset.id],n=+b.dataset.n,box=$('#ch-'+b.dataset.id);if(c&&box){box.innerHTML=area(c.v.slice(-n),c.l.slice(-n));b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))}b.disabled=false;return}
+    if(a==='logoutall'){await sb.auth.signOut({scope:'global'});me=prof=null;location.hash='#/';return render({keep:true})}
+    if(a==='delreq'){if(!confirm(t('delreq')+'?'))return;const r=await sb.from('support_tickets').insert({user_id:me.id,subject:t('delreq'),category:'account_deletion'}).select().single();if(r.error)throw r.error;await sb.from('ticket_messages').insert({ticket_id:r.data.id,author_id:me.id,body:t('delreq')});toast(t('sent'));b.disabled=false;return}
+    if(a==='delsrv'){const c=await sb.from('deployments').select('id',{count:'exact',head:true}).eq('server_id',id).eq('status','live');if(c.count>0)throw new Error(t('srvbusy'));const r=await sb.from('servers').delete().eq('id',id);if(r.error)throw r.error;await audit('server.delete','servers',{id})}
+    if(a==='delsite'){if(!confirm(t('delwarn')))return;const r=await sb.from('websites').delete().eq('id',id);if(r.error)throw r.error;await audit('website.delete','websites',{id});location.hash='#/app';return render({keep:true})}
+    if(a==='dev'){const f=$('#pv');if(f)f.style.width=b.dataset.w;b.disabled=false;return}
+    if(a==='savecode'){await saveHtml(id,$('#code').value,'editor')}
+    if(a==='deldom'){const r=await sb.from('domains').delete().eq('id',id);if(r.error)throw r.error}
+    if(a==='readall'){const r=await sb.from('notifications').update({read_at:new Date().toISOString()}).is('read_at',null).eq('user_id',me.id);if(r.error)throw r.error}
+    if(a==='restore'){if(!confirm(t('restore')+'?'))return;const r=await sb.rpc('restore_version',{p_site:b.dataset.site,p_version:+b.dataset.v});if(r.error)throw r.error}
+    if(a==='respond'){const r=await sb.rpc('respond_quote',{p_id:id,p_accept:b.dataset.to==='true'});if(r.error)throw r.error}
+    if(a==='quote'){b.textContent=t('pricing_now');const j=await gw({action:'quote',request_id:id});if(!j.ok)throw new Error(j.error||t('err'))}
+    if(a==='paid'){const r=await sb.from('invoices').update({status:'paid'}).eq('id',id);if(r.error)throw r.error;await audit('invoice.paid','invoices',{id})}
+    if(a==='runcheck'){const {data:s}=await sb.auth.getSession();const r=await fetch(SB_URL+'/functions/v1/uptime-check',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+s.session.access_token,apikey:SB_KEY},body:'{}'});const j=await r.json();if(!r.ok)throw new Error(j.error||t('err'));toast(t('checked')+': '+j.checked);render({keep:true});return}
+    if(a==='ctrsend'){const r=await sb.from('contracts').update({status:'sent',sent_at:new Date().toISOString()}).eq('id',id).eq('status','draft');if(r.error)throw r.error;await audit('contract.send','contracts',{id})}
+    if(a==='ctrapprove'){const r=await sb.from('contracts').update({status:'approved',approved_at:new Date().toISOString(),approved_by:me.id}).eq('id',id).eq('status','received_signed');if(r.error)throw r.error;await audit('contract.approve','contracts',{id})}
+    if(a==='ctrcopy'){try{await navigator.clipboard.writeText(b.dataset.link)}catch(e){}toast(t('ctr_linkcopied'));b.disabled=false;return}
+    if(a==='ctrfile'){
+      const which=b.dataset.which;
+      const {data:c}=await sb.from('contracts').select('original_path,signed_path,esign_image_path').eq('id',id).maybeSingle();
+      const path=which==='original'?c?.original_path:which==='signed'?c?.signed_path:c?.esign_image_path;
+      if(!path)throw new Error(t('err'));
+      const r=await sb.storage.from('contracts').createSignedUrl(path,300);
+      if(r.error)throw r.error;window.open(r.data.signedUrl,'_blank');b.disabled=false;return;
+    }
+    if(a==='ctrpub'){
+      const j=await ctrGet(b.dataset.token,b.dataset.which);
+      if(!j.url)throw new Error(t('err'));window.open(j.url,'_blank');b.disabled=false;return;
+    }
+    if(a==='esignclear'){const cv=$('#esigncv');cv&&cv.getContext('2d').clearRect(0,0,cv.width,cv.height);b.disabled=false;return}
+    if(a==='esignsubmit'){
+      const name=($('#esignname')&&$('#esignname').value||'').trim();
+      if(name.length<2)throw new Error(t('err'));
+      const cv=$('#esigncv');if(!cv)throw new Error(t('err'));
+      const dataUrl=cv.toDataURL('image/png'),b64=dataUrl.split(',')[1];
+      const j=await ctrPost({token:b.dataset.token,which:'esign',name,image_base64:b64});
+      if(!j.ok)throw new Error(j.error||t('err'));
+      toast(t('ctr_thanks'));location.hash=location.hash;return render({keep:false});
+    }
+    toast(t('saved'));render({keep:true});
+  }catch(x){fail(x);b.disabled=false}
+});
+document.addEventListener('change',async e=>{
+  const s=e.target.closest('[data-chg="role"]');if(!s)return;
+  const r=await sb.from('profiles').update({role:s.value}).eq('id',s.dataset.id);
+  if(r.error)return fail(r.error);await audit('user.role','profiles',{id:s.dataset.id,role:s.value});toast(t('saved'));
+});
+document.addEventListener('change',async e=>{
+  const s=e.target.closest('[data-chg="tstatus"]');if(!s)return;
+  const r=await sb.from('support_tickets').update({status:s.value}).eq('id',s.dataset.id);
+  if(r.error)return fail(r.error);await audit('ticket.status','support_tickets',{id:s.dataset.id,to:s.value});toast(t('saved'));
+});
+document.addEventListener('change',async e=>{
+  const s=e.target.closest('[data-chg="wstatus"]');if(!s)return;
+  const r=await sb.from('websites').update({status:s.value}).eq('id',s.dataset.id);
+  if(r.error)return fail(r.error);await audit('website.status','websites',{id:s.dataset.id,to:s.value});toast(t('saved'));
+});
+let pvT;document.addEventListener('input',e=>{if(e.target.id==='code'){clearTimeout(pvT);pvT=setTimeout(()=>{const f=$('#pv');if(f)f.srcdoc=e.target.value},300)}});
+document.addEventListener('change',e=>{
+  const r=e.target.closest&&e.target.closest('input[name="tpl"]');if(!r)return;
+  const tp=TEMPLATES.find(x=>x.id===r.value),f=r.form;if(!tp||!f)return;
+  const a=f.querySelector('[name=type]'),b=f.querySelector('[name=style]'),c=f.querySelector('input[name=color][value="'+tp.color+'"]');
+  if(a)a.value=tp.type;if(b)b.value=tp.style;if(c)c.checked=true;
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const sh=$('#sheet');if(sh&&!sh.hidden){sh.hidden=true;document.body.classList.remove('noscroll')}}});
+document.addEventListener('submit',async e=>{
+  const f=e.target.closest('[data-form]');if(!f)return;e.preventDefault();
+  const k=f.dataset.form,d=Object.fromEntries(new FormData(f)),btn=f.querySelector('button');btn.disabled=true;
+  try{
+    if(k==='interest'){const r=await sb.from('interest_signups').insert({email:d.email,service:'apps'});if(r.error)throw r.error;toast(t('notified'));f.reset()}
+    if(k==='signup'){const r=await sb.auth.signUp({email:d.email,password:d.pass,options:{data:{full_name:d.name}}});if(r.error)throw r.error;if(r.data.session){await loadMe();location.hash='#/app'}else toast(t('checkmail'))}
+    if(k==='login'){const r=await sb.auth.signInWithPassword({email:d.email,password:d.pass});if(r.error)throw r.error;await loadMe();location.hash='#/app'}
+    if(k==='newsite'){const r=await sb.from('websites').insert({owner_id:me.id,name:d.name,site_type:d.type}).select().single();if(r.error)throw r.error;location.hash='#/app/site/'+r.data.id;return}
+    if(k==='banner'){const r=await sb.from('banners').insert({placement:d.placement,title_ar:d.ar,title_en:d.en,link:d.link||null});if(r.error)throw r.error;await audit('banner.add','banners',{});toast(t('saved'));render({keep:true});return}
+    if(k==='provider'){const r=await sb.from('ai_providers').insert({name:d.name,kind:d.kind,endpoint:d.endpoint||null,priority:+d.priority||100});if(r.error)throw r.error;await audit('provider.add','ai_providers',{name:d.name});toast(t('saved'));render({keep:true});return}
+    if(k==='ticket'){const r=await sb.from('support_tickets').insert({user_id:me.id,subject:d.subject}).select().single();if(r.error)throw r.error;const m=await sb.from('ticket_messages').insert({ticket_id:r.data.id,author_id:me.id,body:d.body});if(m.error)throw m.error;location.hash='#/app/support/'+r.data.id;return}
+    if(k==='reply'){const r=await sb.from('ticket_messages').insert({ticket_id:f.dataset.id,author_id:me.id,body:d.body});if(r.error)throw r.error;toast(t('sent'));render({keep:true});return}
+    if(k==='modreq'){const r=await sb.from('modification_requests').insert({website_id:f.dataset.id,user_id:me.id,description:d.d}).select().single();if(r.error)throw r.error;
+      toast(t('mr_analyzing'));const j=await fnPost('ai-gateway',{action:'quote',request_id:r.data.id});
+      if(j&&j.error&&j.error!=='service_not_configured')throw new Error(t(j.error));toast(j&&j.ok?t('mr_priced'):t('mr_wait'));render({keep:true});return}
+    if(k==='invoice'){const r=await sb.from('invoices').insert({user_id:d.user,amount:parseFloat(d.amount)});if(r.error)throw r.error;await audit('invoice.create','invoices',{user:d.user});toast(t('saved'));render({keep:true});return}
+    if(k==='platform'){const u=d.url.trim().replace(/\/+$/,'');if(!/^https:\/\/[A-Za-z0-9.-]+(:[0-9]+)?$/.test(u))throw new Error(t('invalidurl'));const r=await sb.from('platform_settings').upsert({key:'public.sites_base_url',value:u,updated_by:me.id});if(r.error)throw r.error;await audit('settings.sites_base_url','platform_settings',{});toast(t('saved'));render({keep:true});return}
+    if(k==='contract'){
+      const file=d.file;
+      if(!(file instanceof File)||!file.size)throw new Error(t('err'));
+      if(file.size>8*1024*1024)throw new Error(t('err'));
+      const mime=file.type;
+      if(!['application/pdf','image/jpeg','image/png','image/webp'].includes(mime))throw new Error(t('err'));
+      const ins=await sb.from('contracts').insert({customer_id:d.customer,title:d.title||null,created_by:me.id}).select().single();
+      if(ins.error)throw ins.error;
+      const ext=mime==='application/pdf'?'pdf':mime==='image/png'?'png':mime==='image/webp'?'webp':'jpg';
+      const path=`original/${ins.data.id}.${ext}`;
+      const up=await sb.storage.from('contracts').upload(path,file,{contentType:mime,upsert:false});
+      if(up.error)throw up.error;
+      const upd=await sb.from('contracts').update({original_path:path,original_mime:mime}).eq('id',ins.data.id);
+      if(upd.error)throw upd.error;
+      await audit('contract.create','contracts',{id:ins.data.id});toast(t('saved'));render({keep:true});return;
+    }
+    if(k==='csign'){
+      const file=d.file;
+      if(!(file instanceof File)||!file.size)throw new Error(t('err'));
+      if(file.size>8*1024*1024)throw new Error(t('err'));
+      const mime=file.type;
+      if(!['application/pdf','image/jpeg','image/png','image/webp'].includes(mime))throw new Error(t('err'));
+      const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(',')[1]);fr.onerror=rej;fr.readAsDataURL(file)});
+      const j=await ctrPost({token:f.dataset.token,which:'signed',mime,file_base64:b64});
+      if(!j.ok)throw new Error(j.error||t('err'));
+      toast(t('ctr_thanks'));render({keep:false});return;
+    }
+    if(k==='wizard'){
+      const slug=(d.sub||'').trim().toLowerCase();
+      if(!/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(slug)||slug.includes('--'))throw new Error(t('sub_taken'));
+      const av=await sb.rpc('slug_available',{p_slug:slug});if(av.error)throw av.error;if(!av.data)throw new Error(t('sub_taken'));
+      const brief={...d};delete brief.sub;btn.dataset.l=btn.textContent;btn.textContent=t('wz_save');
+      const ins=await sb.from('websites').insert({owner_id:me.id,name:d.name,site_type:d.type,slug,config:{brief}}).select().single();if(ins.error)throw ins.error;
+      const sid=ins.data.id;boOpen(t('bo_building'),t('bo_building_s'),[t('bo_s1'),t('bo_s2'),t('bo_s3')]);boStage(0);
+      try{await saveHtml(sid,genSite(brief),'initial');boStage(1);let how='tpl',why='';
+        try{const j=await fnPost('ai-gateway',{action:'build',website_id:sid});if(j&&j.ok)how='ai';else why=(j&&j.error)||''}catch(e){}
+        boStage(2);await new Promise(x=>setTimeout(x,400));
+        try{
+          const r=await sb.rpc('request_publish',{p_site:sid});if(r.error)throw new Error(t(r.error.message));
+          const pj=await fnPost('verify-publish',{deployment_id:r.data});if(!pj.ok)throw new Error(t('pubfail')+': '+(pj.error||''));
+          boDone(t('bo_live'),pj.url,[`<a class="btn p lg" href="${esc(pj.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`]);
+        }catch(pe){
+          boDone(t('bo_ready'),how==='ai'?t('bo_ready_ai'):t('bo_ready_tpl')+(why&&why!=='service_not_configured'?' ('+t(why)+')':''),[`<button class="btn p lg" data-act="bopublish" data-id="${sid}">${t('send')}</button>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('preview')}</button>`]);
+        }
+      }catch(x){boClose();throw x}
+      return}
+    if(k==='details'){
+      const w=await sb.from('websites').select('config').eq('id',f.dataset.id).single();
+      const up=await sb.from('websites').update({name:d.name,site_type:d.type,config:{...(w.data&&w.data.config||{}),brief:{...d,tpl:(((w.data&&w.data.config)||{}).brief||{}).tpl}}}).eq('id',f.dataset.id);if(up.error)throw up.error;
+      const how=await buildSite(f.dataset.id,{...d,tpl:(((w.data&&w.data.config)||{}).brief||{}).tpl},'rebuild');toast(how==='ai'?t('designed'):t('designed_tpl'));
+      const h='#/app/site/'+f.dataset.id+'/overview';if(location.hash===h)render({keep:true});else location.hash=h;return}
+    if(k==='preset'){const P={openai:['OpenAI','gpt-6-luna'],gemini:['Gemini','gemini-flash-latest'],anthropic:['Claude','claude-sonnet-5-5'],deepseek:['DeepSeek','deepseek-chat']}[d.kind];if(!P)throw new Error(t('err'));
+      let {data:pv}=await sb.from('ai_providers').select('id').eq('name',P[0]).maybeSingle();
+      if(!pv){const r=await sb.from('ai_providers').insert({name:P[0],kind:d.kind,priority:100}).select().single();if(r.error)throw r.error;pv=r.data}
+      const mm=await sb.from('ai_models').select('id').eq('provider_id',pv.id).eq('model_id',P[1]).maybeSingle();
+      const cost={cost_in_per_1m:+d.cin||0,cost_out_per_1m:+d.cout||0};
+      if(!mm.data){const r=await sb.from('ai_models').insert({provider_id:pv.id,model_id:P[1],usage_type:'general',...cost});if(r.error)throw r.error}else{await sb.from('ai_models').update(cost).eq('id',mm.data.id)}
+      const kr=await sb.rpc('admin_set_provider_key',{p_provider:pv.id,p_key:d.key});if(kr.error)throw kr.error;
+      const en=await sb.from('ai_providers').update({enabled:true}).eq('id',pv.id);if(en.error)throw en.error;
+      const j=await fnPost('ai-gateway',{action:'test',provider_id:pv.id});if(!j.ok)throw new Error(t('err')+': '+(j.error||''));
+      await audit('provider.preset','ai_providers',{name:P[0]});toast(t('preset_ok'));render({keep:true});return}
+    if(k==='aicfg'){let bj;try{bj=JSON.parse(d.bounds);if(!['simple','medium','advanced','major'].every(x=>Array.isArray(bj[x])&&bj[x].length===2&&bj[x][0]>=0&&bj[x][1]>=bj[x][0]))throw 0}catch(e){throw new Error(t('err'))}
+      for(const [key,value] of [['ai.free_budget_usd',String(Math.max(0,+d.free||0))],['ai.quote_bounds',JSON.stringify(bj)],['ai.cost_markup',String(Math.max(1,+d.markup||4))]]){const r=await sb.from('platform_settings').upsert({key,value,updated_by:me.id});if(r.error)throw r.error}
+      await audit('settings.ai','platform_settings',{});toast(t('saved'));render({keep:true});return}
+    if(k==='profile'){const r=await sb.from('profiles').update({full_name:d.name}).eq('id',me.id);if(r.error)throw r.error;await loadMe();toast(t('saved'));render({keep:true});return}
+    if(k==='password'){const r=await sb.auth.updateUser({password:d.pass});if(r.error)throw r.error;toast(t('saved'));f.reset()}
+    if(k==='server'){const r=await sb.from('servers').insert({name:d.name,region:d.region||null});if(r.error)throw r.error;await audit('server.add','servers',{name:d.name});toast(t('saved'));render({keep:true});return}
+    if(k==='aiedit'){btn.textContent=t('building');const cur=$('#code').value;const j=await gw({action:'chat',website_id:f.dataset.id,messages:[{role:'system',content:'You edit a single self-contained HTML page. Return only the complete updated HTML document, nothing else.'},{role:'user',content:'Current page:\n'+cur+'\n\nRequested change: '+d.prompt}]});const h=cleanHtml(j.text);$('#code').value=h;$('#pv').srcdoc=h;toast(t('previewReady'));btn.textContent=t('applyc');btn.disabled=false;return}
+    if(k==='rename'){const r=await sb.from('websites').update({name:d.name}).eq('id',f.dataset.id);if(r.error)throw r.error;toast(t('saved'));render({keep:true});return}
+    if(k==='domain'){const r=await sb.from('domains').insert({website_id:f.dataset.id,hostname:d.host.trim().toLowerCase()});if(r.error)throw r.error;toast(t('saved'));render({keep:true});return}
+    if(k==='build'){
+      btn.textContent=t('building');
+      const j=await gw({action:'chat',website_id:f.dataset.id,usage_type:'general',messages:[{role:'system',content:'You generate one complete, responsive, self-contained HTML page (inline CSS, no external scripts, no remote images). Reply with only the HTML document.'},{role:'user',content:d.prompt}]});
+      await saveHtml(f.dataset.id,cleanHtml(j.text),d.prompt);
+      toast(t('saved'));render({keep:true});return;
+    }
+  }catch(x){fail(x);if(btn.dataset.l)btn.textContent=btn.dataset.l}
+  btn.disabled=false;
+});
+
+let slT;document.addEventListener('input',e=>{
+  if(e.target.id!=='sl')return;const i=e.target,v=i.value.toLowerCase().replace(/[^a-z0-9-]/g,'');if(v!==i.value)i.value=v;
+  const st=$('#slst'),pv=$('#slp');if(pv)pv.textContent=v||'royal';clearTimeout(slT);
+  if(v.length<3){st.textContent=t('sub_hint');st.style.color='var(--tx2)';return}
+  slT=setTimeout(async()=>{const r=await sb.rpc('slug_available',{p_slug:v});if(i.value!==v)return;const ok=r.data===true;st.textContent=ok?'✓ '+t('sub_ok'):'✗ '+t('sub_taken');st.style.color=ok?'var(--ok)':'var(--er)'},350)});
+let sT;document.addEventListener('input',e=>{
+  if(e.target.id!=='gs')return;clearTimeout(sT);
+  const q=e.target.value.trim().replace(/[%_,()]/g,''),box=$('#sres');
+  if(q.length<2){box.hidden=true;return}
+  sT=setTimeout(async()=>{const like='%'+q+'%',rs=[];
+    const [w,tk,u]=await Promise.all([sb.from('websites').select('id,name').ilike('name',like).limit(5),sb.from('support_tickets').select('id,subject').ilike('subject',like).limit(5),isAdm()?sb.from('profiles').select('id,full_name').ilike('full_name',like).limit(5):Promise.resolve({data:[]})]);
+    (w.data||[]).forEach(x=>rs.push([x.name,'#/app/site/'+x.id,t('mysites')]));
+    (tk.data||[]).forEach(x=>rs.push([x.subject,(isAdm()?'#/admin/tickets/':'#/app/support/')+x.id,t('support')]));
+    (u.data||[]).forEach(x=>rs.push([x.full_name,'#/admin/users',t('users')]));
+    box.hidden=false;box.innerHTML=rs.length?rs.map(([n,h,k])=>`<a href="${h}">${esc(n)}<small>${k}</small></a>`).join(''):`<div style="padding:12px;color:var(--tx2)">${t('nodata')}</div>`;
+  },250)});
+document.addEventListener('click',e=>{if(!e.target.closest('.search')){const b=$('#sres');if(b)b.hidden=true}});
+if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark');
+(async()=>{if(HOSTED){await showSite(HOSTED);return}await loadMe();sb.auth.onAuthStateChange(async()=>{await loadMe();chrome()});await banner();render()})();
+</script>
+</body>
+</html>

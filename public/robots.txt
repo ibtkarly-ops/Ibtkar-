@@ -1,0 +1,7 @@
+# ابتكار | IBTIKAR
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /admin
+
+Sitemap: https://ibtkar.ly/sitemap.xml
