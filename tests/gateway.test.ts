@@ -232,3 +232,26 @@ Deno.test("build: a company page without a valid site-data block is rejected (so
     reset();
   }
 });
+
+Deno.test("build: our own storage images are allowed, any other remote image is rejected", async () => {
+  for (const [img, expected] of [[`${SUPA}/storage/v1/object/public/site-assets/s/a.webp`, true], ["https://evil.example/a.png", false]] as const) {
+    reset();
+    const page = HTML.replace("</body>", `<img src="${img}" alt=""></body>`);
+    providerBehavior = anthropicFake({ text: page });
+    await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+    const r = await call("cust", { action: "build", website_id: "site1" });
+    assert((r.json.ok === true) === expected, `${img} -> ${JSON.stringify(r.json).slice(0, 100)}`);
+  }
+});
+
+Deno.test("build: items the customer edited (and logo/currency) are handed to the AI so a rebuild keeps them", async () => {
+  reset();
+  const items = [{ n: "عطر", c: "عطور", p: "45", d: "", img: "x" }, { n: "ب", p: "" }, { n: "ج", p: "" }];
+  T.websites[0].config.html = `<html>${SD(items).replace('{"items"', '{"logo":"L","cur":"د.ل","items"')}</html>`;
+  let sent = "";
+  const base = anthropicFake();
+  providerBehavior = (req) => { if (req.url.includes("/v1/messages") && req.body.max_tokens > 16) sent = JSON.stringify(req.body.messages); return base(req); };
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  await call("cust", { action: "build", website_id: "site1" });
+  assert(sent.includes("existing_items") && sent.includes("عطر") && sent.includes("currency"), "existing items passed: " + sent.slice(0, 200));
+});

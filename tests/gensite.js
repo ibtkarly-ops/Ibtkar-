@@ -42,6 +42,14 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
     await p.screenshot({ path: `${out}/site-${n}.png`, fullPage: true });
     await p.close();
   }
+  // SEO: items + JSON-LD are present without running any JavaScript
+  const html = await h.page.evaluate(() => genSite({ name: 'ملكي', type: 'store', lang: 'ar', phone: '0912345678', desc: 'متجر', logo: 'https://x.supabase.co/storage/v1/object/public/site-assets/s/l.webp', color: '#2433ff', style: 'modern' }));
+  const ctx = await h.browser.newContext({ javaScriptEnabled: false }); const np = await ctx.newPage(); await np.setContent(html);
+  check('no-JS: items visible in static HTML', (await np.locator('#items-list .item').count()) >= 4);
+  check('logo shown in header + og:image', (await np.locator('#site-logo').count()) === 1 && /og:image/.test(html));
+  const ld = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html)[1]);
+  check('JSON-LD valid (name, phone, image)', ld.name === 'ملكي' && ld.telephone === '+218912345678' && !!ld.image);
+  await ctx.close();
   await h.close();
   process.exit(fails ? 2 : 0);
 })();

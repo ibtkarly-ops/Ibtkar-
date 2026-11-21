@@ -47,6 +47,7 @@ async function launch(opts = {}) {
     dark = false,
     expiresIn = 3600,
     scale = 1,
+    lang = 'ar',
   } = opts;
 
   const browser = await chromium.launch();
@@ -61,13 +62,13 @@ async function launch(opts = {}) {
   const profile = { id: UID, full_name: 'ايوب رضاء', role, lang: 'ar', status: 'active', created_at: new Date().toISOString() };
   const T = { profiles: [profile], notifications: [], websites: [], plans: [], banners: [], ...tables };
 
-  await context.addInitScript(([ref, sess, isIn, isDark]) => {
+  await context.addInitScript(([ref, sess, isIn, isDark, lg]) => {
     try {
       if (isIn) localStorage.setItem(`sb-${ref}-auth-token`, JSON.stringify(sess));
       if (isDark) localStorage.setItem('theme', 'dark');
-      localStorage.setItem('lang', 'ar');
+      localStorage.setItem('lang', lg);
     } catch (e) { /* ignore */ }
-  }, [REF, session, signedIn, dark]);
+  }, [REF, session, signedIn, dark, lang]);
 
   await context.route('**/*supabase.co/**', async (route) => {
     const req = route.request();

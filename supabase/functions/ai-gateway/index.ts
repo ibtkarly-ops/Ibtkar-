@@ -213,7 +213,9 @@ export function validSiteData(h: string): boolean {
 function validHtml(h: string, brief: any, needSD = false): boolean {
   if (needSD && !validSiteData(h)) return false;
   if (!/<html[\s>]/i.test(h) || !/<\/html>/i.test(h) || h.length < 1500 || h.length > 300_000) return false;
-  if (/<script[^>]+src=/i.test(h) || /<img[^>]+src=["']https?:/i.test(h)) return false;
+  const ownAssets = `${Deno.env.get("SUPABASE_URL") ?? "https://invalid.local"}/storage/v1/object/public/site-assets/`;
+  const hh = h.split(ownAssets).join("");   // images we host ourselves are allowed; any other remote image/script is not
+  if (/<script[^>]+src=/i.test(hh) || /<img[^>]+src=["']https?:/i.test(hh)) return false;
   const dg = h.replace(/\D/g, "");
   const ph = intl(brief?.phone);
   if (ph && !dg.includes(ph.slice(-8))) return false;
@@ -227,7 +229,7 @@ const ADDENDUM = `قيود المنصة (تتقدم على أي متطلبات �
 - روابط الاتصال تستخدم tel:+الرقم الدولي وروابط واتساب https://wa.me/الرقم الدولي، حرفياً كما في بيانات العميل.
 - أعد وثيقة HTML كاملة فقط، بلا شرح ولا Markdown.
 - لا تخترع أرقام هواتف أو آراء عملاء أو إحصائيات أو شهادات أو عناوين أو أسعاراً؛ استخدم ما في بيانات العميل فقط.
-- عقد الأصناف (إلزامي لأنواع الشركة والمتجر والمطعم والصفحة التعريفية): قسم الأصناف عنصر <section id=\"items\"> يحوي <div id=\"items-list\"></div> فارغاً يملؤه سكربت. ضع قبل </body> كتلة <script type=\"application/json\" id=\"site-data\">{\"sample\":true,\"items\":[{\"n\":\"الاسم\",\"c\":\"التصنيف\",\"p\":\"\",\"d\":\"وصف قصير\"}]}</script> ثم سكربت صغير يقرأ الكتلة ويرسم البطاقات داخل #items-list بإنشاء عناصر DOM وtextContent (لا innerHTML بنصوص خام)، مع أزرار تصنيف إذا وُجد أكثر من تصنيف، وإذا كان p فارغاً اعرض «اتصل للسعر» كرابط tel أو واتساب. إن وردت offerings في بيانات العميل فاستخدمها كما هي (الاسم|السعر|الوصف) وضع sample=false، وإلا أنشئ من 6 إلى 10 أصناف نموذجية واقعية تناسب النشاط والوصف بلا أسعار (p فارغ) وsample=true. كل صنف: n الاسم، c التصنيف، p السعر، d الوصف.`;
+- عقد الأصناف (إلزامي لأنواع الشركة والمتجر والمطعم والصفحة التعريفية): قسم الأصناف عنصر <section id=\"items\"> يحوي <div id=\"items-list\"></div> فارغاً يملؤه سكربت. ضع قبل </body> كتلة <script type=\"application/json\" id=\"site-data\">{\"sample\":true,\"items\":[{\"n\":\"الاسم\",\"c\":\"التصنيف\",\"p\":\"\",\"d\":\"وصف قصير\"}]}</script> ثم سكربت صغير يقرأ الكتلة ويرسم البطاقات داخل #items-list بإنشاء عناصر DOM وtextContent (لا innerHTML بنصوص خام)، مع أزرار تصنيف إذا وُجد أكثر من تصنيف، وإذا كان p فارغاً اعرض «اتصل للسعر» كرابط tel أو واتساب. إن وردت offerings في بيانات العميل فاستخدمها كما هي (الاسم|السعر|الوصف) وضع sample=false، وإلا أنشئ من 6 إلى 10 أصناف نموذجية واقعية تناسب النشاط والوصف بلا أسعار (p فارغ) وsample=true. كل صنف: n الاسم، c التصنيف، p السعر، d الوصف، وإن وُجدت صورة img (رابط). إن وُجد existing_items في بيانات العميل فانسخه كما هو حرفياً داخل site-data (بما فيه img وc وp) ولا تستبدله بأصناف نموذجية وضع sample=false. إن وُجد logo أو currency فأضفهما كحقلين logo وcur في site-data، واعرض الشعار صغيراً في الشريط العلوي، وصورة الصنف إن وُجدت (بإنشاء عنصر img عبر DOM)، وألحق cur بالأسعار الرقمية. ضع أيضاً نسخة ثابتة من الأصناف داخل #items-list بين التعليقين <!--sd--> و<!--/sd--> (يستبدلها السكربت عند التحميل) لتراها محركات البحث.`;
 
 // Built-in prompt for the "app" type (web app / PWA). ai_prompts.key has a CHECK constraint, so it lives in code.
 const APP_PROMPT = `أنت مصمم تطبيقات ويب جوال محترف. أنشئ تطبيق ويب (PWA) بصفحة HTML واحدة يبدو كتطبيق أصلي على الجوال:
@@ -391,7 +393,12 @@ Deno.serve(async (req) => {
       const brief = site.config?.brief ?? {};
       const lang = brief.lang === "both" ? "ثنائي اللغة: عربية RTL افتراضياً مع نسخة إنجليزية وزر EN/ع يبدّل النص واللغة والاتجاه" : brief.lang === "en" ? "English, LTR" : "العربية RTL (dir=rtl, lang=ar)";
       const ph = intl(brief.phone), wa = intl(brief.wa) || ph;
+      const sdm = /<script[^>]*id=["']site-data["'][^>]*>([\s\S]*?)<\/script>/i.exec(site.config?.html ?? "");
+      let prevSD: any = null;
+      try { prevSD = sdm ? JSON.parse(sdm[1]) : null; } catch { /* ignore */ }
+      const keepItems = prevSD && !prevSD.sample && Array.isArray(prevSD.items) && prevSD.items.length ? prevSD.items.slice(0, 60) : null;
       const data = {
+        ...(keepItems ? { existing_items: keepItems } : {}), ...(prevSD?.logo ? { logo: prevSD.logo } : {}), ...(prevSD?.cur ? { currency: prevSD.cur } : {}),
         name: brief.name ?? site.name, tagline: brief.tag ?? "", description: brief.desc ?? "", business_type: site.site_type,
         language: lang, main_color: brief.color ?? "", design_style: brief.style ?? "",
         phone: ph ? "+" + ph : "", whatsapp: wa ? "+" + wa : "", email: brief.email ?? "", address: brief.addr ?? "", hours: brief.hours ?? "",
