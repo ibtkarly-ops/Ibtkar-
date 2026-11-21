@@ -48,7 +48,7 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
   const html2 = v2.body.snapshot.html, sd2 = await page.evaluate((x) => readSD(x), html2);
   check('saved logo + currency + image in site-data', sd2.logo && sd2.cur === 'د.ل' && sd2.items.some((i) => i.img));
   const stat = /<!--sd-->([\s\S]*)<!--\/sd-->/.exec(html2)[1];
-  check('static (no-JS) items kept in sync for SEO', stat.includes(sd2.items[0].n) && /class="im"/.test(stat) && (stat.match(/class="card item"/g) || []).length === sd2.items.length);
+  check('static (no-JS) items kept in sync for SEO', stat.includes(sd2.items[0].n) && /class="im"/.test(stat) && (stat.match(/class="card item[ \"]/g) || []).length === sd2.items.length);
   check('no page errors', h.errors.length === 0 || (console.log(h.errors), false));
   await h.close();
   // ---- old design -> one-click refresh keeps the customer's items ----
