@@ -13,11 +13,13 @@ async function scenario(name, fns, advance) {
   await page.clock.install();
   await h.open('#/app/new');
   await page.waitForSelector('form[data-form="wizard"]', { timeout: 8000 });
-  await page.fill('#sl', 'royal');
-  await page.fill('input[name=name]', 'ملكي');
-  await page.fill('textarea[name=desc]', 'وصف النشاط');
-  await page.fill('input[name=phone]', '0912345678');
-  await page.click('form[data-form="wizard"] button.btn.p.lg');
+  const next = async () => { await page.click('[data-act="wznext"]'); await page.waitForTimeout(150); };
+  await page.fill('textarea[name=desc]', 'وصف النشاط'); await next();           // 1 idea
+  await page.fill('input[name=name]', 'ملكي'); await page.fill('#sl', 'royal');  // 2 name + link
+  await page.waitForTimeout(600); await next();
+  await page.fill('input[name=phone]', '0912345678'); await next();             // 3 contact
+  await next(); await next(); await next();                                      // 4 items, 5 about, 6 look (all optional)
+  await page.click('#wzgo');
   await page.waitForSelector('#bo', { timeout: 5000 });
   for (const ms of advance) { await page.clock.runFor(ms); await page.waitForTimeout(300); }
   const state = await page.evaluate(() => { const b = document.querySelector('#bo'); return b ? { cls: b.className, title: b.querySelector('h2')?.textContent, sub: b.querySelector('p')?.textContent } : null; });

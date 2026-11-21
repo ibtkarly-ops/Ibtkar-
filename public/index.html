@@ -104,7 +104,14 @@ main{animation:in .4s cubic-bezier(.2,.7,.2,1) both}
 .cta .btn{background:#fff;color:var(--ac)}
 .price{font-size:38px;font-weight:700;letter-spacing:-.03em}.price small{font-size:14px;color:var(--tx2);font-weight:400}
 .chip{display:inline-block;padding:2px 11px;border-radius:99px;font-size:12px;font-weight:500;background:var(--bg2);border:1px solid var(--bd)}
-[hidden]{display:none!important}.irh{display:flex;gap:12px;align-items:flex-start}.ipw{flex:none;width:76px;height:76px;border:1.5px dashed var(--bd);border-radius:12px;display:grid;place-items:center;cursor:pointer;overflow:hidden;margin:14px 0 0!important;background:var(--bg2)}.ip{width:100%;height:100%;object-fit:cover}.ip[hidden],.ipp[hidden]{display:none}.ipp{color:var(--tx2)}.pwbox{position:relative}.pwbox input{padding-inline-end:46px}.pweye{position:absolute;inset-inline-end:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--tx2);width:36px;height:36px;cursor:pointer;display:grid;place-items:center}
+[hidden]{display:none!important}.irh{display:flex;gap:12px;align-items:flex-start}.ipw{flex:none;width:76px;height:76px;border:1.5px dashed var(--bd);border-radius:12px;display:grid;place-items:center;cursor:pointer;overflow:hidden;margin:14px 0 0!important;background:var(--bg2)}.ip{width:100%;height:100%;object-fit:cover}.ip[hidden],.ipp[hidden]{display:none}.ipp{color:var(--tx2)}.wz{padding:24px}.wz-bar{height:6px;border-radius:9px;background:var(--bg2);overflow:hidden;margin-bottom:12px}.wz-bar i{display:block;height:100%;background:var(--ac);border-radius:9px;transition:width .25s}
+.wz-steps{display:flex;gap:6px;overflow-x:auto;margin-bottom:22px;font-size:12.5px;color:var(--tx2)}.wz-steps span{white-space:nowrap;padding:3px 10px;border-radius:99px;background:var(--bg2)}.wz-steps span.on{background:var(--ac);color:#fff}.wz-steps span.done{color:var(--ok)}
+.wz-h{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}.wz-n{flex:none;width:36px;height:36px;border-radius:50%;background:rgba(36,51,255,.1);color:var(--ac);display:grid;place-items:center;font-weight:700}.wz-h h2{font-size:22px;line-height:1.3}.wz-h p{color:var(--tx2);font-size:14px;margin-top:2px}
+.wz-nav{display:flex;gap:10px;margin-top:26px;padding-top:18px;border-top:1px solid var(--bd)}
+.wzrow{display:grid;grid-template-columns:1.4fr .8fr 1.6fr auto;gap:8px;margin-bottom:8px}@media(max-width:640px){.wzrow{grid-template-columns:1fr 1fr}.wzrow input:nth-child(3){grid-column:1/-1}}
+.wz-r{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--bd);font-size:14px}.wz-r b{flex:none;width:120px;color:var(--tx2);font-weight:500}.wz-r span{word-break:break-word}
+.wz-what{margin:16px 0 0;padding-inline-start:20px;color:var(--tx2);font-size:14px}
+.pwbox{position:relative}.pwbox input{padding-inline-end:46px}.pweye{position:absolute;inset-inline-end:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--tx2);width:36px;height:36px;cursor:pointer;display:grid;place-items:center}
 .auth h2{font-size:26px}.auth-links{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:13.5px}.auth-links a,.auth-alt a{color:var(--ac);font-weight:500}.auth-alt{text-align:center;margin-top:16px;font-size:14px}
 .auth-sep{display:flex;align-items:center;gap:12px;margin:22px 0 14px;color:var(--tx2);font-size:13.5px}.auth-sep::before,.auth-sep::after{content:"";flex:1;height:1px;background:var(--bd)}
 .help-code{font-size:46px;font-weight:700;letter-spacing:.18em;text-align:center;background:var(--bg2);border:1.5px dashed var(--ac);border-radius:14px;padding:14px 0;color:var(--ac)}
@@ -453,6 +460,8 @@ Object.assign(T.ar,{site_up:'عاد موقعك للعمل',it_logo:'شعار ا�
 Object.assign(T.en,{site_up:'Your website is back online',it_logo:'Site logo',it_cur:'Currency (added to numeric prices)',it_img_add:'Add image',it_img_rm:'Remove image',it_up:'Up',it_down:'Down',it_dup:'Duplicate',uploading:'Uploading image…',img_type:'Unsupported image type (PNG/JPG/WebP/GIF)',img_big:'Image is too large (2 MB max)',it_enable:'Enable items (instant template)',it_enable_c:'The current design will be replaced by the basic template with an editable items section. Continue?'});
 Object.assign(T.ar,{login_d:'أهلاً بعودتك، سجّل دخولك للمتابعة',forgotpw:'نسيت كلمة المرور؟',forgotmail:'نسيت البريد الإلكتروني؟',signup_new:'إنشاء حساب جديد',showpw:'إظهار كلمة المرور',forgot_t:'استعادة كلمة المرور',forgot_d:'اكتب بريدك الإلكتروني وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.',forgot_btn:'إرسال الرابط',forgot_sent:'إن كان هذا البريد مسجّلاً لدينا فستصلك رسالة فيها رابط تعيين كلمة المرور. تحقق أيضاً من البريد غير الهام.',backlogin:'العودة لتسجيل الدخول',reset_t:'كلمة مرور جديدة',reset_d:'اختر كلمة مرور جديدة لحسابك (8 أحرف على الأقل).',reset_new:'كلمة المرور الجديدة',reset_btn:'حفظ ومتابعة',reset_ok:'تم تغيير كلمة المرور',help_t:'نسيت البريد الإلكتروني؟',help_d:'لا مشكلة. اضغط الزر أدناه لنفتح لك محادثة واتساب مع الدعم، وأرسل لهم هذا الرمز ليتعرفوا على طلبك ويساعدوك في استرجاع حسابك.',help_code:'رمز طلبك',help_wa:'تواصل مع الدعم عبر واتساب',help_nonum:'رقم واتساب الدعم لم يُضبط بعد. احتفظ بالرمز وحاول لاحقاً.',help_msg:'مرحباً، نسيت البريد الإلكتروني لحسابي في ابتكار. رمز الطلب:',support_wa:'رقم واتساب الدعم',support_wa_h:'يظهر في صفحة «نسيت البريد الإلكتروني» ويُفتح منه واتساب. اكتبه بالصيغة الدولية، مثل 218912345678.',help_reqs:'طلبات استرجاع الحساب',help_done:'تمت',help_mark:'تمت المعالجة'});
 Object.assign(T.en,{login_d:'Welcome back, sign in to continue',forgotpw:'Forgot password?',forgotmail:'Forgot your email?',signup_new:'Create a new account',showpw:'Show password',forgot_t:'Reset your password',forgot_d:'Enter your email and we will send you a link to set a new password.',forgot_btn:'Send link',forgot_sent:'If this email is registered you will receive a message with a link to set your password. Check your spam folder too.',backlogin:'Back to sign in',reset_t:'New password',reset_d:'Choose a new password for your account (8 characters minimum).',reset_new:'New password',reset_btn:'Save and continue',reset_ok:'Your password was changed',help_t:'Forgot your email?',help_d:'No problem. Tap the button below to open a WhatsApp chat with support, and send them this code so they can recognise your request and help you recover your account.',help_code:'Your request code',help_wa:'Contact support on WhatsApp',help_nonum:'The support WhatsApp number is not set yet. Keep the code and try again later.',help_msg:'Hello, I forgot the email of my IBTIKAR account. Request code:',support_wa:'Support WhatsApp number',support_wa_h:'Shown on the "Forgot your email" page and opens WhatsApp. Use the international format, e.g. 218912345678.',help_reqs:'Account recovery requests',help_done:'Done',help_mark:'Mark handled'});
+Object.assign(T.ar,{optional:'اختياري',wz_pick:'اختر…',wz_prev:'السابق',wz_next:'التالي',wz_social:'حسابات التواصل الاجتماعي (اختياري)',wz_s1:'فكرتك',wz_s2:'الاسم والرابط',wz_s3:'التواصل',wz_s4:'المحتوى',wz_s5:'عن نشاطك',wz_s6:'الشكل',wz_s7:'المراجعة',wz_s1_h:'ما فكرة مشروعك؟',wz_s1_d:'اكتب بأسلوبك ما هو نشاطك وماذا تقدّم، وكلما شرحت أكثر كان الموقع أدق.',wz_idea:'اشرح مشروعك',wz_idea_ph:'مثال: محل متخصص في الألعاب الرياضية والتزلج في طرابلس، نبيع لوازم التزلج للمبتدئين والمحترفين ونقدّم صيانة للأجهزة.',wz_s2_h:'الاسم والرابط',wz_s2_d:'اسم مشروعك والرابط الذي سيفتح به موقعك.',wz_tag_ph:'جملة قصيرة تعبّر عنك',wz_s3_h:'كيف يتواصل معك العملاء؟',wz_s3_d:'الهاتف مطلوب، والباقي اختياري. أرقامك تظهر في الموقع كما كتبتها.',wz_s4_h:'منتجاتك أو خدماتك',wz_s4_d:'أضف ما تعرضه الآن، وتعدّله لاحقاً في أي وقت من تبويب «الأصناف».',wz_i_name:'الاسم',wz_i_price:'السعر',wz_i_desc:'وصف قصير',wz_items_note:'إن تركتها فارغة سنضع لك أصنافاً نموذجية بدون أسعار لتعدّلها بعد ذلك.',wz_sample:'أصناف نموذجية',wz_s5_h:'عن نشاطك',wz_s5_d:'كل ما تكتبه هنا يصل للذكاء الاصطناعي ليكتب موقعك بدقة أكبر. كله اختياري.',wz_aud:'من هم عملاؤك؟',wz_aud_ph:'مثال: شباب وعائلات في طرابلس',wz_goal:'ما هدفك الأساسي من الموقع؟',wz_tone:'نبرة الكتابة',goal_call:'أن يتصل بي العملاء',goal_order:'استقبال طلبات أو حجوزات',goal_showcase:'عرض أعمالي ومنتجاتي',goal_info:'تعريف بنشاطي فقط',tone_formal:'رسمية وموثوقة',tone_friendly:'ودّية وقريبة',tone_luxury:'فاخرة وراقية',tone_youth:'شبابية وحيوية',tone_simple:'بسيطة ومباشرة',wz_usp:'ما الذي يميّزك؟ (سطر لكل ميزة)',wz_usp_ph:'خبرة أكثر من 10 سنوات\nصيانة مجانية للمشتريات\nتوصيل داخل المدينة',wz_insp:'مواقع أو أمثلة تعجبك',wz_insp_ph:'روابط أو وصف للتصميم الذي تحبه',wz_notes:'أي شيء آخر تريده في الموقع',wz_notes_ph:'مثال: أريد قسماً للعروض، وصورة كبيرة في الأعلى',wz_s6_h:'شكل موقعك',wz_s6_d:'اختر اللون والأسلوب واللغة.',wz_custom:'لون مخصص',wz_s7_h:'راجع واطلق موقعك',wz_s7_d:'تأكد من البيانات ثم اضغط إنشاء الموقع.'});
+Object.assign(T.en,{optional:'Optional',wz_pick:'Choose…',wz_prev:'Back',wz_next:'Next',wz_social:'Social accounts (optional)',wz_s1:'Idea',wz_s2:'Name & link',wz_s3:'Contact',wz_s4:'Content',wz_s5:'About you',wz_s6:'Look',wz_s7:'Review',wz_s1_h:'What is your project about?',wz_s1_d:'Describe what you do in your own words. The more you tell us, the better the site.',wz_idea:'Describe your project',wz_idea_ph:'e.g. A shop in Tripoli selling skating and sports gear for beginners and pros, with a repair service.',wz_s2_h:'Name & link',wz_s2_d:'Your project name and the link your site will open on.',wz_tag_ph:'A short line that describes you',wz_s3_h:'How do customers reach you?',wz_s3_d:'Phone is required, the rest is optional. Your numbers appear exactly as you type them.',wz_s4_h:'Your products or services',wz_s4_d:'Add what you offer now, and edit it any time from the "Items" tab.',wz_i_name:'Name',wz_i_price:'Price',wz_i_desc:'Short description',wz_items_note:'Leave it empty and we will add sample items without prices for you to edit.',wz_sample:'Sample items',wz_s5_h:'About your business',wz_s5_d:'Everything here goes to the AI so it writes your site more accurately. All optional.',wz_aud:'Who are your customers?',wz_aud_ph:'e.g. Young people and families in Tripoli',wz_goal:'Main goal of the site',wz_tone:'Writing tone',goal_call:'Customers call me',goal_order:'Receive orders or bookings',goal_showcase:'Showcase my work and products',goal_info:'Just present my business',tone_formal:'Formal and trustworthy',tone_friendly:'Friendly and warm',tone_luxury:'Luxury and elegant',tone_youth:'Young and lively',tone_simple:'Simple and direct',wz_usp:'What makes you different? (one per line)',wz_usp_ph:'10+ years of experience\nFree maintenance\nDelivery inside the city',wz_insp:'Sites or examples you like',wz_insp_ph:'Links or a description of the design you like',wz_notes:'Anything else you want on the site',wz_notes_ph:'e.g. an offers section and a big image on top',wz_s6_h:'How your site looks',wz_s6_d:'Pick the colour, style and language.',wz_custom:'Custom colour',wz_s7_h:'Review and launch',wz_s7_d:'Check your details then tap Create site.'});
 Object.assign(T.en,{slow:'The connection is slow or stalled.',retry:'Try again',resetsession:'Clear session and reload',timeout:'Request timed out, please try again',network:'Could not reach the network',session_timeout:'Session is slow, please retry',not_signed_in:'Please sign in first',verify_failed:'Could not verify the publish',bo_tpl_note:'Published with a basic design because the AI was unavailable'});
 let L=localStorage.getItem('lang')||'ar';
 const t=k=>T[L][k]??k;
@@ -956,6 +965,7 @@ function briefFields(b){
   <h3>${t('sec_contact')}</h3><div class="fg">${inp('phone','f_phone','','tel',1)}${inp('wa','f_wa','','tel')}${inp('email','f_email','','email')}${inp('addr','f_addr')}${inp('hours','f_hours')}</div>
   <h3>${t('sec_social')}</h3><div class="fg">${inp('ig','f_ig','@')}${inp('fb','f_fb')}${inp('tt','f_tt','@')}${inp('tg','f_tg','@')}</div>
   <h3>${t('sec_content')}</h3><label>${t('f_items')}</label><textarea name="items" maxlength="4000" placeholder="${t('f_items_h')}">${v('items')}</textarea>
+  <h3>${t('wz_s5')} ${opt()}</h3><div class="fg"><div><label>${t('wz_aud')}</label><input name="aud" value="${v('aud')}" maxlength="160"></div><div><label>${t('wz_goal')}</label><select name="goal">${selOpts('goal',['call','order','showcase','info']).replace('value="'+(b.goal||'')+'"','value="'+(b.goal||'')+'" selected')}</select></div><div><label>${t('wz_tone')}</label><select name="tone">${selOpts('tone',['formal','friendly','luxury','youth','simple']).replace('value="'+(b.tone||'')+'"','value="'+(b.tone||'')+'" selected')}</select></div></div><label>${t('wz_usp')}</label><textarea name="usp" maxlength="600" style="min-height:80px">${v('usp')}</textarea><label>${t('wz_insp')}</label><textarea name="insp" maxlength="500" style="min-height:60px">${v('insp')}</textarea><label>${t('wz_notes')}</label><textarea name="notes" maxlength="800" style="min-height:70px">${v('notes')}</textarea>
   <h3>${t('sec_look')}</h3><label>${t('f_color')}</label><div class="sw">${COLORS.map(c=>`<label><input type="radio" name="color" value="${c}" ${(b.color||COLORS[0])===c?'checked':''}><i style="background:${c}"></i></label>`).join('')}</div>
   <label>${t('f_style')}</label><select name="style">${['modern','classic','bold'].map(x=>`<option value="${x}" ${b.style===x?'selected':''}>${t('st_'+x)}</option>`).join('')}</select>`;
 }
@@ -1036,7 +1046,8 @@ R.innerHTML=items.filter(function(i){return!cat||i.c===cat}).map(function(i){var
 return '<div class="card item">'+im+'<div class="tp"><h3>'+x(i.n)+"</h3>"+pr+"</div>"+(i.d?"<p>"+x(i.d)+"</p>":"")+(i.p?"":'<span class="ask">'+x(l.price)+"</span>")+go+"</div>"}).join("")}
 if(F)F.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;cat=b.getAttribute("data-c")||"";draw()});window.__draw=draw;draw()})()<\/script>`;
   const lt=both?`<script>(function(){var l="${lg}";document.getElementById("lt").onclick=function(){l=l==="ar"?"en":"ar";document.documentElement.lang=l;document.documentElement.dir=l==="ar"?"rtl":"ltr";document.querySelectorAll("[data-ar]").forEach(function(x){x.textContent=x.getAttribute("data-"+l)});if(window.__draw)window.__draw()}})()<\/script>`:'';
-  const T3=(a)=>`<div class="grid">${[1,2,3].map(i=>`<div class="card">${a?`<div class="num">${i}</div>`:''}<h3>${lb((a?'h':'w')+i)}</h3><p>${lb((a?'h':'w')+i+'d')}</p></div>`).join('')}</div>`;
+  const usps=String(b.usp||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,6);
+  const T3=(a)=>!a&&usps.length?`<div class="grid">${usps.map(u=>`<div class="card"><h3>${e(u)}</h3></div>`).join('')}</div>`:`<div class="grid">${[1,2,3].map(i=>`<div class="card">${a?`<div class="num">${i}</div>`:''}<h3>${lb((a?'h':'w')+i)}</h3><p>${lb((a?'h':'w')+i+'d')}</p></div>`).join('')}</div>`;
   return `<!doctype html><html lang="${lg}" dir="${lg==='ar'?'rtl':'ltr'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${e(b.name)}</title><meta name="description" content="${e(String(b.desc||'').slice(0,150))}"><meta property="og:title" content="${e(b.name)}"><meta property="og:description" content="${e(String(b.desc||'').slice(0,150))}"><meta property="og:type" content="website">${data.logo?`<meta property="og:image" content="${e(data.logo)}">`:''}<meta name="theme-color" content="${c}"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet"><style>${css}</style><script type="application/ld+json">${JSON.stringify({"@context":"https://schema.org","@type":"LocalBusiness",name:b.name,description:String(b.desc||'').slice(0,300),...(b.phone?{telephone:"+"+intl(b.phone)}:{}),...(b.email?{email:b.email}:{}),...(b.addr?{address:b.addr}:{}),...(data.logo?{image:data.logo}:{})}).replace(/</g,'\\u003c')}<\/script></head><body>
 <header><a class="lg" href="#">${data.logo?`<img id="site-logo" src="${e(data.logo)}" alt="" style="height:34px;width:auto;vertical-align:middle;margin-inline-end:8px;border-radius:6px">`:''}${e(b.name)}</a><nav>${nav}</nav>${both?'<button id="lt" type="button">EN / ع</button>':''}</header>
 <section class="hero"><h1>${e(b.name)}</h1><p>${e(b.tag||b.desc)}</p><div>${cta}</div></section>
@@ -1073,15 +1084,64 @@ async function buildSite(id,b,note){
 }
 let LAST_AI_ERR='';
 
+const WZ_N=7;
+const wzItem=()=>`<div class="wzrow"><input data-wi="n" placeholder="${esc(t('wz_i_name'))}" maxlength="80"><input data-wi="p" placeholder="${esc(t('wz_i_price'))}" maxlength="30"><input data-wi="d" placeholder="${esc(t('wz_i_desc'))}" maxlength="160"><button type="button" class="btn d sm" data-act="wzrowdel" aria-label="${esc(t('del'))}">&times;</button></div>`;
+const opt=()=>`<span class="chip">${t('optional')}</span>`;
+const selOpts=(k,list)=>`<option value="">${t('wz_pick')}</option>`+list.map(x=>`<option value="${x}">${t(k+'_'+x)}</option>`).join('');
 async function vNewSite(){
   const {data:rt}=await sb.from('platform_settings').select('value').eq('key','public.sites_root_domain').maybeSingle();
   const root=rt&&rt.value||'';const {data:bt}=await sb.from('platform_settings').select('value').eq('key','public.sites_base_url').maybeSingle();const pbase=(bt&&bt.value||'').replace(/\/$/,'');
+  const stepHead=(n,h,d,o)=>`<div class="wz-h"><span class="wz-n">${n}</span><div><h2>${h}${o?' '+opt():''}</h2><p>${d}</p></div></div>`;
   return shell(SIDE_C(),'#/app/new',`<div class="ph"><div><h1>${t('wiz_title')}</h1><p>${t('wiz_sub')}</p></div></div>
-  <form data-form="wizard" class="card fcard" style="max-width:1000px"><h3>${t('f_sub')}</h3><div class="dom"><input id="sl" name="sub" required minlength="3" maxlength="30" pattern="[a-z0-9\\-]{3,30}" placeholder="royal" autocomplete="off" autocapitalize="off"><span>${root?'.'+esc(root):''}</span></div>
-  <div id="slst" style="font-size:13px;margin:6px 0 0;color:var(--tx2)">${t('sub_hint')}</div><div style="font-size:13px;margin-top:4px;color:var(--tx2)" dir="ltr">${root?`https://<b id="slp">royal</b>.${esc(root)}`:`${esc(pbase)}/<b id="slp">royal</b>`}</div>
-  ${briefFields({lang:L})}<br><br><button class="btn p lg">${t('createSite')}</button></form>`);
+  <form data-form="wizard" class="card wz" data-step="1" style="max-width:860px" novalidate>
+  <div class="wz-bar"><i style="width:${100/WZ_N}%"></i></div><div class="wz-steps">${[1,2,3,4,5,6,7].map(i=>`<span data-s="${i}" class="${i===1?'on':''}">${t('wz_s'+i)}</span>`).join('')}</div>
+  <section class="wz-s" data-step="1">${stepHead(1,t('wz_s1_h'),t('wz_s1_d'))}
+    <label>${t('wz_idea')}</label><textarea name="desc" required maxlength="1200" placeholder="${esc(t('wz_idea_ph'))}" style="min-height:130px"></textarea>
+    ${typeCards('company')}</section>
+  <section class="wz-s" data-step="2" hidden>${stepHead(2,t('wz_s2_h'),t('wz_s2_d'))}
+    <div class="fg"><div><label>${t('f_name')}</label><input name="name" required maxlength="80"></div><div><label>${t('f_tag')} ${opt()}</label><input name="tag" maxlength="120" placeholder="${esc(t('wz_tag_ph'))}"></div></div>
+    <label>${t('f_sub')}</label><div class="dom"><input id="sl" name="sub" required minlength="3" maxlength="30" pattern="[a-z0-9\\-]{3,30}" placeholder="royal" autocomplete="off" autocapitalize="off"><span>${root?'.'+esc(root):''}</span></div>
+    <div id="slst" style="font-size:13px;margin:6px 0 0;color:var(--tx2)">${t('sub_hint')}</div><div style="font-size:13px;margin-top:4px;color:var(--tx2)" dir="ltr">${root?`https://<b id="slp">royal</b>.${esc(root)}`:`${esc(pbase)}/<b id="slp">royal</b>`}</div></section>
+  <section class="wz-s" data-step="3" hidden>${stepHead(3,t('wz_s3_h'),t('wz_s3_d'))}
+    <div class="fg"><div><label>${t('f_phone')}</label><input name="phone" type="tel" required maxlength="40"></div><div><label>${t('f_wa')} ${opt()}</label><input name="wa" type="tel" maxlength="40"></div><div><label>${t('f_email')} ${opt()}</label><input name="email" type="email" maxlength="120"></div><div><label>${t('f_addr')} ${opt()}</label><input name="addr" maxlength="160"></div><div><label>${t('f_hours')} ${opt()}</label><input name="hours" maxlength="120"></div></div>
+    <details style="margin-top:14px"><summary style="cursor:pointer;color:var(--ac);font-weight:500">${t('wz_social')}</summary><div class="fg"><div><label>Instagram</label><input name="ig" placeholder="@" maxlength="120"></div><div><label>Facebook</label><input name="fb" maxlength="160"></div><div><label>TikTok</label><input name="tt" placeholder="@" maxlength="120"></div><div><label>Telegram</label><input name="tg" placeholder="@" maxlength="120"></div></div></details></section>
+  <section class="wz-s" data-step="4" hidden>${stepHead(4,t('wz_s4_h'),t('wz_s4_d'),1)}
+    <div id="wzitems">${wzItem()}${wzItem()}${wzItem()}</div><button type="button" class="btn s sm" data-act="wzrowadd" style="margin-top:10px">+ ${t('it_add')}</button>
+    <textarea name="items" hidden></textarea><p style="color:var(--tx2);font-size:13px;margin-top:12px">${t('wz_items_note')}</p></section>
+  <section class="wz-s" data-step="5" hidden>${stepHead(5,t('wz_s5_h'),t('wz_s5_d'),1)}
+    <div class="fg"><div><label>${t('wz_aud')}</label><input name="aud" maxlength="160" placeholder="${esc(t('wz_aud_ph'))}"></div>
+    <div><label>${t('wz_goal')}</label><select name="goal">${selOpts('goal',['call','order','showcase','info'])}</select></div>
+    <div><label>${t('wz_tone')}</label><select name="tone">${selOpts('tone',['formal','friendly','luxury','youth','simple'])}</select></div></div>
+    <label>${t('wz_usp')}</label><textarea name="usp" maxlength="600" placeholder="${esc(t('wz_usp_ph'))}" style="min-height:90px"></textarea>
+    <label>${t('wz_insp')}</label><textarea name="insp" maxlength="500" placeholder="${esc(t('wz_insp_ph'))}" style="min-height:70px"></textarea>
+    <label>${t('wz_notes')}</label><textarea name="notes" maxlength="800" placeholder="${esc(t('wz_notes_ph'))}" style="min-height:80px"></textarea></section>
+  <section class="wz-s" data-step="6" hidden>${stepHead(6,t('wz_s6_h'),t('wz_s6_d'))}
+    <label>${t('f_color')}</label><div class="sw">${COLORS.map((c,i)=>`<label><input type="radio" name="color" value="${c}" ${i?'':'checked'}><i style="background:${c}"></i></label>`).join('')}<label title="${esc(t('wz_custom'))}"><input type="radio" name="color" value="" id="wzcustom"><i style="background:conic-gradient(red,orange,yellow,lime,cyan,blue,magenta,red);position:relative"><input type="color" id="wzcolor" value="#2433ff" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer"></i></label></div>
+    <div class="fg"><div><label>${t('f_style')}</label><select name="style">${['modern','classic','bold'].map(x=>`<option value="${x}">${t('st_'+x)}</option>`).join('')}</select></div><div><label>${t('f_lang')}</label><select name="lang">${['ar','en','both'].map(x=>`<option value="${x}" ${L===x?'selected':''}>${t('l_'+x)}</option>`).join('')}</select></div></div></section>
+  <section class="wz-s" data-step="7" hidden>${stepHead(7,t('wz_s7_h'),t('wz_s7_d'))}<div id="wzsum"></div>
+    <ul class="wz-what"><li>${t('bo_s1')}</li><li>${t('bo_s2')}</li><li>${t('bo_s3')}</li></ul></section>
+  <div class="wz-nav"><button type="button" class="btn s lg" data-act="wzprev" hidden>${t('wz_prev')}</button><span class="sp"></span><button type="button" class="btn p lg" data-act="wznext">${t('wz_next')}</button><button class="btn p lg" id="wzgo" hidden>${t('createSite')}</button></div>
+  </form>`);
 }
-
+function wzShow(f,n){
+  f.dataset.step=n;f.querySelectorAll('.wz-s').forEach(x=>x.hidden=+x.dataset.step!==n);
+  f.querySelectorAll('.wz-steps span').forEach(x=>x.classList.toggle('on',+x.dataset.s===n));f.querySelectorAll('.wz-steps span').forEach(x=>x.classList.toggle('done',+x.dataset.s<n));
+  f.querySelector('.wz-bar i').style.width=(n*100/WZ_N)+'%';
+  f.querySelector('[data-act="wzprev"]').hidden=n===1;f.querySelector('[data-act="wznext"]').hidden=n===WZ_N;f.querySelector('#wzgo').hidden=n!==WZ_N;
+  if(n===WZ_N)wzSummary(f);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function wzValid(f,n){
+  const sec=f.querySelector('.wz-s[data-step="'+n+'"]');
+  for(const el of sec.querySelectorAll('input[required],textarea[required]')){if(!el.checkValidity()){el.reportValidity();return false}}
+  if(n===2){const st=$('#slst');if(st&&st.dataset.ok!=='1'){toast(st.dataset.ok==='0'?t('sub_taken'):t('sub_hint'),1);$('#sl').focus();return false}}
+  return true;
+}
+function wzSummary(f){
+  const d=Object.fromEntries(new FormData(f)),row=(k,v)=>v?`<div class="wz-r"><b>${esc(k)}</b><span>${esc(v)}</span></div>`:'';
+  const its=[...f.querySelectorAll('#wzitems .wzrow')].filter(r=>r.querySelector('[data-wi="n"]').value.trim()).length;
+  $('#wzsum').innerHTML=row(t('f_name'),d.name)+row(t('wz_s1'),t('ty_'+d.type))+row(t('f_sub'),d.sub)+row(t('f_phone'),d.phone)+row(t('wz_idea'),d.desc)+row(t('wz_s4'),its?String(its):t('wz_sample'))+row(t('wz_goal'),d.goal?t('goal_'+d.goal):'')+row(t('wz_tone'),d.tone?t('tone_'+d.tone):'')+row(t('wz_usp'),d.usp)+row(t('f_color'),d.color||$('#wzcolor').value);
+}
 async function vApp(sub){
   if(!me)return vApp0(sub);
   const S=SIDE_C();
@@ -1303,6 +1363,9 @@ document.addEventListener('click',async e=>{
     if(a==='pmodels'){const j=await fx('ai-gateway',{action:'models',provider_id:id},90000);if(!j.ok)throw new Error(errText(j.error||'err')+(j.hint?' — '+errText(j.hint):''));toast(j.tested&&j.tested.ok?t('c_ok'):t('c_warn'))}
     if(a==='mtoggle'){const r=await sb.from('ai_models').update({enabled:b.dataset.to==='true'}).eq('id',id);if(r.error)throw r.error}
     if(a==='itemadd'){const c=$('#irows');if(c&&c.children.length<60){c.insertAdjacentHTML('beforeend',itemRow({n:'',c:'',p:'',d:''}));c.lastElementChild.querySelector('input').focus()}b.disabled=false;return}
+    if(a==='wznext'||a==='wzprev'){const f=b.closest('form'),n=+f.dataset.step;if(a==='wznext'){if(!wzValid(f,n)){b.disabled=false;return}wzShow(f,n+1)}else wzShow(f,n-1);b.disabled=false;return}
+    if(a==='wzrowadd'){const c=$('#wzitems');if(c.children.length<40){c.insertAdjacentHTML('beforeend',wzItem());c.lastElementChild.querySelector('input').focus()}b.disabled=false;return}
+    if(a==='wzrowdel'){const r=b.closest('.wzrow');if(r)r.remove();const f=document.querySelector('form[data-form="wizard"]');if(f)wzCompile(f);return}
     if(a==='pweye'){const i=b.parentElement.querySelector('input');i.type=i.type==='password'?'text':'password';b.disabled=false;return}
     if(a==='helpdone'){const r=await sb.from('account_help_requests').update({handled:true}).eq('id',id);if(r.error)throw r.error}
     if(a==='itemup'||a==='itemdown'){const r=b.closest('.irow');if(r){const o=a==='itemup'?r.previousElementSibling:r.nextElementSibling;if(o)a==='itemup'?o.before(r):o.after(r)}b.disabled=false;return}
@@ -1451,6 +1514,8 @@ document.addEventListener('submit',async e=>{
       toast(t('ctr_thanks'));render({keep:false});return;
     }
     if(k==='wizard'){
+      if(+f.dataset.step!==WZ_N){wzShow(f,Math.min(WZ_N,+f.dataset.step+1));return}
+      if(!d.color)d.color=$('#wzcolor').value;
       const slug=(d.sub||'').trim().toLowerCase();
       if(!/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(slug)||slug.includes('--'))throw new Error(t('sub_taken'));
       const av=await sb.rpc('slug_available',{p_slug:slug});if(av.error)throw av.error;if(!av.data)throw new Error(t('sub_taken'));
@@ -1523,11 +1588,15 @@ document.addEventListener('submit',async e=>{
   btn.disabled=false;
 });
 
+function wzCompile(f){f.querySelector('textarea[name="items"]').value=[...f.querySelectorAll('#wzitems .wzrow')].map(r=>['n','p','d'].map(k=>r.querySelector('[data-wi="'+k+'"]').value.trim().replace(/[|\n]/g,' ')).join('|')).filter(l=>l.split('|')[0]).join('\n')}
+document.addEventListener('input',e=>{const wi=e.target.closest('[data-wi]');if(wi){wzCompile(wi.closest('form'));return}
+  if(e.target.id==='wzcolor'){const r=$('#wzcustom');r.value=e.target.value;r.checked=true}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest('form[data-form="wizard"]')&&e.target.tagName!=='TEXTAREA'){e.preventDefault();const f=e.target.closest('form'),n=+f.dataset.step;if(n<WZ_N&&wzValid(f,n))wzShow(f,n+1)}});
 let slT;document.addEventListener('input',e=>{
   if(e.target.id!=='sl')return;const i=e.target,v=i.value.toLowerCase().replace(/[^a-z0-9-]/g,'');if(v!==i.value)i.value=v;
   const st=$('#slst'),pv=$('#slp');if(pv)pv.textContent=v||'royal';clearTimeout(slT);
-  if(v.length<3){st.textContent=t('sub_hint');st.style.color='var(--tx2)';return}
-  slT=setTimeout(async()=>{const r=await sb.rpc('slug_available',{p_slug:v});if(i.value!==v)return;const ok=r.data===true;st.textContent=ok?'✓ '+t('sub_ok'):'✗ '+t('sub_taken');st.style.color=ok?'var(--ok)':'var(--er)'},350)});
+  st.dataset.ok='';if(v.length<3){st.textContent=t('sub_hint');st.style.color='var(--tx2)';return}
+  slT=setTimeout(async()=>{const r=await sb.rpc('slug_available',{p_slug:v});if(i.value!==v)return;const ok=r.data===true;st.dataset.ok=ok?'1':'0';st.textContent=ok?'✓ '+t('sub_ok'):'✗ '+t('sub_taken');st.style.color=ok?'var(--ok)':'var(--er)'},350)});
 let sT;document.addEventListener('input',e=>{
   if(e.target.id!=='gs')return;clearTimeout(sT);
   const q=e.target.value.trim().replace(/[%_,()]/g,''),box=$('#sres');
