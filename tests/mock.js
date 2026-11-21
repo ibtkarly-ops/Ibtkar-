@@ -103,6 +103,7 @@ async function launch(opts = {}) {
       const fn = url.pathname.split('/')[4];
       const h = rpc[fn];
       const v = typeof h === 'function' ? await h(body) : h;
+      if (v && typeof v === 'object' && '__status' in v) return json(v.__status, v.__body ?? { message: v.__body });
       return json(200, v === undefined ? true : v);
     }
 
