@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { DISPLAY, KINDS, cleanKey, detectPick, keyHint, listError, modelsRequest, orderModels, parseCurl, parseModels, rankModels, resolveTarget, safeEndpoint, targetFromCurl, type Found, type Kind, type Ranked, type Target } from "./models.ts";
+import { APP_CHAT_PROMPT, APP_FILE_PROMPT, cleanPlan, depsOf, exportsOf, extractCode, isCodePath, projectConfig, slugOf, snackUrl, validFile } from "./apps.ts";
 import { CORE_RULES, DESIGN_PROMPT, EDIT_PROMPT, applyPatch, cleanCopy, cleanItems, ownImage, parseJSON } from "./spec.ts";
 
 // Public publishable key (same one shipped in the browser app). Used only as the `apikey` header when we act
@@ -323,31 +324,6 @@ function briefData(brief: any, site: any, ph: string, wa: string, prevSD: any, k
   };
 }
 
-// ---- Expo / React Native app chat (super admin) ----
-const EXPO_PROMPT = `أنت مهندس Expo وReact Native محترف يبني تطبيقات جوال من وصف المستخدم بالعربي.
-القواعد:
-- أعطِ ملفاً واحداً كاملاً اسمه App.js (export default function App) يعمل مباشرة في Expo Snack بدون أي إعداد.
-- استعمل فقط هذه المكتبات: react، react-native، expo-status-bar، @expo/vector-icons. لا مكتبات أخرى ولا ملفات أخرى ولا صور خارجية.
-- التنقل بين الشاشات بحالة useState (شريط تبويب سفلي أو أزرار) بدون مكتبات تنقل.
-- دعم العربية: textAlign right وwritingDirection rtl عند الحاجة، وخطوط وأحجام مريحة وأزرار كبيرة سهلة اللمس.
-- تصميم عصري نظيف بالألوان التي يطلبها المستخدم، بيانات نموذجية واضحة، حالات فارغة، وتجربة تشبه تطبيقاً حقيقياً.
-- لا تخترع أرقام هواتف أو معلومات حقيقية. لا اتصال بخوادم؛ خزّن البيانات في الحالة فقط.
-- شكل الرد: رسالة عربية قصيرة (سطرين أو ثلاثة) تشرح ما بنيته أو عدّلته، ثم الكود الكامل في كتلة واحدة \`\`\`jsx. أعد الكود كاملاً في كل مرة (لا مقاطع جزئية).`;
-const APP_IMPORTS = new Set(["react", "react-native", "expo-status-bar"]);
-export function extractApp(text: string): { reply: string; code: string } | null {
-  const m = /```(?:jsx|js|javascript|tsx)?[ \t]*\r?\n([\s\S]*?)```/.exec(text);
-  if (!m) return null;
-  return { code: m[1].trim(), reply: text.replace(m[0], "").trim() };
-}
-export function validApp(code: string): string | null {
-  if (code.length < 50 || code.length > 60_000) return "bad_length";
-  if (!/export\s+default/.test(code)) return "no_default_export";
-  if (/\beval\s*\(|new\s+Function\s*\(|document\.cookie|child_process/.test(code)) return "unsafe_code";
-  const mods = [...code.matchAll(/(?:from|require\s*\()\s*['"]([^'"]+)['"]/g)].map((x) => x[1]);
-  for (const mod of mods) if (!(APP_IMPORTS.has(mod) || mod === "@expo/vector-icons" || mod.startsWith("@expo/vector-icons/"))) return "import_not_allowed:" + mod;
-  return null;
-}
-
 async function prompts(type: string): Promise<string> {
   const key = ({ restaurant: "restaurant", store: "store", company: "company", app: "app" } as Record<string, string>)[type] ?? "landing";
   const { data } = await db.from("ai_prompts").select("key,body").in("key", ["master", key]);
@@ -379,7 +355,7 @@ Deno.serve(async (req) => {
   const { data: u } = await db.auth.getUser(token);
   const user = u?.user;
   if (!user) return json({ error: "unauthorized" }, 401);
-  const { data: prof } = await db.from("profiles").select("role,status").eq("id", user.id).maybeSingle();
+  const { data: prof } = await db.from("profiles").select("role,status,apps_access").eq("id", user.id).maybeSingle();
   if (!prof || prof.status !== "active") return json({ error: "account_inactive" }, 403);
   const isAdmin = ["super_admin", "admin"].includes(prof.role);
 
@@ -484,26 +460,118 @@ Deno.serve(async (req) => {
       return json({ ok: true, switched, provider: { id: provider.id, name: provider.name, kind }, models: ranked.map((m: Ranked) => ({ id: m.id, role: m.role, tier: m.tier, enabled: en.get(m.id) ?? false })), tested });
     }
 
-    // ---- Super admin: build / edit an Expo (React Native) app by chatting ----
-    if (body.action === "app_chat") {
-      if (prof.role !== "super_admin") return json({ error: "forbidden" }, 403);
+    // ---- Expo (React Native) app builder: super admin + users the super admin enabled ----
+    if (typeof body.action === "string" && body.action.startsWith("app_")) {
+      if (!(prof.role === "super_admin" || prof.apps_access)) return json({ error: "forbidden" }, 403);
       const { data: site } = await db.from("websites").select("id,owner_id,name,site_type,config").eq("id", body.website_id).maybeSingle();
       if (!site || site.site_type !== "app") return json({ error: "website_not_found" }, 404);
-      const msgs = (cleanMessages(body.messages) ?? []).filter((m) => m.role !== "system").slice(-14);
-      if (!msgs.length || msgs[msgs.length - 1].role !== "user") return json({ error: "invalid_messages" }, 400);
-      const cur = String(site.config?.app?.code ?? "");
-      const system = EXPO_PROMPT + (cur ? "\n\nالكود الحالي للتطبيق (عدّله حسب طلب المستخدم وأعده كاملاً):\n```jsx\n" + cur + "\n```" : "");
-      const r = await runAI({ task: "ui", userId: user.id, siteId: site.id, maxTokens: 12000, messages: [{ role: "system", content: system }, ...msgs] });
-      const ex = extractApp(r.text);
-      if (!ex) return json({ ok: false, error: "invalid_output", detail: r.text.slice(0, 200) });
-      const bad = validApp(ex.code);
-      if (bad) return json({ ok: false, error: "invalid_output", detail: bad });
-      const reply = ex.reply || "تم";
-      const chat = [...msgs, { role: "assistant", content: reply }].slice(-40);
-      await db.from("websites").update({ config: { ...(site.config ?? {}), app: { chat, code: ex.code } }, updated_at: new Date().toISOString() }).eq("id", site.id);
-      const { data: vv } = await db.from("website_versions").select("version").eq("website_id", site.id).order("version", { ascending: false }).limit(1);
-      await db.from("website_versions").insert({ website_id: site.id, version: (vv?.[0]?.version ?? 0) + 1, snapshot: { app: { code: ex.code } }, note: "app: " + msgs[msgs.length - 1].content.slice(0, 120), created_by: user.id });
-      return json({ ok: true, reply, code: ex.code, model: r.model });
+      if (site.owner_id !== user.id && prof.role !== "super_admin") return json({ error: "forbidden" }, 403);
+      const app0 = site.config?.app ?? {};
+      const files: Record<string, string> = { ...(app0.files ?? {}) };
+      if (!Object.keys(files).length && typeof app0.code === "string" && app0.code) files["App.js"] = app0.code;   // older single-file apps
+      const codePaths = Object.keys(files).filter(isCodePath);
+      const plan = app0.plan ?? null;
+      const state = () => ({ plan: plan ? { name: plan.name, summary: plan.summary, screens: plan.screens, colors: plan.colors, features: plan.features } : null, files: codePaths.map((p) => ({ path: p, exports: exportsOf(files[p]) })) });
+      const save = async (app: Record<string, unknown>, note: string, snapFiles = false) => {
+        await db.from("websites").update({ name: (app.name as string) ?? site.name, config: { ...(site.config ?? {}), app }, updated_at: new Date().toISOString() }).eq("id", site.id);
+        if (!snapFiles) return;
+        const { data: vv } = await db.from("website_versions").select("version").eq("website_id", site.id).order("version", { ascending: false }).limit(1);
+        await db.from("website_versions").insert({ website_id: site.id, version: (vv?.[0]?.version ?? 0) + 1, snapshot: { app: { files: app.files, plan: app.plan } }, note: note.slice(0, 150), created_by: user.id });
+      };
+
+      // 1) chat: one question only if essential, otherwise a plan (new app) or the list of files to change (existing app)
+      if (body.action === "app_chat") {
+        const message = String(body.message ?? "").trim().slice(0, 3000);
+        if (message.length < 2) return json({ error: "invalid_messages" }, 400);
+        const chat = Array.isArray(app0.chat) ? app0.chat : [];
+        const history = chat.slice(-8).map((m: any) => ({ role: m.role === "user" ? "user" as const : "assistant" as const, content: String(m.content ?? "").slice(0, 800) }));
+        const r = await runAI({ task: "ui", json: true, rules: true, userId: user.id, siteId: site.id, maxTokens: 1800, deadlineMs: 90_000, messages: [{ role: "system", content: APP_CHAT_PROMPT }, ...history, { role: "user", content: JSON.stringify({ app: state(), message }) }] });
+        const out = parseJSON(r.text) ?? {};
+        const type = ["question", "plan", "edit", "answer"].includes(out.type) ? out.type : "answer";
+        const text = String(out.text ?? "").trim().slice(0, 1200) || (type === "plan" ? "هذه خطة تطبيقك" : "تم");
+        const reply: Record<string, unknown> = { role: "assistant", content: text, type };
+        if (type === "plan") reply.plan = cleanPlan(out.plan);
+        if (type === "edit") reply.files = (Array.isArray(out.files) ? out.files : []).slice(0, 8).map((f: any) => ({ path: String(f?.path ?? "").slice(0, 80), purpose: String(f?.purpose ?? "").slice(0, 200) })).filter((f: any) => isCodePath(f.path));
+        if (type === "edit" && !(reply.files as unknown[]).length) reply.type = "answer";
+        await save({ ...app0, files, chat: [...chat, { role: "user", content: message }, reply].slice(-60) }, "");
+        return json({ ok: true, ...reply, model: r.model });
+      }
+
+      // 2) one file at a time (keeps every request inside a free provider's per-minute token limit)
+      if (body.action === "app_file") {
+        const path = String(body.path ?? "");
+        if (!isCodePath(path)) return json({ error: "bad_path" }, 400);
+        const p = cleanPlan(body.plan ?? plan ?? {});
+        const all = new Set([...codePaths, ...p.files.map((f: any) => f.path), ...(Array.isArray(body.paths) ? body.paths.filter((x: unknown) => typeof x === "string" && isCodePath(x as string)) : [])]);
+        const ctx = { plan: { name: p.name, summary: p.summary, screens: p.screens, colors: p.colors, features: p.features }, files: [...all].map((f) => ({ path: f, purpose: p.files.find((x: any) => x.path === f)?.purpose ?? "", exports: files[f] ? exportsOf(files[f]) : "" })), file: path, purpose: String(body.purpose ?? "").slice(0, 300), request: String(body.request ?? "").slice(0, 1500) };
+        const cur = files[path] && files[path].length < 9000 ? "\n\nالمحتوى الحالي للملف (عدّله وأعده كاملاً):\n```jsx\n" + files[path] + "\n```" : "";
+        const r = await runAI({ task: "ui", rules: true, userId: user.id, siteId: site.id, maxTokens: 3400, deadlineMs: 100_000, messages: [{ role: "system", content: APP_FILE_PROMPT }, { role: "user", content: JSON.stringify(ctx) + cur }] });
+        const code = extractCode(r.text);
+        if (!code) return json({ ok: false, error: "invalid_output", detail: "no_code" });
+        const bad = validFile(path, code, all);
+        if (bad) return json({ ok: false, error: "invalid_output", detail: bad });
+        return json({ ok: true, path, code, model: r.model });
+      }
+
+      // 3) commit the written files: validated together, config files generated, version saved, files stored for Expo Go
+      if (body.action === "app_commit") {
+        const inFiles = body.files && typeof body.files === "object" ? body.files as Record<string, unknown> : {};
+        const merged = { ...files };
+        for (const [k, v] of Object.entries(inFiles)) if (isCodePath(k) && typeof v === "string") merged[k] = v;
+        const all = new Set(Object.keys(merged).filter(isCodePath));
+        for (const k of all) { const bad = validFile(k, merged[k], all); if (bad) return json({ ok: false, error: "invalid_output", detail: k + ": " + bad }, 422); }
+        if (!all.has("App.js")) return json({ ok: false, error: "invalid_output", detail: "App.js missing" }, 422);
+        const p = body.plan ? cleanPlan(body.plan) : plan;
+        const name = p?.name ?? site.name, slug = app0.slug ?? slugOf(String(name), site.id);
+        const code = Object.fromEntries([...all].map((k) => [k, merged[k]]));
+        const full = { ...code, ...projectConfig({ name, slug, plan: p }, code) };
+        const rev = (Number(app0.rev) || 0) + 1;
+        const chat = Array.isArray(app0.chat) ? app0.chat : [];
+        const note = String(body.note ?? "").slice(0, 300);
+        await save({ ...app0, name, slug, plan: p, files: full, rev, chat: note ? [...chat, { role: "assistant", content: note, type: "built", rev }].slice(-60) : chat }, "app: " + note, true);
+        for (const [k, v] of Object.entries(full)) await db.storage.from("app-files").upload(`${site.id}/${rev}/${k}`, new Blob([v], { type: "text/plain" }), { upsert: true, contentType: "text/plain" });
+        return json({ ok: true, rev, files: Object.keys(full), deps: depsOf(code) });
+      }
+
+      // 4) "View in Expo Go": a Snack link whose files are short-lived signed links to this revision
+      if (body.action === "app_snack") {
+        const rev = Number(app0.rev) || 0;
+        if (!rev || !codePaths.length) return json({ ok: false, error: "no_build_yet" }, 409);
+        const paths = codePaths;
+        const { data: signed } = await db.storage.from("app-files").createSignedUrls(paths.map((k) => `${site.id}/${rev}/${k}`), 7 * 24 * 3600);
+        const urls: Record<string, string> = {};
+        (Array.isArray(signed) ? signed : []).forEach((x: any, i: number) => { if (x?.signedUrl) urls[paths[i]] = x.signedUrl; });
+        if (Object.keys(urls).length !== paths.length) return json({ ok: false, error: "storage_error" }, 502);
+        const deps = depsOf(Object.fromEntries(paths.map((k) => [k, files[k]])));
+        const nm = String(app0.name ?? site.name);
+        let share = String(app0.share ?? "");
+        if (!/^[a-f0-9]{32}$/.test(share)) { share = crypto.randomUUID().replace(/-/g, ""); await save({ ...app0, share }, ""); }
+        const go = `${Deno.env.get("SUPABASE_URL")}/functions/v1/app-export?go=${site.id}&k=${share}`;
+        return json({ ok: true, url: snackUrl(nm, urls, deps, "mydevice"), embed: snackUrl(nm, urls, deps, "web"), go, rev });
+      }
+
+      // 5) store builds (EAS) through the GitHub workflow .github/workflows/eas-build.yml — super admin only
+      if (body.action === "app_build") {
+        if (prof.role !== "super_admin") return json({ error: "forbidden" }, 403);
+        if (!(Number(app0.rev) > 0)) return json({ ok: false, error: "no_build_yet" }, 409);
+        const platform = body.platform === "ios" ? "ios" : "android", profile = body.profile === "production" ? "production" : "preview";
+        const { data: gh } = await db.rpc("get_integration_secret", { p_name: "github_token" });
+        if (!gh) return json({ ok: false, error: "build_not_configured" }, 409);
+        const repo = (await setting("apps.build_repo")) || "ibtkarly-ops/Ibtkar-", ref = (await setting("apps.build_ref")) || "main";
+        if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) return json({ ok: false, error: "build_not_configured" }, 409);
+        const run = crypto.randomUUID().replace(/-/g, "").slice(0, 20);
+        const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/eas-build.yml/dispatches`, {
+          method: "POST", signal: AbortSignal.timeout(20_000),
+          headers: { authorization: `Bearer ${gh}`, accept: "application/vnd.github+json", "x-github-api-version": "2022-11-28", "user-agent": "ibtikar-platform", "content-type": "application/json" },
+          body: JSON.stringify({ ref, inputs: { app_id: site.id, platform, profile, run } }),
+        }).catch(() => null);
+        if (!res || res.status !== 204) return json({ ok: false, error: "build_dispatch_failed", detail: res ? String(res.status) : "network" }, 502);
+        const builds = Array.isArray(app0.builds) ? app0.builds : [];
+        await save({ ...app0, builds: [{ id: "", run, platform, profile, status: "queued", url: "", page: "", at: new Date().toISOString() }, ...builds].slice(0, 20) }, "");
+        await db.from("audit_logs").insert({ actor_id: user.id, action: "app.build", entity: "websites", meta: { id: site.id, platform, profile, run } });
+        return json({ ok: true, run });
+      }
+      return json({ error: "unknown_action" }, 400);
     }
 
     // ---- Admin: test a provider's real connection ----

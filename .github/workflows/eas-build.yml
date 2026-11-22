@@ -1,0 +1,91 @@
+# Store builds for apps made with the IBTIKAR app builder.
+# Started by the platform (ai-gateway action "app_build") through workflow_dispatch.
+# Repository secrets needed: EXPO_TOKEN (expo.dev -> Access tokens) and BUILD_SECRET (same value as in the platform settings).
+# Optional repository variable: APP_EXPORT_URL (defaults to this project's app-export function).
+name: EAS app build
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_id: { description: "App id", required: true, type: string }
+      platform: { description: "android | ios", required: true, default: android, type: string }
+      profile: { description: "preview (APK) | production (AAB / iOS)", required: true, default: preview, type: string }
+      run: { description: "Platform run id", required: true, type: string }
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eas-${{ inputs.app_id }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      BUILD_SECRET: ${{ secrets.BUILD_SECRET }}
+      EXPORT_URL: ${{ vars.APP_EXPORT_URL || 'https://ppegbmqkcdwopakewetl.supabase.co/functions/v1/app-export' }}
+      APP_ID: ${{ inputs.app_id }}
+      PLATFORM: ${{ inputs.platform }}
+      PROFILE: ${{ inputs.profile }}
+      RUN: ${{ inputs.run }}
+    steps:
+      - name: Check inputs
+        run: |
+          [[ "$APP_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || { echo "bad app id"; exit 1; }
+          [[ "$PLATFORM" == "android" || "$PLATFORM" == "ios" ]] || { echo "bad platform"; exit 1; }
+          [[ "$PROFILE" == "preview" || "$PROFILE" == "production" ]] || { echo "bad profile"; exit 1; }
+          [[ "$RUN" =~ ^[a-zA-Z0-9]{1,40}$ ]] || { echo "bad run"; exit 1; }
+          [ -n "$EXPO_TOKEN" ] || { echo "EXPO_TOKEN secret is missing"; exit 1; }
+          [ -n "$BUILD_SECRET" ] || { echo "BUILD_SECRET secret is missing"; exit 1; }
+
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: scripts }
+
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+
+      - name: Fetch the app project
+        run: node scripts/eas-app.mjs fetch app
+
+      - name: Report started
+        run: node scripts/eas-app.mjs report in_progress
+
+      - name: Install dependencies
+        working-directory: app
+        run: |
+          npm install --no-audit --no-fund
+          npx expo install --fix
+
+      - name: Link the Expo project
+        working-directory: app
+        run: npx --yes eas-cli@latest init --force --non-interactive
+
+      - name: Start the EAS build
+        working-directory: app
+        run: npx --yes eas-cli@latest build -p "$PLATFORM" --profile "$PROFILE" --non-interactive --no-wait --json > ../build.json
+
+      - name: Report queued
+        run: node scripts/eas-app.mjs report auto build.json
+
+      - name: Wait for the build
+        working-directory: app
+        run: |
+          id=$(node -e 'const b=JSON.parse(require("fs").readFileSync("../build.json","utf8"));console.log((Array.isArray(b)?b[0]:b).id)')
+          for i in $(seq 1 60); do
+            npx --yes eas-cli@latest build:view "$id" --json > ../build.json || true
+            st=$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync("../build.json","utf8")).status)}catch{console.log("")}')
+            echo "status: $st"
+            case "$st" in FINISHED|ERRORED|CANCELED) break;; esac
+            [ $((i % 5)) -eq 0 ] && (cd .. && node scripts/eas-app.mjs report auto build.json) || true
+            sleep 60
+          done
+
+      - name: Report result
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ -s build.json ]; then node scripts/eas-app.mjs report auto build.json; else node scripts/eas-app.mjs report errored; fi

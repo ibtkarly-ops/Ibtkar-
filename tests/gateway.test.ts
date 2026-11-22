@@ -11,6 +11,7 @@ let T: Record<string, Row[]>;
 let secrets: Record<string, string>;
 let seq = 0;
 const log: { url: string; method: string; body?: any; auth?: string }[] = [];
+const stored: Record<string, string> = {};
 let providerBehavior: (req: { url: string; headers: Headers; body: any }) => { status: number; body: any };
 
 function reset() {
@@ -79,6 +80,7 @@ globalThis.fetch = (async (input: any, init: any = {}) => {
     if (url.pathname.startsWith("/rest/v1/rpc/")) {
       const fn = url.pathname.split("/")[4];
       if (fn === "get_provider_key") return ok(secrets[body.p_provider] ?? null);
+      if (fn === "get_integration_secret") return ok(secrets["int:" + body.p_name] ?? null);
       if (fn === "admin_set_provider_key") {
         const tok = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
         if (tok !== "tok-admin") return ok({ message: "forbidden" }, 400);           // like the real is_super() check
@@ -89,11 +91,13 @@ globalThis.fetch = (async (input: any, init: any = {}) => {
       return ok(true);
     }
     if (url.pathname.startsWith("/rest/v1/")) return rest(req, url, body);
+    if (url.pathname.startsWith("/storage/v1/object/sign/")) { const bucket = url.pathname.split("/")[5]; return ok((body?.paths ?? []).map((p: string) => ({ path: p, signedURL: `/object/sign/${bucket}/${p}?token=t`, error: null }))); }
+    if (url.pathname.startsWith("/storage/v1/object/")) { stored[url.pathname.slice("/storage/v1/object/".length)] = await req.clone().text(); return ok({ Key: "k" }); }
     return ok({});
   }
   // ---- fake AI providers ----
   const r = providerBehavior({ url: req.url, headers: req.headers, body });
-  return ok(r.body, r.status);
+  return r.status === 204 ? new Response(null, { status: 204 }) : ok(r.body, r.status);
 }) as typeof fetch;
 
 let handler: (r: Request) => Promise<Response>;
@@ -306,41 +310,79 @@ Deno.test("failures are explained with the provider's own answer AND recorded wi
   assert(c.json.error === "curl_not_found", "bad curl explained");
 });
 
-// ---- Expo app chat ----
-const APP_CODE = "import React, { useState } from 'react';\nimport { View, Text } from 'react-native';\nimport { StatusBar } from 'expo-status-bar';\nimport { Ionicons } from '@expo/vector-icons';\nexport default function App() { const [n] = useState(0); return (<View><Text>مرحبا {n}</Text><StatusBar /><Ionicons name=\"home\" /></View>); }";
-const reply = (code: string) => "بنيت لك الشاشة الرئيسية مع شريط تبويب.\n\n```jsx\n" + code + "\n```";
-function appSite() { T.websites.push({ id: "app1", owner_id: "admin", org_id: null, name: "تطبيق", site_type: "app", config: {} }); }
+// ---- Expo app builder (chat -> plan -> files -> commit -> Expo Go) ----
+const HOME = "import React from 'react';\nimport { View, Text } from 'react-native';\nimport { theme } from '../theme';\nexport default function HomeScreen() { return (<View><Text style={{ color: theme.text }}>مرحبا</Text></View>); }";
+const THEME = "export const theme = { primary: '#5b4ae0', text: '#111827' };";
+const APPJS = "import React from 'react';\nimport { NavigationContainer } from '@react-navigation/native';\nimport { createBottomTabNavigator } from '@react-navigation/bottom-tabs';\nimport HomeScreen from './src/screens/HomeScreen';\nconst Tab = createBottomTabNavigator();\nexport default function App() { return (<NavigationContainer><Tab.Navigator><Tab.Screen name=\"Home\" component={HomeScreen} /></Tab.Navigator></NavigationContainer>); }";
+const PLAN = { name: "عيادتي", summary: "حجز مواعيد", icon: "🦷", screens: [{ name: "الرئيسية", purpose: "المواعيد" }], colors: { primary: "#0f766e", background: "#ffffff", text: "#111827" }, features: ["حجز"], files: [{ path: "App.js", purpose: "تنقل" }, { path: "src/theme.js", purpose: "ألوان" }, { path: "src/screens/HomeScreen.js", purpose: "الرئيسية" }, { path: "../evil.js", purpose: "x" }] };
+function appSite(owner = "admin") { T.websites.push({ id: "app1", owner_id: owner, org_id: null, name: "تطبيق", site_type: "app", config: {} }); }
 
-Deno.test("app_chat: super admin only; code extracted, validated, saved with the chat", async () => {
-  reset(); appSite(); providerBehavior = anthropicFake({ text: reply(APP_CODE) });
+Deno.test("app builder: only super admin or users with apps_access; chat returns a validated plan", async () => {
+  reset(); appSite();
+  providerBehavior = anthropicFake({ text: JSON.stringify({ type: "plan", text: "هذه خطة تطبيقك", plan: PLAN }) });
   await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
-  const deny = await call("cust", { action: "app_chat", website_id: "app1", messages: [{ role: "user", content: "تطبيق حجوزات" }] });
-  assert(deny.status === 403, "customer refused");
-  const r = await call("admin", { action: "app_chat", website_id: "app1", messages: [{ role: "user", content: "تطبيق حجوزات لعيادة" }] });
-  assert(r.json.ok === true && r.json.code.includes("export default") && /بنيت/.test(r.json.reply) && !r.json.reply.includes("```"), "reply split: " + JSON.stringify(r.json).slice(0, 150));
-  const saved = T.websites.find((w) => w.id === "app1").config.app;
-  assert(saved.code === APP_CODE && saved.chat.length === 2 && saved.chat[0].role === "user", "chat + code saved");
-  assert(T.website_versions.some((v) => v.snapshot?.app?.code === APP_CODE), "version recorded");
+  assert((await call("cust", { action: "app_chat", website_id: "app1", message: "تطبيق حجوزات" })).status === 403, "customer without access refused");
+  const r = await call("admin", { action: "app_chat", website_id: "app1", message: "تطبيق حجوزات لعيادة أسنان" });
+  assert(r.json.ok && r.json.type === "plan" && r.json.plan.name === "عيادتي", "plan " + JSON.stringify(r.json).slice(0, 200));
+  assert(!r.json.plan.files.some((f: any) => f.path.includes("..")), "unsafe path dropped");
+  const chat = T.websites.find((w) => w.id === "app1").config.app.chat;
+  assert(chat.length === 2 && chat[1].type === "plan", "conversation kept with the plan");
+  T.profiles.find((x) => x.id === "cust").apps_access = true;
+  T.websites.find((w) => w.id === "app1").owner_id = "cust";
+  assert((await call("cust", { action: "app_chat", website_id: "app1", message: "عدّل الألوان" })).json.ok, "enabled user can build their own app");
 });
 
-Deno.test("app_chat: imports outside the allow-list and unsafe code are rejected; an edit receives the current code", async () => {
+Deno.test("app builder: files written one by one are validated (allowed imports, relative files must exist)", async () => {
   reset(); appSite();
-  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" }).catch(() => {});
-  for (const bad of [APP_CODE.replace("expo-status-bar", "expo-file-system"), APP_CODE + "\neval('1')", "```jsx\nconst x = 1;\n```", "no code block here"]) {
-    providerBehavior = anthropicFake({ text: bad.startsWith("```") || bad === "no code block here" ? bad : reply(bad) });
-    if (!T.ai_providers.length) await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
-    const r = await call("admin", { action: "app_chat", website_id: "app1", messages: [{ role: "user", content: "x" }] });
+  providerBehavior = anthropicFake({ text: "```jsx\n" + HOME + "\n```" });
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const ok = await call("admin", { action: "app_file", website_id: "app1", path: "src/screens/HomeScreen.js", plan: PLAN });
+  assert(ok.json.ok && ok.json.code === HOME, "file ok " + JSON.stringify(ok.json).slice(0, 160));
+  for (const bad of [HOME.replace("react-native'", "react-native-fs'"), HOME + "\neval('x')", HOME.replace("'../theme'", "'../missing'"), HOME + "\nconst m = require(name);"]) {
+    providerBehavior = anthropicFake({ text: "```jsx\n" + bad + "\n```" });
+    const r = await call("admin", { action: "app_file", website_id: "app1", path: "src/screens/HomeScreen.js", plan: PLAN });
     assert(r.json.error === "invalid_output", "rejected: " + JSON.stringify(r.json).slice(0, 120));
   }
-  T.websites.find((w) => w.id === "app1").config = { app: { code: APP_CODE, chat: [] } };
-  let sent = "";
-  const base = anthropicFake({ text: reply(APP_CODE) });
-  providerBehavior = (q) => { if (q.url.includes("/v1/messages") && q.body.max_tokens > 16) sent = JSON.stringify(q.body.system); return base(q); };
-  const ok = await call("admin", { action: "app_chat", website_id: "app1", messages: [{ role: "user", content: "غيّر اللون" }] });
-  assert(ok.json.ok === true && sent.includes("export default function App"), "current code sent as context");
+  assert((await call("admin", { action: "app_file", website_id: "app1", path: "../../etc/passwd", plan: PLAN })).status === 400, "bad path refused");
+});
+
+Deno.test("app builder: commit generates the Expo project, saves a version, stores files; Expo Go link uses signed URLs", async () => {
+  reset(); appSite();
+  const r = await call("admin", { action: "app_commit", website_id: "app1", plan: PLAN, note: "بنيت التطبيق", files: { "App.js": APPJS, "src/theme.js": THEME, "src/screens/HomeScreen.js": HOME } });
+  assert(r.json.ok && r.json.rev === 1, "committed " + JSON.stringify(r.json));
+  const app = T.websites.find((w) => w.id === "app1").config.app;
+  const pkg = JSON.parse(app.files["package.json"]);
+  assert(pkg.main === "index.js" && pkg.dependencies.expo && pkg.dependencies["@react-navigation/bottom-tabs"] && pkg.dependencies["react-native-screens"], "package.json deps");
+  assert(JSON.parse(app.files["app.json"]).expo.android.package.startsWith("ly.ibtkar."), "android package id");
+  assert(JSON.parse(app.files["eas.json"]).build.preview.android.buildType === "apk", "apk profile");
+  assert(T.website_versions.some((v) => v.snapshot?.app?.files?.["App.js"] === APPJS), "version saved");
+  assert((stored["app-files/app1/1/App.js"] ?? "").includes("createBottomTabNavigator"), "files uploaded for Expo Go: " + Object.keys(stored).slice(0, 3));
+  const bad = await call("admin", { action: "app_commit", website_id: "app1", files: { "src/x.js": "import a from 'left-pad'; export const x = a;" } });
+  assert(bad.status === 422, "invalid commit refused");
+  const sn = await call("admin", { action: "app_snack", website_id: "app1" });
+  assert(sn.json.ok && sn.json.url.startsWith("https://snack.expo.dev/?") && sn.json.url.includes("platform=mydevice"), "snack url");
+  const files = JSON.parse(new URL(sn.json.url).searchParams.get("files")!);
+  assert(files["App.js"].type === "CODE" && files["App.js"].url.includes("token=") && !files["package.json"], "files by signed url, code only");
 });
 
 // ---- must-have checks, plan and repair ----
+Deno.test("app builder: store builds (EAS) are super-admin only, need the GitHub token, dispatch the workflow and record a queued build", async () => {
+  reset(); appSite("cust"); T.profiles.find((p) => p.id === "cust")!.apps_access = true;
+  let gh: any = null;
+  providerBehavior = ({ url, headers, body }) => { if (url.includes("api.github.com")) { gh = { url, auth: headers.get("authorization"), body }; return { status: 204, body: null }; } return { status: 404, body: {} }; };
+  assert((await call("admin", { action: "app_build", website_id: "app1", platform: "android", profile: "preview" })).status === 409, "not built yet");
+  await call("admin", { action: "app_commit", website_id: "app1", plan: PLAN, files: { "App.js": APPJS, "src/theme.js": THEME, "src/screens/HomeScreen.js": HOME } });
+  assert((await call("cust", { action: "app_build", website_id: "app1", platform: "android", profile: "preview" })).status === 403, "owner with apps_access cannot start store builds");
+  const nc = await call("admin", { action: "app_build", website_id: "app1", platform: "android", profile: "preview" });
+  assert(nc.json.error === "build_not_configured" && !gh, "no token -> not configured, nothing sent");
+  secrets["int:github_token"] = "ghp_test_token_123";
+  const r = await call("admin", { action: "app_build", website_id: "app1", platform: "ios", profile: "production; rm -rf /" });
+  assert(r.json.ok && gh?.url.endsWith("/repos/ibtkarly-ops/Ibtkar-/actions/workflows/eas-build.yml/dispatches"), "dispatched " + JSON.stringify(r.json));
+  assert(gh.auth === "Bearer ghp_test_token_123" && gh.body.ref === "main" && gh.body.inputs.platform === "ios" && gh.body.inputs.profile === "preview" && gh.body.inputs.app_id === "app1", "inputs sanitised");
+  const b = T.websites.find((w) => w.id === "app1").config.app.builds[0];
+  assert(b.status === "queued" && b.run === r.json.run && b.platform === "ios", "queued build recorded");
+});
+
 Deno.test("build reports which customer-requested features are missing; repair adds them", async () => {
   reset(); T.websites[0].site_type = "store"; T.websites[0].config.brief = { ...T.websites[0].config.brief, banner: "خصم على كل القطع", bg: "aurora", motion: "strong", float: "1", wa: "0912345678", banners: [{ t: "عروض الصيف", img: "https://x.supabase.co/storage/v1/object/public/site-assets/s1/b.webp", u: "javascript:alert(1)" }] };
   providerBehavior = anthropicFake({ text: HTML });   // a plain page: no banner, no animated bg, ...
