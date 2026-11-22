@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { DISPLAY, KINDS, cleanKey, detectPick, keyHint, listError, modelsRequest, orderModels, parseCurl, parseModels, rankModels, resolveTarget, safeEndpoint, targetFromCurl, type Found, type Kind, type Ranked, type Target } from "./models.ts";
 import { APP_CHAT_PROMPT, APP_FILE_PROMPT, cleanPlan, depsOf, exportsOf, extractCode, isCodePath, projectConfig, slugOf, snackUrl, validFile } from "./apps.ts";
-import { CORE_RULES, DESIGN_PROMPT, EDIT_PROMPT, applyPatch, cleanCopy, cleanItems, ownImage, parseJSON } from "./spec.ts";
+import { CORE_RULES, DESIGN_PROMPT, EDIT_PROMPT, SITE_CHAT_PROMPT, applyPatch, cleanCopy, cleanItems, draftMissing, mergeDraft, ownImage, parseJSON } from "./spec.ts";
 
 // Public publishable key (same one shipped in the browser app). Used only as the `apikey` header when we act
 // *as the signed-in admin* (their JWT goes in Authorization), e.g. to call admin_set_provider_key.
@@ -677,6 +677,35 @@ Deno.serve(async (req) => {
     };
     const img = ownImage(Deno.env.get("SUPABASE_URL") ?? "https://invalid.local");
     const siteLang = (b: any) => (b.lang === "en" ? "English" : "العربية");
+
+    // ---- "Describe your site -> send": extract a draft brief (no site row yet; it is created when the customer clicks Build) ----
+    if (body.action === "site_chat") {
+      const message = String(body.message ?? "").trim().slice(0, 3000);
+      if (message.length < 2) return json({ error: "invalid_messages" }, 400);
+      if (prof.role === "customer") {
+        const limit = await monthlyLimit(user.id);
+        const { count } = await db.from("ai_usage").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "ok").gte("created_at", monthStart());
+        if ((count ?? 0) >= limit) return json({ error: "quota_exceeded", limit }, 429);
+      }
+      const prev = mergeDraft(body.draft, {}, img);
+      const history = (cleanMessages(body.history) ?? []).filter((m) => m.role !== "system").slice(-6).map((m) => ({ role: m.role, content: m.content.slice(0, 800) }));
+      const r = await runAI({ task: "ui", json: true, rules: true, userId: user.id, siteId: null, maxTokens: 1800, deadlineMs: 90_000, messages: [{ role: "system", content: SITE_CHAT_PROMPT }, ...history, { role: "user", content: JSON.stringify({ draft: prev, message }) }] });
+      const out = parseJSON(r.text) ?? {};
+      const draft = mergeDraft(prev, out, img);
+      if (!draft.brief.desc) draft.brief.desc = (history.find((m) => m.role === "user")?.content ?? message).slice(0, 900);
+      const missing = draftMissing(draft.brief), en = body.lang === "en";
+      let type = out.type === "question" && !Object.keys(out.brief ?? {}).length ? "question" : "plan";
+      let text = String(out.text ?? "").trim().slice(0, 800);
+      if (missing.length) {
+        type = "question";
+        const ask = missing.includes("name") && missing.includes("phone") ? (en ? "What is your business name, and which phone or WhatsApp number should customers use?" : "ما اسم نشاطك؟ وما رقم الهاتف أو الواتساب الذي يتواصل عليه العملاء؟")
+          : missing.includes("name") ? (en ? "What is the name of your business?" : "ما اسم نشاطك كما تريده أن يظهر في الموقع؟")
+          : (en ? "Which phone or WhatsApp number should customers contact you on?" : "ما رقم الهاتف أو الواتساب الذي يتواصل عليه العملاء؟");
+        text = (text && out.type !== "question" ? text + "\n" : "") + ask;
+      }
+      if (!text) text = en ? "Here is your site plan" : "هذه خطة موقعك";
+      return json({ ok: true, type, text, draft, missing, model: r.model });
+    }
 
     // ---- New site: the AI writes all the copy (small JSON); the page engine renders the design ----
     if (body.action === "design") {

@@ -11,7 +11,7 @@ async function scenario(name, fns, advance) {
   const h = await launch({ file, role: 'customer', rpc: { slug_available: true, request_publish: 'dep-1' }, functions: fns });
   const { page } = h;
   await page.clock.install();
-  await h.open('#/app/new');
+  await h.open('#/app/new/form');
   await page.waitForSelector('form[data-form="wizard"]', { timeout: 8000 });
   const next = async () => { await page.click('[data-act="wznext"]'); await page.waitForTimeout(150); };
   await page.fill('textarea[name=desc]', 'وصف النشاط'); await next();           // 1 idea

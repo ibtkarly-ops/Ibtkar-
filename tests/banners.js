@@ -60,7 +60,7 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
   // ---- 3) wizard: logo + banner image + item photo ----
   const z = await launch({ role: 'customer', viewport: { width: 1280, height: 900 }, rpc: { slug_available: true, request_publish: 'dep-1' }, functions: { 'ai-gateway': { ok: false, error: 'service_not_configured' }, 'verify-publish': { ok: true, url: 'https://x.pages.dev/royal' } }, tables: { websites: [], website_versions: [] } });
   const zp = z.page;
-  await z.open('#/app/new'); await zp.waitForSelector('form[data-form="wizard"]');
+  await z.open('#/app/new/form'); await zp.waitForSelector('form[data-form="wizard"]');
   const next = async () => { await zp.click('[data-act="wznext"]'); await zp.waitForTimeout(120); };
   await zp.fill('textarea[name=desc]', 'متجر تزلج'); await zp.click('.tc:nth-child(2)'); await next();
   await zp.fill('input[name=name]', 'رويال'); await zp.fill('#sl', 'royalx'); await zp.waitForTimeout(700); await next();

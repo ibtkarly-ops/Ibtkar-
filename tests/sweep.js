@@ -6,7 +6,7 @@ const out = process.argv[2];
 const site = { id: 's1', owner_id: UID, name: 'ملكي', slug: 'royal', site_type: 'store', status: 'published', url: 'https://royal.ibtkar.ly', created_at: new Date().toISOString(), config: {} };
 const plans = [{ id: 'p1', code: 'free', name_ar: 'مجانية', name_en: 'Free', price: 0, websites_limit: 1, storage_mb: 100, ai_requests_limit: 50, active: true, sort: 1 }];
 const ROUTES = {
-  customer: ['#/app', '#/app/sites', '#/app/new', '#/app/apps', '#/app/analytics', '#/app/requests', '#/app/support', '#/app/notes', '#/app/billing', '#/app/contracts', '#/app/settings',
+  customer: ['#/app', '#/app/sites', '#/app/new', '#/app/new/form', '#/app/apps', '#/app/analytics', '#/app/requests', '#/app/support', '#/app/notes', '#/app/billing', '#/app/contracts', '#/app/settings',
     '#/app/site/s1/overview', '#/app/site/s1/items', '#/app/site/s1/details', '#/app/site/s1/analytics', '#/app/site/s1/versions', '#/app/site/s1/requests', '#/app/site/s1/domains'],
   super_admin: ['#/admin', '#/admin/analytics', '#/admin/users', '#/admin/sites', '#/admin/apps', '#/admin/requests', '#/admin/tickets', '#/admin/invoices', '#/admin/contracts', '#/admin/banners', '#/admin/plans', '#/admin/servers', '#/admin/monitor', '#/admin/engine', '#/admin/prompts', '#/admin/settings', '#/admin/audit'],
   visitor: ['#/', '#/pricing', '#/apps', '#/login', '#/signup', '#/forgot', '#/help'],

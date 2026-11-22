@@ -7,7 +7,7 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
 (async () => {
   const h = await launch({ role: 'customer', viewport: { width: 390, height: 844 }, rpc: { slug_available: true, request_publish: 'dep-1' }, functions: { 'ai-gateway': { ok: false, error: 'service_not_configured' }, 'verify-publish': { ok: true, url: 'https://x.pages.dev/royal' } }, tables: { websites: [], website_versions: [] } });
   const { page } = h;
-  await h.open('#/app/new'); await page.waitForSelector('form[data-form="wizard"]');
+  await h.open('#/app/new/form'); await page.waitForSelector('form[data-form="wizard"]');
   const step = () => page.evaluate(() => +document.querySelector('form[data-form="wizard"]').dataset.step);
   const next = async () => { await page.click('[data-act="wznext"]'); await page.waitForTimeout(120); };
   const shot = async (n) => { if (shots) { fs.mkdirSync(shots, { recursive: true }); await page.screenshot({ path: `${shots}/wz${n}.png` }); } };

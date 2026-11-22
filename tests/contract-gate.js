@@ -52,7 +52,7 @@ const html = '<html><body>' + 'x'.repeat(40) + '</body></html>';
       tables: { websites: [], website_versions: [] },
     });
     const { page } = h;
-    await h.open('#/app/new'); await page.waitForSelector('form[data-form="wizard"]');
+    await h.open('#/app/new/form'); await page.waitForSelector('form[data-form="wizard"]');
     const next = async () => { await page.click('[data-act="wznext"]'); await page.waitForTimeout(120); };
     await page.fill('textarea[name=desc]', 'شركة استشارات'); await page.click('.tc:nth-child(2)'); await next();
     await page.fill('input[name=name]', 'شركتي'); await page.fill('#sl', 'mycoxx'); await page.waitForTimeout(700); await next();

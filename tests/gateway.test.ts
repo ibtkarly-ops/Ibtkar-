@@ -383,6 +383,23 @@ Deno.test("app builder: store builds (EAS) are super-admin only, need the GitHub
   assert(b.status === "queued" && b.run === r.json.run && b.platform === "ios", "queued build recorded");
 });
 
+Deno.test("site_chat: name/phone are asked by the server; the draft is cleaned and merged; nothing is created yet", async () => {
+  reset();
+  providerBehavior = anthropicFake({ text: JSON.stringify({ type: "plan", text: "فهمت: مطعم مشويات", brief: { name: "مشويات الملكي", type: "bakery", desc: "مطعم مشويات", color: "red", tone: "friendly", role: "super_admin", custom_css: "x" }, items: [{ n: "شاورما", p: "15" }, { n: "" }], slug: "Al Malaki!!" }) });
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const q = await call("cust", { action: "site_chat", message: "مطعم مشويات في طرابلس اسمه الملكي" });
+  assert(q.json.ok && q.json.type === "question" && q.json.missing.join() === "phone" && /رقم/.test(q.json.text), "asks for the phone " + JSON.stringify(q.json));
+  const d = q.json.draft;
+  assert(d.brief.name === "مشويات الملكي" && d.brief.type === "company" && !d.brief.color && d.brief.tone === "friendly" && !("role" in d.brief) && !("custom_css" in d.brief), "brief cleaned " + JSON.stringify(d.brief));
+  assert(d.items.length === 1 && d.items[0].p === "15" && d.slug === "al-malaki", "items + slug cleaned " + JSON.stringify(d));
+  assert(T.websites.length === 1, "no website row created");
+  providerBehavior = anthropicFake({ text: JSON.stringify({ type: "plan", text: "تمام", brief: { phone: "٠٩١٢٣٤٥٦٧٨", type: "restaurant" } }) });
+  const p2 = await call("cust", { action: "site_chat", message: "رقمي ٠٩١٢٣٤٥٦٧٨", draft: d, history: [{ role: "user", content: "مطعم مشويات في طرابلس اسمه الملكي" }] });
+  assert(p2.json.type === "plan" && p2.json.draft.brief.phone === "0912345678" && p2.json.draft.brief.name === "مشويات الملكي" && p2.json.draft.brief.type === "restaurant" && p2.json.draft.items.length === 1, "merged into a plan " + JSON.stringify(p2.json));
+  T.ai_usage = Array.from({ length: 50 }, (_, i) => ({ id: "u" + i, user_id: "cust", status: "ok", created_at: new Date().toISOString() }));
+  assert((await call("cust", { action: "site_chat", message: "مرحبا" })).status === 429, "monthly quota applies");
+});
+
 Deno.test("build reports which customer-requested features are missing; repair adds them", async () => {
   reset(); T.websites[0].site_type = "store"; T.websites[0].config.brief = { ...T.websites[0].config.brief, banner: "خصم على كل القطع", bg: "aurora", motion: "strong", float: "1", wa: "0912345678", banners: [{ t: "عروض الصيف", img: "https://x.supabase.co/storage/v1/object/public/site-assets/s1/b.webp", u: "javascript:alert(1)" }] };
   providerBehavior = anthropicFake({ text: HTML });   // a plain page: no banner, no animated bg, ...
