@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { DISPLAY, KINDS, cleanKey, detectPick, keyHint, listError, modelsRequest, orderModels, parseCurl, parseModels, rankModels, resolveTarget, safeEndpoint, targetFromCurl, type Found, type Kind, type Ranked, type Target } from "./models.ts";
-import { DESIGN_PROMPT, EDIT_PROMPT, applyPatch, cleanCopy, cleanItems, ownImage, parseJSON } from "./spec.ts";
+import { CORE_RULES, DESIGN_PROMPT, EDIT_PROMPT, applyPatch, cleanCopy, cleanItems, ownImage, parseJSON } from "./spec.ts";
 
 // Public publishable key (same one shipped in the browser app). Used only as the `apikey` header when we act
 // *as the signed-in admin* (their JWT goes in Authorization), e.g. to call admin_set_provider_key.
@@ -185,10 +185,13 @@ async function candidates(task: string) {
 // Model router. Tries enabled providers/models best-first and moves on automatically when one fails
 // (overloaded 503/429, timeout, bad model). A rejected key (401/403) skips that provider's remaining models.
 // Hard deadline so the edge function always answers before its own wall-clock limit (the browser also has a timeout).
-async function runAI(opts: { task: string; messages: Msg[]; userId: string; siteId: string | null; maxTokens?: number; json?: boolean; deadlineMs?: number }) {
+async function runAI(opts: { task: string; messages: Msg[]; userId: string; siteId: string | null; maxTokens?: number; json?: boolean; deadlineMs?: number; rules?: boolean }) {
   const cand = await candidates(opts.task);
   if (!cand.length) throw new AIError("service_not_configured", 503);
   const cap = Number(await setting("ai.request_token_cap") ?? 7500) || 0;
+  // IBTIKAR AI rules go first in the system prompt: the full text where the host has no per-minute cap, the core otherwise
+  const core = opts.rules ? (await setting("ai.master_rules_core")) || CORE_RULES : "", full = opts.rules ? (await setting("ai.master_rules")) || "" : "";
+  const withRules = (kind: string) => !opts.rules ? opts.messages : [{ role: "system" as const, content: (kind !== "custom" && full ? full : core) }, ...opts.messages];
   const deadline = Date.now() + (opts.deadlineMs ?? 135_000);
   let tried = 0, lastErr = "";
   const dead = new Set<string>(), touched = new Set<string>();   // touched = we flagged it degraded earlier in THIS run, reset it on success
@@ -201,15 +204,16 @@ async function runAI(opts: { task: string; messages: Msg[]; userId: string; site
     if (!key) continue;
     tried++;
     try {
-      let mt = fitMaxTokens(p.kind, opts.messages, opts.maxTokens ?? 4096, cap);
-      const attempt = () => callProvider(p.kind, p.endpoint, key, model.model_id, opts.messages, mt, Math.min(105_000, deadline - Date.now()), !!opts.json);
+      const msgs = withRules(p.kind);
+      let mt = fitMaxTokens(p.kind, msgs, opts.maxTokens ?? 4096, cap);
+      const attempt = () => callProvider(p.kind, p.endpoint, key, model.model_id, msgs, mt, Math.min(105_000, deadline - Date.now()), !!opts.json);
       let out: Out;
       try { out = await attempt(); }
       catch (e1) {
         // the same model usually works a moment later (per-minute limit) or with a smaller output budget
         const m1 = String((e1 as Error).message), s1 = Number(m1.match(/status (\d{3})/)?.[1] ?? 0);
         const wait = Number(m1.match(/retry-after (\d+)/)?.[1] ?? 0), over = overBy(m1);
-        if (s1 === 429 && !/insufficient_quota|billing|credit/i.test(m1) && wait > 0 && wait <= 20 && Date.now() + wait * 1000 < deadline - 20_000) { await new Promise((r) => setTimeout(r, wait * 1000)); out = await attempt(); }
+        if (s1 === 429 && !/insufficient_quota|billing|credit/i.test(m1) && wait > 0 && wait <= 20 && !cand.some((c) => c.provider.id !== p.id && !dead.has(c.provider.id)) && Date.now() + wait * 1000 < deadline - 20_000) { await new Promise((r) => setTimeout(r, wait * 1000)); out = await attempt(); }
         else if ((s1 === 413 || s1 === 400 || s1 === 429) && over > 0 && mt - over - 200 >= 900) { mt = mt - over - 200; out = await attempt(); }
         else throw e1;
       }
@@ -623,7 +627,7 @@ Deno.serve(async (req) => {
         notes: String(brief.notes ?? "").slice(0, 600), hours: brief.hours ?? "", address: brief.addr ?? "",
         offerings: String(brief.items ?? "").split("\n").map((x: string) => x.split("|")[0].trim()).filter(Boolean).slice(0, 12), needs_items: needs,
       };
-      const r = await runAI({ task: "ui", json: true, userId: user.id, siteId: site.id, maxTokens: 2600, deadlineMs: 100_000, messages: [{ role: "system", content: DESIGN_PROMPT }, { role: "user", content: JSON.stringify(info) }] });
+      const r = await runAI({ task: "ui", json: true, userId: user.id, siteId: site.id, maxTokens: 2600, deadlineMs: 100_000, rules: true, messages: [{ role: "system", content: DESIGN_PROMPT }, { role: "user", content: JSON.stringify(info) }] });
       const out = parseJSON(r.text);
       if (!out || typeof out !== "object") return json({ ok: false, error: "invalid_output", detail: "design_unparseable" });
       const copy = cleanCopy(out.copy, img);
@@ -652,7 +656,7 @@ Deno.serve(async (req) => {
       const { aud, goal, insp, notes, items: _txt, ...specBrief } = brief;
       const choices = JSON.stringify(body.choices ?? {}).slice(0, 1500);
       const user0 = JSON.stringify({ spec: { brief: specBrief, items, sample_items: !!(sd && sd.sample) }, choices: JSON.parse(choices.length < 1500 ? choices : "{}"), request: instruction });
-      const r = await runAI({ task: "ui", json: true, userId: user.id, siteId: site.id, maxTokens: 3000, deadlineMs: 100_000, messages: [{ role: "system", content: EDIT_PROMPT }, ...history, { role: "user", content: user0 }] });
+      const r = await runAI({ task: "ui", json: true, userId: user.id, siteId: site.id, maxTokens: 3000, deadlineMs: 100_000, rules: true, messages: [{ role: "system", content: EDIT_PROMPT }, ...history, { role: "user", content: user0 }] });
       const out = parseJSON(r.text);
       if (!out || typeof out !== "object") return json({ ok: false, error: "invalid_output", detail: "edit_unparseable" });
       const res = applyPatch({ brief, items }, out.patch, img);

@@ -129,3 +129,14 @@ Deno.test("curl: OpenAI, Anthropic, Gemini, Groq and an unknown OpenAI-compatibl
   if ("error" in nonb) throw new Error(nonb.error);
   eq((targetFromCurl(nonb) as any).error, "curl_unsupported_auth", "unsupported auth header at unknown host");
 });
+
+Deno.test("free providers from the awesome-freellm list are presets; OpenRouter keeps only :free models", () => {
+  for (const id of ["nvidia", "cohere", "llm7", "ovh", "ollama", "zai", "chutes", "glhf", "siliconflow", "modelscope", "kilo", "opencode", "aion", "agnes", "gonka"]) {
+    const t = resolveTarget(id);
+    eq(!!t && t.kind === "custom" && /^https:\/\//.test(t.endpoint!), true, id + " preset");
+  }
+  eq(detectPick("nvapi-abc"), "nvidia", "nvapi- prefix");
+  const r = rk("custom", ["meta-llama/llama-3.1-405b-instruct", "deepseek/deepseek-chat-v3:free", "qwen/qwen3-235b-a22b:free", "openai/gpt-4o"].map((id) => ({ id, created: 1 })));
+  eq(r.every((x) => x.id.endsWith(":free")), true, "only free models kept");
+  eq(r.find((x) => x.role === "primary")?.id, "qwen/qwen3-235b-a22b:free", "biggest free model is primary");
+});

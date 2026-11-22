@@ -131,7 +131,9 @@ export function rankModels(kind: Kind, found: Found[]): Ranked[] {
       if (DATED.test(f.id) && ids.has(f.id.replace(DATED, ""))) return false;
       return tierOf(kind, f.id) > 0;
     })
-    .map((f) => ({ ...f, tier: tierOf(kind, f.id), ver: versionOf(f.id), pre: /(preview|exp|beta|thinking)/i.test(f.id) }));
+    .map((f) => ({ ...f, tier: tierOf(kind, f.id), ver: versionOf(f.id), pre: /(preview|exp|beta|thinking)/i.test(f.id) }))
+    // hosts that mark free models (OpenRouter ":free"): only those, a paid one would fail on a free key
+    .filter((f, _i, all) => kind !== "custom" || !all.some((x) => /:free$/i.test(x.id)) || /:free$/i.test(f.id));
 
   const best = (list: typeof usable) =>
     [...list].sort((a, b) => Number(a.pre) - Number(b.pre) || cmpVersion(b.ver, a.ver) || b.created - a.created)[0];
@@ -234,6 +236,22 @@ export const PRESETS: Record<string, { name: string; endpoint: string; host: str
   together: { name: "Together", endpoint: "https://api.together.xyz/v1", host: "api.together.xyz" },
   fireworks: { name: "Fireworks", endpoint: "https://api.fireworks.ai/inference/v1", host: "api.fireworks.ai" },
   cerebras: { name: "Cerebras", endpoint: "https://api.cerebras.ai/v1", host: "api.cerebras.ai" },
+  // free tiers from github.com/open-free-llm-api/awesome-freellm-apis (all OpenAI-compatible)
+  nvidia: { name: "NVIDIA NIM", endpoint: "https://integrate.api.nvidia.com/v1", host: "integrate.api.nvidia.com" },
+  cohere: { name: "Cohere", endpoint: "https://api.cohere.ai/compatibility/v1", host: "api.cohere.ai" },
+  llm7: { name: "LLM7", endpoint: "https://api.llm7.io/v1", host: "api.llm7.io" },
+  ovh: { name: "OVHcloud", endpoint: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1", host: "oai.endpoints.kepler.ai.cloud.ovh.net" },
+  ollama: { name: "Ollama Cloud", endpoint: "https://ollama.com/v1", host: "ollama.com" },
+  zai: { name: "Z AI", endpoint: "https://open.bigmodel.cn/api/paas/v4", host: "open.bigmodel.cn" },
+  chutes: { name: "Chutes", endpoint: "https://llm.chutes.ai/v1", host: "llm.chutes.ai" },
+  glhf: { name: "Glhf", endpoint: "https://glhf.chat/api/openai/v1", host: "glhf.chat" },
+  siliconflow: { name: "SiliconFlow", endpoint: "https://api.siliconflow.cn/v1", host: "api.siliconflow.cn" },
+  modelscope: { name: "ModelScope", endpoint: "https://api-inference.modelscope.cn/v1", host: "api-inference.modelscope.cn" },
+  kilo: { name: "Kilo Code", endpoint: "https://api.kilo.ai/api/gateway", host: "api.kilo.ai" },
+  opencode: { name: "OpenCode Zen", endpoint: "https://opencode.ai/zen/v1", host: "opencode.ai" },
+  aion: { name: "Aion Labs", endpoint: "https://api.aionlabs.ai/v1", host: "api.aionlabs.ai" },
+  agnes: { name: "Agnes AI", endpoint: "https://apihub.agnes-ai.com/v1", host: "apihub.agnes-ai.com" },
+  gonka: { name: "Gonka", endpoint: "https://proxy.gonkabroker.com/v1", host: "proxy.gonkabroker.com" },
 };
 
 export interface Target { kind: Kind; endpoint: string | null; name: string }
@@ -256,6 +274,7 @@ export function detectPick(key: string): string | null {
   if (k.startsWith("sk-or-")) return "openrouter";
   if (k.startsWith("csk-")) return "cerebras";
   if (k.startsWith("fw_")) return "fireworks";
+  if (k.startsWith("nvapi-")) return "nvidia";
   return null;
 }
 

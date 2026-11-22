@@ -467,3 +467,25 @@ Deno.test("openai-compatible hosts get max_tokens within the per-minute cap, JSO
   assert(chat.response_format?.type === "json_object" && chat.reasoning_effort === "low", "json + low reasoning");
   assert(chat.max_tokens >= 900 && chat.max_tokens <= 2600, "max_tokens sent and capped: " + chat.max_tokens);
 });
+
+Deno.test("IBTIKAR AI rules: core sent to capped free hosts, full text to uncapped providers", async () => {
+  reset();
+  T.platform_settings.push({ key: "ai.master_rules", value: "FULL RULES TEXT" });
+  let sys = "";
+  const base = anthropicFake({ text: JSON.stringify({ copy: { hero: { t: "ع" } }, items: [] }) });
+  providerBehavior = (r) => { if (r.url.includes("/v1/messages") && r.body.max_tokens > 16) sys = r.body.system; return base(r); };
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  await call("cust", { action: "design", website_id: "site1" });
+  assert(sys.startsWith("FULL RULES TEXT"), "uncapped provider gets the full rules: " + sys.slice(0, 40));
+  reset();
+  let groqSys = "";
+  providerBehavior = ({ url, headers, body }) => {
+    if (url.endsWith("/models")) return { status: 200, body: { data: [{ id: "openai/gpt-oss-120b", created: 1 }] } };
+    if (url.endsWith("/chat/completions")) { if (body.max_tokens > 64) groqSys = body.messages[0].content; return { status: 200, body: { choices: [{ message: { content: JSON.stringify({ copy: { hero: { t: "ع" } }, items: [] }) } }], usage: {} } }; }
+    return { status: 404, body: {} };
+  };
+  T.platform_settings.push({ key: "ai.master_rules", value: "FULL RULES TEXT" });
+  await call("admin", { action: "connect", kind: "groq", key: "gsk_GOODKEY123" });
+  await call("cust", { action: "design", website_id: "site1" });
+  assert(groqSys.startsWith("أنت IBTIKAR AI") && !groqSys.includes("FULL RULES TEXT"), "capped free host gets the core rules");
+});
