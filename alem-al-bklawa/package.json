@@ -1,0 +1,16 @@
+{
+  "name": "alem-al-bklawa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "متجر عالم البكلاوه — Alem Al Bklawa e-commerce (Node.js + SQLite, no runtime dependencies)",
+  "type": "module",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server.js",
+    "create-admin": "node --disable-warning=ExperimentalWarning scripts/create-admin.js",
+    "seed:demo": "node --disable-warning=ExperimentalWarning scripts/seed-demo.js",
+    "test": "node --disable-warning=ExperimentalWarning --test tests/api.test.js",
+    "test:e2e": "node --disable-warning=ExperimentalWarning tests/e2e.js"
+  }
+}
