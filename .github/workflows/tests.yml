@@ -9,8 +9,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
         with: { deno-version: v2.x }
-      - run: deno check supabase/functions/ai-gateway/index.ts supabase/functions/uptime-check/index.ts supabase/functions/app-export/index.ts
-      - run: deno test -A --no-check tests/models.test.ts tests/gateway.test.ts
+      - run: deno check supabase/functions/ai-gateway/index.ts supabase/functions/uptime-check/index.ts supabase/functions/app-export/index.ts supabase/functions/contract-file/index.ts
+      - run: deno test -A --no-check tests/models.test.ts tests/gateway.test.ts tests/contract.test.ts
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -20,4 +20,4 @@ jobs:
       - run: npm install --no-save playwright@1 && npx playwright install --with-deps chromium
       - run: |
           set -e
-          for t in engine wizard wizard2 sitechat gensite variety edit admin-chat items cart banners contract-gate storage-cap apps pathsite auth repro-hang freeze admin-browse bottom-nav sweep; do echo "== $t"; node tests/$t.js; done
+          for t in engine wizard wizard2 sitechat contracts gensite variety edit admin-chat items cart banners contract-gate storage-cap apps pathsite auth repro-hang freeze admin-browse bottom-nav sweep; do echo "== $t"; node tests/$t.js; done

@@ -123,6 +123,8 @@ main{animation:in .4s cubic-bezier(.2,.7,.2,1) both}
 .nsw{max-width:900px;display:flex;flex-direction:column;gap:12px}.nsw .ac-msgs{min-height:300px;max-height:62vh}.nsplan{max-width:100%;width:100%}.nsin{font-size:18px;font-weight:700;padding:6px 10px;margin-bottom:2px}.nsg{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px;margin:6px 0 10px}.nsg label{margin-top:0;font-size:12.5px}.nsc button{width:26px;height:26px;border-radius:8px;border:2px solid transparent;cursor:pointer;padding:0}.nsc button.on{border-color:var(--tx);box-shadow:0 0 0 2px var(--card) inset}.nsd{font-size:13.5px;color:var(--tx2);margin:4px 0 8px}.nsact{margin-top:12px}.nsatt{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;border:1px dashed var(--bd);cursor:pointer;flex:none;color:var(--tx2)}.nsattn{color:var(--tx2);font-size:12.5px}
 .nsw .ac-hello .chip{white-space:normal;text-align:start;max-width:100%;line-height:1.6;height:auto;padding:8px 12px}
 @media(max-width:700px){.nsg{grid-template-columns:1fr}.nsw .ac-in{flex-wrap:wrap}.nsw .ac-in textarea{flex:1 1 calc(100% - 56px);min-width:0}.nsw .ac-in .btn{flex:1 1 100%;justify-content:center}}
+.ctrbody h4{margin:16px 0 4px;font-size:15px}.ctrbody p{margin:0 0 8px;line-height:1.9;font-size:14.5px}.ctrbody{background:var(--bg2);border-radius:12px;padding:14px 16px}.ctrdoc .ctrbody{background:transparent;padding:0}.ctrsig{display:flex;gap:16px;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--bd)}.ctrimg{height:84px;max-width:240px;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:4px}
+@media print{body *{visibility:hidden}.ctrpage,.ctrpage *{visibility:visible}.ctrpage{position:absolute;inset:0;max-width:none!important;margin:0!important;padding:18mm!important}.noprint{display:none!important}.ctrdoc{border:0!important;box-shadow:none!important;background:#fff!important;color:#000!important}.ctrdoc .ctrbody *{color:#000!important}}
 .apsw{display:inline-flex;gap:6px;align-items:center;font-size:13px;cursor:pointer}.apsw input{width:auto}
 .ap-how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 18px}.ap-how div{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--bd);border-radius:14px;background:var(--card);font-size:14px}.ap-how b{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--ac);color:#fff;font-size:13px}
 .apic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:24px;color:#fff;margin-bottom:10px;box-shadow:0 10px 24px -14px rgba(0,0,0,.6)}.apic.sm{width:42px;height:42px;font-size:21px;margin:0}
@@ -612,6 +614,12 @@ Object.assign(T.ar,{contract_ready:'لديك عقد ينتظر توقيعك',con
 Object.assign(T.en,{contract_ready:'You have a contract waiting for your signature',contract_approved:'Your contract has been approved',contract_received:'We received your signed contract, awaiting admin approval',ctr_tap_sign:'Tap to view and sign the contract',ctr_tap_view:'Tap to view your contracts',admin_viewing:'Browsing website: ',admin_viewing_s:' — as admin',admin_back:'All websites',more:'More',try_other_t:'A one-of-a-kind design',try_other_d:'Your site design is not repeated elsewhere. Try a completely different look in one tap; your texts and items stay as they are.',try_other:'Try another design'});
 Object.assign(T.ar,{ns_title:'أنشئ موقعك',ns_sub:'صف موقعك بكلماتك واضغط إرسال؛ الذكاء يجهّز كل شيء ثم يبنيه وينشره.',ns_form:'املأ التفاصيل يدوياً',ns_back:'← صف موقعك بالذكاء',ns_reset:'ابدأ من جديد',ns_hello:'صف نشاطك وموقعك الذي تريده',ns_hello_d:'اكتب اسم نشاطك، ماذا تقدّم، رقم التواصل، وأي شيء تريده في الموقع (أصناف وأسعار، ألوان، عروض…). يمكنك إرفاق الشعار من زر +.',ns_ex1:'مطعم مشويات اسمه «الملكي» في طرابلس، رقم الطلبات 0912345678، عندنا شاورما 15 وكباب 25، وأبي اللون أحمر',ns_ex2:'متجر عطور اسمه «عبير» يبيع عطور فرنسية وعربية، واتساب 0923456789، أبي تصميم فخم أسود وذهبي',ns_ex3:'شركة صيانة مكيفات اسمها «برودة» تخدم بنغازي، الهاتف 0941234567، خدماتنا تركيب وصيانة وتنظيف',ns_ex4:'صفحة تعريفية لدورة تصميم جرافيك أونلاين باسم «إبداع»، التسجيل عبر واتساب 0911112222',ns_ph:'مثال: مخبز اسمه «السنبلة» في مصراتة، رقمنا 091…، نبيع خبز وحلويات…',ns_ph2:'أضف أو غيّر أي شيء: «غيّر اللون للأزرق»، «أضف صنف كنافة 20»…',ns_thinking:'يجهّز موقعك…',ns_items:'الأصناف:',ns_noitems:'لم تذكر أصنافاً؛ سنضيف أمثلة مناسبة لنشاطك تعدّلها لاحقاً من تبويب الأصناف.',ns_build:'ابنِ موقعي الآن',ns_more:'تفاصيل أكثر',ns_need:'أكمل اسم النشاط ورقم التواصل أولاً',ns_manual:'املأ التفاصيل يدوياً',ns_logo:'إرفاق الشعار'});
 Object.assign(T.en,{ns_title:'Create your site',ns_sub:'Describe your site in your own words and press send; the AI prepares everything, then builds and publishes it.',ns_form:'Fill in the details manually',ns_back:'← Describe it with AI',ns_reset:'Start over',ns_hello:'Describe your business and the site you want',ns_hello_d:'Write your business name, what you offer, your contact number and anything you want on the site (items and prices, colours, offers…). You can attach your logo with the + button.',ns_ex1:'A grill restaurant called “Al Malaki” in Tripoli, orders on 0912345678, shawarma 15 and kebab 25, red colour please',ns_ex2:'A perfume shop called “Abeer” selling French and Arabic perfumes, WhatsApp 0923456789, luxurious black and gold design',ns_ex3:'An AC maintenance company called “Buruda” serving Benghazi, phone 0941234567, installation, repair and cleaning',ns_ex4:'A landing page for an online graphic design course called “Ibdaa”, sign up on WhatsApp 0911112222',ns_ph:'e.g. a bakery called “Sunbula” in Misrata, our number 091…, we sell bread and sweets…',ns_ph2:'Add or change anything: “make it blue”, “add kunafa 20”…',ns_thinking:'Preparing your site…',ns_items:'Items:',ns_noitems:'No items mentioned; we will add fitting examples you can edit later in the Items tab.',ns_build:'Build my site now',ns_more:'More details',ns_need:'Add the business name and a contact number first',ns_manual:'Fill in the details manually',ns_logo:'Attach logo'});
+Object.assign(T.ar,{ap_retry:'أعد المحاولة',ap_retry_note:'تكمل من حيث توقفت ولا تُفقد الملفات المكتوبة.',ap_done_f:'جاهز',ap_e_import:'استخدم الذكاء مكتبة غير مدعومة (%)؛ أعد المحاولة وسيكتبها بدونها.',ap_e_missing:'يستورد ملفاً غير موجود (%)؛ أعد المحاولة.',ap_e_quality:'لم تكتمل النتيجة بالجودة المطلوبة؛ أعد المحاولة.'});
+Object.assign(T.en,{ap_retry:'Try again',ap_retry_note:'It continues where it stopped; written files are kept.',ap_done_f:'Done',ap_e_import:'The AI used an unsupported library (%); try again and it will write it without.',ap_e_missing:'It imports a file that does not exist (%); try again.',ap_e_quality:'The result did not reach the required quality; try again.'});
+Object.assign(T.ar,{ed_hist:'سجل الطلبات'});
+Object.assign(T.en,{ed_hist:'Request history'});
+Object.assign(T.ar,{ctr_tpl:'من قالب النظام',ctr_filemode:'رفع ملف مخصص',ctr_plan:'الباقة',ctr_price:'السعر',ctr_cur:'العملة',ctr_months:'المدة (أشهر)',ctr_start:'تاريخ البدء',ctr_law:'القانون المطبّق',ctr_extra:'بنود إضافية (اختياري)',ctr_preview:'معاينة العقد',ctr_savedraft:'حفظ مسودة',ctr_createsend:'إنشاء وإرسال',ctr_nosite_warn:'بلا موقع مرتبط لن يفتح هذا العقد نشر أي موقع للعميل.',ctr_void:'إلغاء العقد',ctr_del:'حذف المسودة',ctr_agree:'قرأت العقد وأوافق على جميع بنوده',ctr_sign_here:'وقّع بإصبعك أو بالماوس داخل الإطار',ctr_empty_sig:'ارسم توقيعك أولاً',ctr_need_agree:'يجب الموافقة على بنود العقد',ctr_print:'طباعة / حفظ PDF',ctr_signed_on:'تاريخ التوقيع',ctr_load_err:'تعذّر فتح العقد، تحقق من الاتصال وحاول مجدداً.',ctr_not_signable:'هذا العقد غير متاح للتوقيع حالياً.',ctr_view:'عرض العقد',ctr_edit_disc:'النص قالب تجاري عام وليس استشارة قانونية؛ راجعه قانونياً قبل اعتماده.',ctr_tap_review:'اضغط للمراجعة والاعتماد',contract_signed:'وقّع العميل العقد',empty_signature:'التوقيع فارغ، ارسم توقيعك أولاً',agree_required:'يجب الموافقة على بنود العقد',name_required:'اكتب اسمك الكامل',already_signed:'تم توقيع هذا العقد مسبقاً',not_awaiting_signature:'هذا العقد غير متاح للتوقيع'});
+Object.assign(T.en,{ctr_tpl:'System template',ctr_filemode:'Upload a custom file',ctr_plan:'Plan',ctr_price:'Price',ctr_cur:'Currency',ctr_months:'Term (months)',ctr_start:'Start date',ctr_law:'Governing law',ctr_extra:'Extra clauses (optional)',ctr_preview:'Contract preview',ctr_savedraft:'Save draft',ctr_createsend:'Create and send',ctr_nosite_warn:'Without a linked site this contract will not unlock publishing for the customer.',ctr_void:'Void contract',ctr_del:'Delete draft',ctr_agree:'I have read the contract and agree to all its terms',ctr_sign_here:'Sign with your finger or mouse inside the box',ctr_empty_sig:'Draw your signature first',ctr_need_agree:'You must agree to the terms',ctr_print:'Print / Save as PDF',ctr_signed_on:'Signed on',ctr_load_err:'Could not open the contract, check your connection and try again.',ctr_not_signable:'This contract is not open for signing right now.',ctr_view:'View contract',ctr_edit_disc:'A general commercial template, not legal advice; have it reviewed before use.',ctr_tap_review:'Tap to review and approve',contract_signed:'The customer signed the contract',empty_signature:'The signature is empty, draw it first',agree_required:'You must agree to the contract terms',name_required:'Enter your full name',already_signed:'This contract was already signed',not_awaiting_signature:'This contract is not open for signing'});
 Object.assign(T.ar,{hap_tag:'جديد · صانع التطبيقات',hap_t:'فكرتك صارت تطبيقاً',hap_d:'صف تطبيقك بكلماتك، والذكاء الاصطناعي يخطّط الشاشات والألوان ويكتب كود React Native حقيقياً تجرّبه على جوالك فوراً، ثم تنشره على App Store وGoogle Play.',hap_s1:'محادثة بسيطة، وسؤال واحد فقط إذا احتاج الذكاء توضيحاً.',hap_s2:'امسح رمز QR وشاهد تطبيقك يعمل على جوالك خلال دقائق.',hap_s3:'نبني ملفات Android وiOS للمتاجر، والكود ملكك بالكامل.',hap_cta:'اطلب الوصول المبكر'});
 Object.assign(T.en,{hap_tag:'New · App builder',hap_t:'Your idea, now an app',hap_d:'Describe your app in your own words. AI plans the screens and colours and writes real React Native code you can try on your phone right away, then publish to the App Store and Google Play.',hap_s1:'A simple chat, with one question only if the AI needs clarification.',hap_s2:'Scan a QR code and watch your app run on your phone in minutes.',hap_s3:'We build Android and iOS files for the stores, and the code is fully yours.',hap_cta:'Request early access'});
 Object.assign(T.ar,{eas_t:'البناء التلقائي للتطبيقات (EAS)',eas_d:'لبناء ملفات المتاجر من صفحة التطبيق: توكن GitHub يستطيع تشغيل Actions في المستودع (صلاحية Actions: Read and write)، ونفس «سر البناء» يوضع أيضاً في أسرار المستودع باسم BUILD_SECRET مع EXPO_TOKEN. القيم تُحفظ مشفّرة ولا تظهر مرة أخرى.',eas_gh:'توكن GitHub',eas_bs:'سر البناء (BUILD_SECRET)',eas_repo:'المستودع',eas_ref:'الفرع',eas_set:'محفوظ',eas_unset:'غير مضبوط'});
@@ -783,20 +791,39 @@ async function appChat(id,base){
 }
 let AP_TAB={};
 /* بناء التطبيق ملفاً ملفاً (كل طلب صغير يناسب حدود المزوّدات المجانية) ثم حفظه كنسخة */
+const AP_PART={},AP_LAST={};
+/* رسالة خطأ مفهومة بدل رمز تقني؛ التفاصيل التقنية بين قوسين للدعم فقط */
+function apErr(j,path){const d=String((j&&j.detail)||''),e=(j&&j.error)||'err';
+  let why=errText(e);
+  if(/^import_not_allowed:/.test(d))why=t('ap_e_import').replace('%',d.split(':').slice(1).join(':'));
+  else if(/^missing_file:/.test(d))why=t('ap_e_missing').replace('%',d.split(':').slice(1).join(':'));
+  else if(/no_code|bad_length|no_default_export|dynamic_import|unsafe_code|bad_path/.test(d))why=t('ap_e_quality');
+  return `${t('ap_build_fail')} ${path?'<code dir="ltr">'+esc(path)+'</code> ':''}— ${esc(why)}${d?` <small dir="ltr" style="opacity:.7">(${esc(d.slice(0,80))})</small>`:''}`}
+/* بناء التطبيق ملفاً ملفاً (كل طلب صغير يناسب حدود المزوّدات المجانية) ثم حفظه كنسخة.
+   الملفات التي كُتبت تُحفظ مؤقتاً، فإعادة المحاولة بعد خطأ تكمل من حيث توقّفت بدل البدء من الصفر. */
 async function apRunBuild(id,m,request){
   const box=$('#acm'),list=m.type==='plan'?m.plan.files:(m.files||[]),plan=m.type==='plan'?m.plan:null;
-  const paths=list.map(f=>f.path),out={};
+  const paths=list.map(f=>f.path);AP_LAST[id]={m,request};
+  const part=AP_PART[id]&&AP_PART[id].key===JSON.stringify(paths)?AP_PART[id]:(AP_PART[id]={key:JSON.stringify(paths),out:{},ex:{}}),out=part.out;
+  box.querySelectorAll('.apfail').forEach(x=>x.remove());
   box.insertAdjacentHTML('beforeend',`<div class="ac-b a approg" id="approg"><b>${t('ap_building')}</b><div class="bar"><i style="width:0%"></i></div><small></small></div>`);box.scrollTop=box.scrollHeight;
   const pg=$('#approg'),bar=pg.querySelector('i'),lab=pg.querySelector('small');
   for(let i=0;i<list.length;i++){
-    const f=list[i];lab.textContent=`${t('ap_writing')} ${i+1}/${list.length}: ${f.path}`;bar.style.width=Math.round(i/list.length*100)+'%';
-    let j=null;for(let k=0;k<3&&!(j&&j.ok);k++)j=await fnPost('ai-gateway',{action:'app_file',website_id:id,path:f.path,purpose:f.purpose,plan,paths,request},{ms:110000});
-    if(!(j&&j.ok)){pg.remove();box.insertAdjacentHTML('beforeend',apMsg({role:'err',content:t('ap_build_fail')+' '+f.path+': '+errText(j&&j.error||'err')+(j&&j.detail?' ('+String(j.detail).slice(0,120)+')':'')}));box.scrollTop=box.scrollHeight;return false}
-    out[f.path]=j.code;
+    const f=list[i];bar.style.width=Math.round(i/list.length*100)+'%';
+    if(out[f.path]){lab.textContent=`${t('ap_done_f')} ${i+1}/${list.length}: ${f.path}`;continue}
+    lab.textContent=`${t('ap_writing')} ${i+1}/${list.length}: ${f.path}`;
+    let j=null,fix='';
+    for(let k=0;k<3&&!(j&&j.ok);k++){
+      j=await fnPost('ai-gateway',{action:'app_file',website_id:id,path:f.path,purpose:f.purpose,plan,paths,request,written:part.ex,fix:fix||undefined},{ms:110000});
+      if(!(j&&j.ok)){fix=(j&&j.detail)||'';if(j&&['quota_exceeded','budget_exceeded','forbidden','service_not_configured'].includes(j.error))break}
+    }
+    if(!(j&&j.ok)){pg.remove();box.insertAdjacentHTML('beforeend',`<div class="ac-b e apfail">${apErr(j,f.path)}<br><button type="button" class="btn p sm" style="margin-top:8px" data-act="apretry" data-id="${id}">${t('ap_retry')}</button> <small style="color:var(--tx2)">${t('ap_retry_note')}</small></div>`);box.scrollTop=box.scrollHeight;return false}
+    out[f.path]=j.code;part.ex[f.path]=j.exports||'';
   }
   lab.textContent=t('ap_saving');bar.style.width='100%';
   const c=await fnPost('ai-gateway',{action:'app_commit',website_id:id,files:out,plan,note:plan?t('ap_built_note')+' «'+plan.name+'»':t('ap_edited_note')},{ms:60000});
-  if(!(c&&c.ok)){pg.remove();box.insertAdjacentHTML('beforeend',apMsg({role:'err',content:t('ap_build_fail')+' '+errText(c&&c.error||'err')+(c&&c.detail?' ('+String(c.detail).slice(0,160)+')':'')}));return false}
+  if(!(c&&c.ok)){pg.remove();box.insertAdjacentHTML('beforeend',`<div class="ac-b e apfail">${apErr(c)}<br><button type="button" class="btn p sm" style="margin-top:8px" data-act="apretry" data-id="${id}">${t('ap_retry')}</button></div>`);return false}
+  delete AP_PART[id];
   AP_TAB[id]='expo';render({keep:true});return true;
 }
 function vAuth(mode){
@@ -1179,6 +1206,7 @@ const bnRow=(x,wz)=>`<div class="brow card"><div class="irh"><label class="ipw b
 const readBn=root=>[...root.querySelectorAll('.brow')].map(r=>{const g=q=>r.querySelector('[data-b="'+q+'"]').value.trim();return{t:g('t'),img:g('img'),u:g('u'),_f:r._file||null}}).filter(x=>x.t||x.img||x._f).slice(0,6);
 const itemRow=i=>`<div class="irow card"><div class="irh"><label class="ipw" title="${esc(t('it_img_add'))}"><img class="ip" alt="" ${i.img?`src="${esc(i.img)}"`:'hidden'}><span class="ipp"${i.img?' hidden':''}>${ic('plus')}</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-up="item" hidden></label><input type="hidden" data-k="img" value="${esc(i.img||'')}"><div class="fg" style="flex:1"><div><label>${t('it_name')}</label><input data-k="n" value="${esc(i.n)}" maxlength="80"></div><div><label>${t('it_cat')}</label><input data-k="c" value="${esc(i.c)}" maxlength="40"></div><div><label>${t('it_price')}</label><input data-k="p" value="${esc(i.p)}" maxlength="30" placeholder="${esc(t('it_price_ph'))}"></div></div></div><label>${t('it_desc')}</label><textarea data-k="d" maxlength="300" style="min-height:64px">${esc(i.d)}</textarea><div class="row2" style="margin-top:10px"><button type="button" class="btn s sm" data-act="itemup" aria-label="${esc(t('it_up'))}">&uarr;</button><button type="button" class="btn s sm" data-act="itemdown" aria-label="${esc(t('it_down'))}">&darr;</button><button type="button" class="btn s sm" data-act="itemdup">${t('it_dup')}</button><button type="button" class="btn s sm" data-act="itemrmimg">${t('it_img_rm')}</button><span class="sp"></span><button type="button" class="btn d sm" data-act="itemdel">${t('del')}</button></div></div>`;
 async function vSite(id,tab){
+  if(tab==='chat')tab='requests';
   const {data:w}=await sb.from('websites').select('*').eq('id',id).maybeSingle();
   const S=SIDE_C();
   if(!w)return shell(S,'#/app/sites',`<div class="empty">404</div>`);
@@ -1189,7 +1217,7 @@ async function vSite(id,tab){
     const {data:op}=await sb.from('profiles').select('full_name').eq('id',w.owner_id).maybeSingle();
     adminBanner=`<div class="card" style="margin-bottom:14px;border-color:var(--ac);display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span>${t('admin_viewing')}<b>${esc(w.name)}${op?.full_name?' — '+esc(op.full_name):''}</b>${t('admin_viewing_s')}</span><span class="sp"></span><a class="btn s sm" href="#/admin/sites">${t('admin_back')}</a></div>`;
   }
-  const tabs=['overview','items','requests',...(isAdm()?['chat']:[]),'details','analytics','versions','domains'],html=w.config?.html||'';
+  const tabs=['overview','items','requests','details','analytics','versions','domains'],html=w.config?.html||'';
   const TI={overview:'globe',items:'shop',details:'list',analytics:'chart',versions:'pulse',requests:'bolt',chat:'chat',domains:'server'};SHEET_EXTRA={title:w.name,cur:'#/app/site/'+id+'/'+tab,items:tabs.map(x=>['#/app/site/'+id+'/'+x,t('tab_'+x),TI[x]])};
   const {data:pss}=await sb.from('platform_settings').select('key,value').in('key',['public.sites_base_url','public.sites_root_domain']);const root=((pss||[]).find(x=>x.key==='public.sites_root_domain')||{}).value||'',pbase=((pss||[]).find(x=>x.key==='public.sites_base_url')||{}).value||'';const hostOk=!!(pss&&pss.length);
   const needsCtr=w.status!=='published';let ctrCleared=true;
@@ -1229,16 +1257,13 @@ async function vSite(id,tab){
     b=tbl(['#',t('message'),t('when'),''],(data||[]).map(v=>`<tr><td>${v.version}</td><td>${esc(v.note||'')}</td><td>${fmtD(v.created_at)}</td><td><button class="btn s sm" data-act="restore" data-site="${id}" data-v="${v.version}">${t('restore')}</button></td></tr>`));
   }
   if(tab==='requests'){
+    /* التعديلات = شات مع الذكاء + معاينة حيّة: يكتب العميل طلبه فيُنفَّذ فوراً مع زر تراجع، وسجل الطلبات أسفله */
     const {data}=await sb.from('modification_requests').select('*').eq('website_id',id).order('created_at',{ascending:false}).limit(40);
-    const le=LAST_EDIT&&LAST_EDIT.id===id?LAST_EDIT:null;LAST_EDIT=null;
-    b=(le?`<div class="card" style="margin-bottom:18px;border-color:var(--ok)"><div class="row2"><b>${t('ed_ok')}</b><span class="sp"></span>${le.pub&&le.pub.ok?`<a class="btn s sm" href="${esc(le.pub.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`:''}<button class="btn s sm" data-act="edundo" data-site="${id}" data-v="${le.before}">${t('ed_undo')}</button></div><p style="margin-top:8px">${esc(le.reply)}</p><iframe sandbox="allow-scripts" srcdoc="${esc(html)}" style="margin-top:12px;height:420px"></iframe></div>`:'')+`<form data-form="edreq" data-id="${id}" class="card" style="margin-bottom:18px"><label style="margin-top:0">${t('ed_ask')}</label><textarea name="d" required maxlength="1500" placeholder="${esc(t('ed_ph'))}"></textarea><div class="row2" style="margin-top:12px"><span style="color:var(--tx2);font-size:13px;flex:1 1 180px;min-width:0">${t('ed_hint')}</span><button class="btn p">${t('ed_send')}</button></div></form><div id="edres"></div>`+
-    (data||[]).map(r=>`<div class="card rq"><div class="row2"><b>${esc(r.description).slice(0,160)}</b><span class="sp"></span><span class="chip ${r.status==='done'?'ok':''}">${r.status==='done'?t('ed_done'):t('ed_pending')}</span></div>${r.status==='done'&&r.ai_reason?`<p style="color:var(--tx2);font-size:14px;margin-top:6px">${esc(r.ai_reason)}</p>`:''}${r.status!=='done'&&r.status!=='rejected'?`<button class="btn s sm" style="margin-top:10px" data-act="edrun" data-id="${id}" data-text="${esc(r.description)}">${t('ed_runnow')}</button>`:''}<small style="color:var(--tx2);display:block;margin-top:6px">${fmtD(r.created_at)}</small></div>`).join('');
-  }
-  if(tab==='chat'&&isAdm()){
     const chat=Array.isArray(w.config?.ai_chat)?w.config.ai_chat:[];
     b=`<div class="appchat sitechat"><div class="card ac-chat"><div class="ac-msgs" id="scm">${chat.length?chat.map(m=>scBubble(m,id)).join(''):`<div class="ac-hello"><h3>${t('sc_hello')}</h3><p>${t('sc_hello_d')}</p><div class="row2">${['sc_ex1','sc_ex2','sc_ex3','sc_ex4'].map(k=>`<button type="button" class="chip pk" data-act="scex">${t(k)}</button>`).join('')}</div></div>`}</div>
       <form data-form="sitechat" data-id="${id}" class="ac-in"><textarea name="m" required maxlength="1500" placeholder="${esc(t('sc_ph'))}" rows="2"></textarea><button class="btn p">${t('c_send')}</button></form></div>
-      <div class="card sc-pv"><iframe id="scprev" title="preview" sandbox="allow-scripts" srcdoc="${esc(html)}"></iframe></div></div>`;
+      <div class="card sc-pv"><iframe id="scprev" title="preview" sandbox="allow-scripts" srcdoc="${esc(html)}"></iframe></div></div>`+
+    ((data&&data.length)?`<details class="edhist" style="margin-top:18px"><summary style="cursor:pointer;font-weight:600">${t('ed_hist')} (${data.length})</summary><div style="display:grid;gap:10px;margin-top:12px">`+data.map(r=>`<div class="card rq"><div class="row2"><b>${esc(r.description).slice(0,160)}</b><span class="sp"></span><span class="chip ${r.status==='done'?'ok':''}">${r.status==='done'?t('ed_done'):t('ed_pending')}</span></div>${r.status==='done'&&r.ai_reason?`<p style="color:var(--tx2);font-size:14px;margin-top:6px">${esc(r.ai_reason)}</p>`:''}${r.status!=='done'&&r.status!=='rejected'?`<button class="btn s sm" style="margin-top:10px" data-act="edrun" data-id="${id}" data-text="${esc(r.description)}">${t('ed_runnow')}</button>`:''}<small style="color:var(--tx2);display:block;margin-top:6px">${fmtD(r.created_at)}</small></div>`).join('')+`</div></details>`:'');
   }
   if(tab==='domains'){
     const {data}=await sb.from('domains').select('*').eq('website_id',id).order('created_at');
@@ -1830,8 +1855,8 @@ async function vApp(sub){
     const {data}=await sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(50);
     return shell(S,'#/app/notes',`<div class="row2"><h2>${t('notes')}</h2><span class="sp"></span><button class="btn s sm" data-act="readall">${t('readall')}</button></div><br>`+
       (data&&data.length?`<div style="display:grid;gap:10px">${data.map(n=>{
-        const href=n.type==='contract_ready'?'#/c/'+n.body:n.type==='contract_approved'?'#/app/contracts':null;
-        const bodyTxt=n.type==='contract_ready'?t('ctr_tap_sign'):n.type==='contract_approved'?t('ctr_tap_view'):(n.body?esc(n.body):'');
+        const href=n.type==='contract_ready'?'#/c/'+n.body:n.type==='contract_approved'?'#/app/contracts':n.type==='contract_signed'?'#/admin/contracts':null;
+        const bodyTxt=n.type==='contract_ready'?t('ctr_tap_sign'):n.type==='contract_approved'?t('ctr_tap_view'):n.type==='contract_signed'?esc(n.body||'')+' · '+t('ctr_tap_review'):(n.body?esc(n.body):'');
         const inner=`<b>${esc(t(n.title))}</b> ${bodyTxt?'· '+bodyTxt:''}<br><small style="color:var(--tx2)">${fmtD(n.created_at)}</small>`;
         return href?`<a class="card" style="display:block;${n.read_at?'opacity:.6':''}" href="${href}">${inner}</a>`:`<div class="card" style="${n.read_at?'opacity:.6':''}">${inner}</div>`;
       }).join('')}</div>`:`<div class="empty">${t('nonotes')}</div>`));
@@ -1899,33 +1924,83 @@ async function vAdmin(sub){
   if(sub==='contracts')return vAContracts();
   return vAdmin0(sub);
 }
+/* ---------- العقود: قالب جاهز بالنظام (يُحفظ نصه عند الإنشاء فلا يتغير) أو ملف مخصص ---------- */
+function contractText(tm,ctx){
+  const money=`${tm.price||'0'} ${tm.cur||'$'}`,per=tm.months?`${tm.months} ${tm.months==1?'شهر':'أشهر'}`:'';
+  const L=['## الأطراف','الطرف الأول (مقدّم الخدمة): منصة ابتكار IBTIKAR.\nالطرف الثاني (العميل): '+(ctx.customer||'—')+'.',
+    '## موضوع العقد','يلتزم الطرف الأول بتقديم الخدمة للطرف الثاني ضمن باقة «'+(tm.plan||'—')+'»'+(ctx.site?' وتشمل بناء الموقع «'+ctx.site+'» وتشغيله ونشره':'')+'، وفق ما ورد في هذا العقد.',
+    '## القيمة والدفع','قيمة الاشتراك '+money+(tm.price&&Number(tm.price)?' شهرياً':'')+'. تُسدَّد قبل بدء الخدمة وعند كل تجديد، ولا تبدأ الخدمة أو تستمر إلا بعد تأكيد السداد.',
+    '## مدة العقد','تبدأ مدة العقد في '+(tm.start||'تاريخ توقيعه')+(per?' وتستمر '+per:'')+'، وتتجدد تلقائياً لمدة مماثلة ما لم يُخطر أحد الطرفين الآخر كتابةً برغبته في عدم التجديد قبل انتهاء المدة بأربعة عشر (14) يوماً.',
+    '## نطاق الخدمة والتسليم','تشمل الخدمة ما تنص عليه الباقة المختارة (الاستضافة، عدد المواقع، المساحة، الدعم). يسلّم الطرف الأول الموقع على رابط يحدده للطرف الثاني، ويُنفَّذ التعديلات المطلوبة ضمن حدود الباقة.',
+    '## محتوى العميل وملكيته','يبقى المحتوى الذي يقدّمه الطرف الثاني (النصوص، الصور، الشعار، بيانات النشاط) ملكاً له، ويمنح الطرف الأول ترخيصاً محدوداً لاستخدامه لغرض تنفيذ الخدمة فقط. ويضمن الطرف الثاني أن لديه حق استخدام ما يقدّمه وأنه لا ينتهك حقوق الغير.',
+    '## المحتوى المُنشأ بالذكاء الاصطناعي','قد تُنشأ النصوص والتصاميم والأكواد بمساعدة الذكاء الاصطناعي. يلتزم الطرف الثاني بمراجعة ما يُنشأ قبل نشره، ولا يضمن الطرف الأول خلو المحتوى المُنشأ آلياً من الأخطاء أو ملاءمته لكل غرض.',
+    '## الاستضافة والإتاحة والنسخ الاحتياطي','يبذل الطرف الأول عناية معقولة لإبقاء الموقع متاحاً وحفظ نسخ من إصداراته، ولا يضمن عدم انقطاع الخدمة، وقد تُجرى صيانة دورية يُعلَن عنها متى أمكن.',
+    '## الإلغاء والاسترجاع','للطرف الثاني إلغاء الاشتراك في أي وقت ويسري الإلغاء من نهاية الفترة المدفوعة. لا تُردّ مبالغ عن فترات مضت إلا إذا تعذّر تقديم الخدمة لسبب يعود للطرف الأول. وللطرف الأول تعليق الخدمة عند التأخر في السداد أو مخالفة بنود العقد أو استخدام الخدمة في نشاط مخالف للقانون.',
+    '## الخصوصية وحماية البيانات','يعالج الطرف الأول بيانات الطرف الثاني وعملائه لغرض تقديم الخدمة فقط، ولا يشاركها مع طرف ثالث إلا بقدر ما تتطلبه الخدمة (كالاستضافة) أو يفرضه القانون، ويتخذ تدابير معقولة لحمايتها.',
+    '## حدود المسؤولية','لا يتحمل أي من الطرفين أضراراً غير مباشرة أو خسارة أرباح، وتُحدَّد مسؤولية الطرف الأول بما لا يزيد على قيمة الاشتراك المدفوع عن آخر ثلاثة أشهر.',
+    '## القانون المطبّق وحل النزاعات','يخضع هذا العقد لـ'+(tm.law||'القانون المتفق عليه بين الطرفين')+'، ويسعى الطرفان إلى حل أي خلاف ودياً أولاً قبل اللجوء إلى الجهات المختصة.'];
+  if((tm.extra||'').trim())L.push('## بنود إضافية',tm.extra.trim());
+  L.push('## الإقرار والتوقيع','بتوقيعه أدناه يقرّ الطرف الثاني بأنه قرأ هذا العقد وفهمه ووافق على جميع بنوده، وأن توقيعه الإلكتروني يعادل توقيعه الخطي.');
+  return L.join('\n\n');
+}
+/* نص العقد -> HTML آمن (## عنوان، وبقية الأسطر فقرات) */
+const ctrHtml=body=>String(body||'').split(/\n\n+/).map(x=>/^## /.test(x)?`<h4>${esc(x.slice(3))}</h4>`:`<p>${esc(x).replace(/\n/g,'<br>')}</p>`).join('');
 async function vAContracts(){
-  const [{data},{data:us},{data:ws}]=await Promise.all([
+  const [{data},{data:us},{data:ws},{data:pl}]=await Promise.all([
     sb.from('contracts').select('*,profiles!customer_id(full_name),websites!website_id(name)').order('created_at',{ascending:false}).limit(300),
     sb.from('profiles').select('id,full_name').eq('role','customer').order('full_name').limit(1000),
-    sb.from('websites').select('id,name,owner_id,status').neq('site_type','app').order('created_at',{ascending:false}).limit(1000)
+    sb.from('websites').select('id,name,owner_id,status').neq('site_type','app').order('created_at',{ascending:false}).limit(1000),
+    sb.from('plans').select('code,name_ar,price').eq('active',true).order('sort')
   ]);
   const chip=s=>`<span class="chip ${s==='approved'?'ok':s==='void'?'er':s==='received_signed'?'ok':'wa'}">${t('ctr_'+s)}</span>`;
+  const link=c=>location.origin+location.pathname+'#/c/'+c.share_token;
   const row=c=>{
-    const link=location.origin+location.pathname+'#/c/'+c.share_token;
-    return `<tr><td>${esc(c.contract_number)}</td><td>${esc(c.profiles?.full_name)}</td><td>${esc(c.title||'')}</td><td>${c.websites?.name?esc(c.websites.name):'—'}</td><td>${chip(c.status)}</td>
+    const sendable=c.status==='draft'&&(c.original_path||c.kind==='template');
+    const mine=(ws||[]).filter(w=>w.owner_id===c.customer_id&&w.status!=='published');
+    return `<tr><td>${esc(c.contract_number)}${c.kind==='template'?` <small class="chip">${t('ctr_tpl')}</small>`:''}</td><td>${esc(c.profiles?.full_name)}</td><td>${esc(c.title||'')}</td>
+    <td>${c.websites?.name?esc(c.websites.name):(['draft','sent','awaiting_signature'].includes(c.status)?`<select data-chg="ctrsite" data-id="${c.id}" style="width:auto;max-width:150px"><option value="">${t('ctr_nosite')} ⚠</option>${mine.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join('')}</select>`:'—')}</td><td>${chip(c.status)}</td>
     <td style="white-space:nowrap">
-    ${c.original_path&&c.status==='draft'?`<button class="btn p sm" data-act="ctrsend" data-id="${c.id}">${t('ctr_send')}</button>`:''}
-    ${['sent','awaiting_signature'].includes(c.status)?`<button class="btn s sm" data-act="ctrcopy" data-link="${esc(link)}">${t('ctr_copylink')}</button> <a class="btn s sm" target="_blank" href="https://wa.me/?text=${encodeURIComponent(link)}">${t('ctr_wa')}</a>`:''}
-    ${c.signed_path||c.esign_image_path?`<button class="btn s sm" data-act="ctrfile" data-id="${c.id}" data-which="${c.signed_path?'signed':'esign'}">${t('ctr_viewsigned')}</button>`:''}
+    ${sendable?`<button class="btn p sm" data-act="ctrsend" data-id="${c.id}">${t('ctr_send')}</button>`:''}
+    ${['sent','awaiting_signature'].includes(c.status)?`<button class="btn s sm" data-act="ctrcopy" data-link="${esc(link(c))}">${t('ctr_copylink')}</button> <a class="btn s sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(link(c))}">${t('ctr_wa')}</a>`:''}
+    ${c.kind==='template'||c.esign_image_path?`<a class="btn s sm" target="_blank" rel="noopener" href="${esc(link(c))}">${c.esign_image_path?t('ctr_viewsigned'):t('ctr_view')}</a>`:''}
+    ${c.signed_path?`<button class="btn s sm" data-act="ctrfile" data-id="${c.id}" data-which="signed">${t('ctr_viewsigned')}</button>`:''}
     ${c.status==='received_signed'?`<button class="btn p sm" data-act="ctrapprove" data-id="${c.id}">${t('ctr_approve')}</button>`:''}
     ${c.original_path?`<button class="btn s sm" data-act="ctrfile" data-id="${c.id}" data-which="original">${t('ctr_vieworig')}</button>`:''}
+    ${['draft','sent','awaiting_signature','received_signed'].includes(c.status)?`<button class="btn d sm" data-act="ctrvoid" data-id="${c.id}">${t('ctr_void')}</button>`:''}
+    ${c.status==='draft'?`<button class="btn d sm" data-act="ctrdel" data-id="${c.id}">${t('ctr_del')}</button>`:''}
     </td></tr>`;
   };
+  const custOpts=(us||[]).map(u=>`<option value="${u.id}">${esc(u.full_name)}</option>`).join('');
+  const siteOpts=`<option value="">${t('ctr_nosite')}</option>`+(ws||[]).map(w=>`<option value="${w.id}" data-owner="${w.owner_id}" ${(w.status==='published'||(us&&us[0]&&w.owner_id!==us[0].id))?'hidden':''}>${esc(w.name)}</option>`).join('');
   return shell(SIDE_A(),'#/admin/contracts',`<div class="ph"><h1>${t('contractsT')}</h1></div>
-  <form data-form="contract" class="card" style="max-width:640px;margin-bottom:16px"><h3 style="margin-top:0">${t('ctr_new')}</h3>
-  <label>${t('ctr_customer')}</label><select name="customer" id="ctrcust" required>${(us||[]).map(u=>`<option value="${u.id}">${esc(u.full_name)}</option>`).join('')}</select>
-  <label>${t('ctr_website')}</label><select name="website" id="ctrsite"><option value="">${t('ctr_nosite')}</option>${(ws||[]).map(w=>`<option value="${w.id}" data-owner="${w.owner_id}" ${(w.status==='published'||(us&&us[0]&&w.owner_id!==us[0].id))?'hidden':''}>${esc(w.name)}</option>`).join('')}</select>
+  <div class="card" style="max-width:760px;margin-bottom:16px"><h3 style="margin-top:0">${t('ctr_new')}</h3>
+  <div class="rg aptabs" style="margin-bottom:12px"><button type="button" class="on" data-act="ctrmode" data-k="tpl">${t('ctr_tpl')}</button><button type="button" data-act="ctrmode" data-k="file">${t('ctr_filemode')}</button></div>
+  <form data-form="ctemplate" id="ctf-tpl">
+  <label>${t('ctr_customer')}</label><select name="customer" id="ctrcust" required>${custOpts}</select>
+  <label>${t('ctr_website')}</label><select name="website" id="ctrsite">${siteOpts}</select>
+  <p id="ctnosite" style="color:var(--wa,#b45309);font-size:13px;margin:6px 0 0">⚠ ${t('ctr_nosite_warn')}</p>
+  <div class="fg"><div><label>${t('ctr_plan')}</label><select name="plan" id="ctplan">${(pl||[]).map(x=>`<option value="${esc(x.name_ar)}" data-price="${x.price}">${esc(x.name_ar)} — $${Number(x.price)}</option>`).join('')}</select></div>
+  <div><label>${t('ctr_price')}</label><input name="price" id="ctprice" type="number" min="0" step="0.01" value="${(pl&&pl[0]&&Number(pl[0].price))||0}" required></div>
+  <div><label>${t('ctr_cur')}</label><input name="cur" value="$" maxlength="12"></div>
+  <div><label>${t('ctr_months')}</label><input name="months" type="number" min="1" max="60" value="12" required></div>
+  <div><label>${t('ctr_start')}</label><input name="start" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+  <div><label>${t('ctr_law')}</label><input name="law" value="قوانين دولة ليبيا" maxlength="120"></div></div>
+  <label>${t('ctr_title')}</label><input name="title" maxlength="140" placeholder="عقد اتفاق خدمات">
+  <label>${t('ctr_extra')}</label><textarea name="extra" maxlength="2000" rows="3"></textarea>
+  <h4 style="margin:16px 0 6px">${t('ctr_preview')}</h4><div id="ctpv" class="ctrbody" style="max-height:340px;overflow:auto"></div>
+  <p style="color:var(--tx2);font-size:12.5px;margin:8px 0">${t('ctr_edit_disc')}</p>
+  <div class="row2"><button class="btn s" name="mode" value="draft">${t('ctr_savedraft')}</button><button class="btn p" name="mode" value="send">${t('ctr_createsend')}</button></div></form>
+  <form data-form="contract" id="ctf-file" hidden>
+  <label>${t('ctr_customer')}</label><select name="customer" required>${custOpts}</select>
   <label>${t('ctr_title')}</label><input name="title" maxlength="140">
   <label>${t('ctr_file')}</label><input type="file" name="file" accept="application/pdf,image/jpeg,image/png,image/webp" required>
-  <br><br><button class="btn p">${t('ctr_create')}</button></form>`+
+  <br><br><button class="btn p">${t('ctr_create')}</button></form></div>`+
   tbl([t('ctr_number'),t('customer'),t('ctr_title'),t('ctr_website'),t('ctr_status'),''],(data||[]).map(row)));
 }
+/* معاينة العقد أثناء الكتابة */
+function ctPreview(){const f=$('#ctf-tpl');if(!f)return;const d=Object.fromEntries(new FormData(f)),sel=i=>{const o=f.elements[i];return o&&o.selectedOptions[0]?o.selectedOptions[0].textContent.split(' — ')[0]:''};
+  const pv=$('#ctpv');if(pv)pv.innerHTML=ctrHtml(contractText({...d,plan:d.plan,start:d.start},{customer:sel('customer'),site:d.website?sel('website'):''}));
+  const w=$('#ctnosite');if(w)w.hidden=!!d.website}
 
 
 /* ---------- public site host: the same app serves <name>.ibtkar.ly ---------- */
@@ -1957,41 +2032,43 @@ const PATH_SLUG=(()=>{const m=location.pathname.match(/^\/([a-z0-9][a-z0-9-]{1,3
 
 /* ---------- public contract signing page: #/c/<share_token> ---------- */
 async function ctrGet(token,which){
-  const r=await fetchT(SB_URL+'/functions/v1/contract-file?token='+encodeURIComponent(token)+'&which='+which,{headers:{apikey:SB_KEY}},25000);
+  const r=await fetchT(SB_URL+'/functions/v1/contract-file?token='+encodeURIComponent(token)+'&which='+which,{},25000);
   return r.json();
 }
 async function ctrPost(body){
-  try{const r=await fetchT(SB_URL+'/functions/v1/contract-file',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY},body:JSON.stringify(body)},60000);
+  try{const r=await fetchT(SB_URL+'/functions/v1/contract-file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)},60000);
   return await r.json().catch(()=>({}))}catch(e){return{ok:false,error:e&&e.name==='AbortError'?'timeout':'network'}}
 }
 async function vContract(token){
   const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if(!UUID.test(token))return `<div class="wrap sec"><div class="empty">${t('ctr_notfound')}</div></div>`;
-  const j=await ctrGet(token,'meta');
-  if(!j.contract)return `<div class="wrap sec"><div class="empty">${t('ctr_notfound')}</div></div>`;
-  const c=j.contract;
-  const done=c.has_signed||c.has_esign;
+  let j;try{j=await ctrGet(token,'meta')}catch(e){return `<div class="wrap sec"><div class="empty">${t('ctr_load_err')}<br><br><button class="btn p" data-act="retry">${t('retry')}</button></div></div>`}
+  if(j&&j.error==='rate_limited')return `<div class="wrap sec"><div class="empty">${t('ctr_load_err')}</div></div>`;
+  if(!j||!j.contract)return `<div class="wrap sec"><div class="empty">${t('ctr_notfound')}</div></div>`;
+  const c=j.contract,tpl=c.kind==='template'&&c.body,done=c.has_signed||c.has_esign;
   const canSign=['sent','awaiting_signature'].includes(c.status)&&!done;
-  return `<div class="wrap sec" style="max-width:640px;margin-inline:auto">
-  <h2>${t('ctr_sign_title')}</h2><p style="color:var(--tx2)">${t('ctr_sign_sub')}</p>
-  <div class="card" style="margin:16px 0"><div class="row2"><b>${esc(c.contract_number)}</b><span class="sp"></span><span class="chip ${done?'ok':'wa'}">${t('ctr_'+c.status)}</span></div>${c.title?`<p>${esc(c.title)}</p>`:''}
-  <br><button class="btn p" data-act="ctrpub" data-which="original" data-token="${esc(token)}">${t('ctr_vieworig')}</button>
-  <p style="color:var(--tx2);font-size:13px;margin-top:10px">${t('ctr_yourcopy')}</p></div>
-  ${done?`<div class="card ok" style="text-align:center;padding:26px">${t('ctr_already')}<br><br>${t('ctr_thanks')}</div>`:canSign?`
-  <div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">${t('ctr_upload_signed')}</h3>
-  <form data-form="csign" data-token="${esc(token)}"><input type="file" name="file" accept="application/pdf,image/jpeg,image/png,image/webp" required><br><br><button class="btn p">${t('ctr_upload_btn')}</button></form></div>
-  <div class="card"><h3 style="margin-top:0">${t('ctr_esign_h')}</h3>
-  <canvas id="esigncv" width="560" height="200" style="width:100%;max-width:560px;height:200px;border:1px dashed var(--bd);border-radius:10px;touch-action:none;background:#fff"></canvas>
-  <div class="row2" style="margin-top:8px"><input id="esignname" placeholder="${t('ctr_esign_name')}" style="flex:1"><button class="btn s sm" data-act="esignclear">${t('ctr_esign_clear')}</button></div>
-  <br><button class="btn p" data-act="esignsubmit" data-token="${esc(token)}">${t('ctr_esign_btn')}</button></div>`:''}
+  const head=`<div class="row2 ctrno"><b>${esc(c.contract_number)}</b><span class="sp"></span><span class="chip ${done?'ok':'wa'}">${t('ctr_'+c.status)}</span></div>${c.title?`<h3 style="margin:6px 0 0">${esc(c.title)}</h3>`:''}`;
+  const text=tpl?`<div class="ctrbody">${ctrHtml(c.body)}</div>`:(c.has_original?`<button class="btn p" data-act="ctrpub" data-which="original" data-token="${esc(token)}">${t('ctr_vieworig')}</button><p style="color:var(--tx2);font-size:13px;margin-top:10px">${t('ctr_yourcopy')}</p>`:'');
+  const signedBlock=done?`<div class="ctrsig">${c.esign_url?`<img src="${esc(c.esign_url)}" alt="signature" class="ctrimg">`:''}<div><b>${esc(c.esign_name||'')}</b><br><small>${t('ctr_signed_on')} ${c.esign_at?esc(fmtD(c.esign_at)):''}</small></div></div>`:'';
+  return `<div class="wrap sec ctrpage" style="max-width:720px;margin-inline:auto">
+  <h2 class="noprint">${t('ctr_sign_title')}</h2><p class="noprint" style="color:var(--tx2)">${done?t('ctr_thanks'):t('ctr_sign_sub')}</p>
+  <div class="card ctrdoc" style="margin:16px 0">${head}<div style="margin-top:14px">${text}</div>${signedBlock}</div>
+  ${done?`<div class="row2 noprint" style="justify-content:center"><button class="btn p" data-act="ctrprint">${t('ctr_print')}</button></div>`:canSign?`
+  <div class="card noprint"><h3 style="margin-top:0">${t('ctr_esign_h')}</h3>
+  <label style="margin-top:0">${t('ctr_esign_name')}</label><input id="esignname" autocomplete="name" maxlength="120">
+  <p style="color:var(--tx2);font-size:13px;margin:12px 0 6px">${t('ctr_sign_here')}</p>
+  <canvas id="esigncv" width="640" height="220" style="width:100%;max-width:640px;height:220px;border:1px dashed var(--bd);border-radius:12px;touch-action:none;background:#fff;cursor:crosshair"></canvas>
+  <div class="row2" style="margin-top:8px"><button class="btn s sm" data-act="esignclear">${t('ctr_esign_clear')}</button></div>
+  <label class="apsw" style="margin:14px 0"><input type="checkbox" id="esignagree"> ${t('ctr_agree')}</label>
+  <button class="btn p lg" style="width:100%;justify-content:center" data-act="esignsubmit" data-token="${esc(token)}">${t('ctr_esign_btn')}</button></div>`:`<div class="card noprint" style="text-align:center">${t('ctr_not_signable')}</div>`}
   </div>`;
 }
 function wireSignPad(cv){
   const ctx=cv.getContext('2d');ctx.lineWidth=2.4;ctx.lineCap='round';ctx.strokeStyle='#111';
   let drawing=false,lx=0,ly=0;
   const pos=e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*(cv.width/r.width),y=(e.clientY-r.top)*(cv.height/r.height);return [x,y]};
-  cv.onpointerdown=e=>{drawing=true;[lx,ly]=pos(e)};
-  cv.onpointermove=e=>{if(!drawing)return;const [x,y]=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(x,y);ctx.stroke();[lx,ly]=[x,y]};
+  cv.onpointerdown=e=>{drawing=true;cv._inked=(cv._inked||0);[lx,ly]=pos(e);try{cv.setPointerCapture(e.pointerId)}catch(_){}};
+  cv.onpointermove=e=>{if(!drawing)return;const [x,y]=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(x,y);ctx.stroke();cv._inked+=Math.hypot(x-lx,y-ly);[lx,ly]=[x,y]};
   cv.onpointerup=()=>drawing=false;cv.onpointerleave=()=>drawing=false;
 }
 
@@ -2019,6 +2096,7 @@ async function render(opts){
   v.innerHTML=html;paintUnread();fxAfter(v);
   v.querySelectorAll('[data-count]').forEach(el=>{const to=+el.dataset.count,t0=performance.now();(function f(now){const p=Math.min((now-t0)/700,1);el.textContent=Math.round(to*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)})(t0)});
   const cv=$('#esigncv');if(cv&&!cv._wired){cv._wired=true;wireSignPad(cv)}
+  if($('#ctf-tpl'))ctPreview();
   if(keep)scrollTo(0,sy);else scrollTo(0,0);
 }
 addEventListener('hashchange',render);
@@ -2044,6 +2122,7 @@ document.addEventListener('click',async e=>{
     if(a==='pmodels'){const j=await fx('ai-gateway',{action:'models',provider_id:id},90000);if(!j.ok)throw new Error(errText(j.error||'err')+(j.hint?' — '+errText(j.hint):''));toast(j.tested&&j.tested.ok?t('c_ok'):t('c_warn'))}
     if(a==='mtoggle'){const r=await sb.from('ai_models').update({enabled:b.dataset.to==='true'}).eq('id',id);if(r.error)throw r.error}
     if(a==='itemadd'){const c=$('#irows');if(c&&c.children.length<60){c.insertAdjacentHTML('beforeend',itemRow({n:'',c:'',p:'',d:''}));c.lastElementChild.querySelector('input').focus()}b.disabled=false;return}
+    if(a==='apretry'){const l=AP_LAST[id];if(!l){b.disabled=false;return}await apRunBuild(id,l.m,l.request);b.disabled=false;return}
     if(a==='apbuild'){const id=location.hash.split('/').pop();let m=b._m;if(!m){const w=await sb.from('websites').select('config').eq('id',id).single();m=(((w.data&&w.data.config&&w.data.config.app)||{}).chat||[])[+b.dataset.i]}
       if(!m)throw new Error(t('err'));const req=[...document.querySelectorAll('#acm .ac-b.u')].map(x=>x.textContent).pop()||'';b.remove();await apRunBuild(id,m,req);return}
     if(a==='aptab'){AP_TAB[b.dataset.id]=b.dataset.k;render({keep:true});return}
@@ -2103,7 +2182,7 @@ document.addEventListener('click',async e=>{
       const w=await sb.from('websites').select('status').eq('id',sid).single();if(w.data&&w.data.status==='published'){const p=await autoPublish(sid);if(!p.ok)throw new Error(t('pubfail')+': '+errText(p.error))}
       if(b.closest('#scm')){const pv=$('#scprev'),w2=await sb.from('websites').select('config').eq('id',sid).single();if(pv&&w2.data)pv.srcdoc=w2.data.config.html||'';b.remove();toast(t('ed_undone'));return}
       toast(t('ed_undone'));render({keep:true});return}
-    if(a==='edrun'){const f=document.querySelector('form[data-form="edreq"]');if(f){f.elements.d.value=b.dataset.text;f.requestSubmit()}b.disabled=false;return}
+    if(a==='edrun'){const f=document.querySelector('form[data-form="sitechat"]');if(f){f.elements.m.value=b.dataset.text;f.requestSubmit()}b.disabled=false;return}
     if(a==='scex'){const ta=document.querySelector('form[data-form="sitechat"] textarea');ta.value=b.textContent;ta.focus();b.disabled=false;return}
     if(a==='saveprompt'){const ta=$('#pr_'+b.dataset.key);if(!ta||ta.value.trim().length<20)throw new Error(t('err'));const r=await sb.from('ai_prompts').update({body:ta.value,updated_by:me.id,updated_at:new Date().toISOString()}).eq('key',b.dataset.key);if(r.error)throw r.error;await audit('prompt.update','ai_prompts',{key:b.dataset.key});toast(t('saved'));b.disabled=false;return}
     if(a==='theme'){document.body.classList.toggle('dark');localStorage.setItem('theme',document.body.classList.contains('dark')?'dark':'light');b.disabled=false;return}
@@ -2121,6 +2200,10 @@ document.addEventListener('click',async e=>{
     if(a==='runcheck'){const j=await fx('uptime-check',{},120000);if(j.error)throw new Error(errText(j.error)||t('err'));toast(t('checked')+': '+j.checked);render({keep:true});return}
     if(a==='ctrsend'){const r=await sb.from('contracts').update({status:'sent',sent_at:new Date().toISOString()}).eq('id',id).eq('status','draft').select('customer_id,share_token').single();if(r.error)throw r.error;await audit('contract.send','contracts',{id});if(r.data)try{await sb.from('notifications').insert({user_id:r.data.customer_id,type:'contract_ready',title:'contract_ready',body:r.data.share_token})}catch(e){}}
     if(a==='ctrapprove'){const r=await sb.from('contracts').update({status:'approved',approved_at:new Date().toISOString(),approved_by:me.id}).eq('id',id).eq('status','received_signed').select('customer_id').single();if(r.error)throw r.error;await audit('contract.approve','contracts',{id});if(r.data)try{await sb.from('notifications').insert({user_id:r.data.customer_id,type:'contract_approved',title:'contract_approved'})}catch(e){}}
+    if(a==='ctrmode'){const k=b.dataset.k;b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));$('#ctf-tpl').hidden=k!=='tpl';$('#ctf-file').hidden=k!=='file';b.disabled=false;return}
+    if(a==='ctrvoid'){if(!confirm(t('ctr_void')+'?')){b.disabled=false;return}const r=await sb.from('contracts').update({status:'void'}).eq('id',id).neq('status','approved').neq('status','void');if(r.error)throw r.error;await audit('contract.void','contracts',{id})}
+    if(a==='ctrdel'){if(!confirm(t('ctr_del')+'?')){b.disabled=false;return}const {data:c0}=await sb.from('contracts').select('original_path').eq('id',id).maybeSingle();const r=await sb.from('contracts').delete().eq('id',id).eq('status','draft');if(r.error)throw r.error;if(c0&&c0.original_path)try{await sb.storage.from('contracts').remove([c0.original_path])}catch(x){}await audit('contract.delete','contracts',{id})}
+    if(a==='ctrprint'){window.print();b.disabled=false;return}
     if(a==='ctrcopy'){try{await navigator.clipboard.writeText(b.dataset.link)}catch(e){}toast(t('ctr_linkcopied'));b.disabled=false;return}
     if(a==='ctrfile'){
       const which=b.dataset.which;
@@ -2134,15 +2217,17 @@ document.addEventListener('click',async e=>{
       const j=await ctrGet(b.dataset.token,b.dataset.which);
       if(!j.url)throw new Error(t('err'));window.open(j.url,'_blank');b.disabled=false;return;
     }
-    if(a==='esignclear'){const cv=$('#esigncv');cv&&cv.getContext('2d').clearRect(0,0,cv.width,cv.height);b.disabled=false;return}
+    if(a==='esignclear'){const cv=$('#esigncv');if(cv){cv.getContext('2d').clearRect(0,0,cv.width,cv.height);cv._inked=0}b.disabled=false;return}
     if(a==='esignsubmit'){
       const name=($('#esignname')&&$('#esignname').value||'').trim();
-      if(name.length<2)throw new Error(t('err'));
+      if(name.length<2){toast(t('name_required'),1);b.disabled=false;return}
       const cv=$('#esigncv');if(!cv)throw new Error(t('err'));
+      if(!(cv._inked>60)){toast(t('ctr_empty_sig'),1);b.disabled=false;return}
+      if(!($('#esignagree')&&$('#esignagree').checked)){toast(t('ctr_need_agree'),1);b.disabled=false;return}
       const dataUrl=cv.toDataURL('image/png'),b64=dataUrl.split(',')[1];
-      const j=await ctrPost({token:b.dataset.token,which:'esign',name,image_base64:b64});
-      if(!j.ok)throw new Error(j.error||t('err'));
-      toast(t('ctr_thanks'));location.hash=location.hash;return render({keep:false});
+      const j=await ctrPost({token:b.dataset.token,which:'esign',name,agree:true,image_base64:b64});
+      if(!j.ok)throw new Error(errText(j.error||'err'));
+      toast(t('ctr_thanks'));return render({keep:false});
     }
     toast(t('saved'));render({keep:true});
   }catch(x){fail(x);b.disabled=false}
@@ -2152,6 +2237,15 @@ document.addEventListener('change',async e=>{
   const r=await sb.from('profiles').update({role:s.value}).eq('id',s.dataset.id);
   if(r.error)return fail(r.error);await audit('user.role','profiles',{id:s.dataset.id,role:s.value});toast(t('saved'));
 });
+document.addEventListener('change',async e=>{
+  const s=e.target.closest('[data-chg="ctrsite"]');if(!s)return;
+  const r=await sb.from('contracts').update({website_id:s.value||null}).eq('id',s.dataset.id);
+  if(r.error)return fail(r.error);await audit('contract.site','contracts',{id:s.dataset.id});toast(t('saved'));render({keep:true});
+});
+document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#ctf-tpl'))ctPreview()});
+document.addEventListener('change',e=>{
+  if(e.target.id==='ctplan'){const o=e.target.selectedOptions[0],pr=$('#ctprice');if(o&&pr)pr.value=Number(o.dataset.price)||0}
+  if(e.target.closest&&e.target.closest('#ctf-tpl'))ctPreview()});
 document.addEventListener('change',async e=>{
   const s=e.target.closest('[data-chg="appsacc"]');if(!s)return;
   const r=await sb.from('profiles').update({apps_access:s.checked}).eq('id',s.dataset.id);
@@ -2228,18 +2322,29 @@ document.addEventListener('submit',async e=>{
       const ups=[repo&&{key:'apps.build_repo',value:repo,updated_by:me.id},ref&&{key:'apps.build_ref',value:ref,updated_by:me.id}].filter(Boolean);
       if(ups.length){const r=await sb.from('platform_settings').upsert(ups);if(r.error)throw r.error}
       await audit('settings.eas','platform_settings',{});toast(t('saved'));render({keep:true});return}
+    if(k==='ctemplate'){
+      const mode=(e.submitter&&e.submitter.value)||'draft',sel=i=>{const o=f.elements[i];return o&&o.selectedOptions[0]?o.selectedOptions[0].textContent.split(' — ')[0]:''};
+      const price=Number(d.price);if(!(price>=0)||!d.customer)throw new Error(t('err'));
+      const terms={plan:d.plan||'',price:String(price),cur:(d.cur||'$').trim(),months:Math.max(1,Math.min(60,+d.months||12)),start:d.start||'',law:(d.law||'').trim(),extra:(d.extra||'').trim()};
+      const body=contractText(terms,{customer:sel('customer'),site:d.website?sel('website'):''});
+      const row={customer_id:d.customer,website_id:d.website||null,kind:'template',body,terms,created_by:me.id};if((d.title||'').trim())row.title=d.title.trim();
+      const ins=await sb.from('contracts').insert(row).select('id,customer_id,share_token').single();if(ins.error)throw ins.error;
+      if(mode==='send'){const u=await sb.from('contracts').update({status:'sent',sent_at:new Date().toISOString()}).eq('id',ins.data.id).eq('status','draft');if(u.error)throw u.error;try{await sb.from('notifications').insert({user_id:ins.data.customer_id,type:'contract_ready',title:'contract_ready',body:ins.data.share_token})}catch(x){}}
+      await audit('contract.create','contracts',{id:ins.data.id,kind:'template',sent:mode==='send'});toast(t('saved'));render({keep:true});return;
+    }
     if(k==='contract'){
       const file=d.file;
       if(!(file instanceof File)||!file.size)throw new Error(t('err'));
       if(file.size>8*1024*1024)throw new Error(t('err'));
       const mime=file.type;
       if(!['application/pdf','image/jpeg','image/png','image/webp'].includes(mime))throw new Error(t('err'));
-      const ins=await sb.from('contracts').insert({customer_id:d.customer,website_id:d.website||null,title:d.title||null,created_by:me.id}).select().single();
+      const row={customer_id:d.customer,website_id:null,created_by:me.id};if((d.title||'').trim())row.title=d.title.trim();   /* العنوان الفارغ يأخذ القيمة الافتراضية (العمود NOT NULL) */
+      const ins=await sb.from('contracts').insert(row).select().single();
       if(ins.error)throw ins.error;
       const ext=mime==='application/pdf'?'pdf':mime==='image/png'?'png':mime==='image/webp'?'webp':'jpg';
       const path=`original/${ins.data.id}.${ext}`;
       const up=await sb.storage.from('contracts').upload(path,file,{contentType:mime,upsert:false});
-      if(up.error)throw up.error;
+      if(up.error){await sb.from('contracts').delete().eq('id',ins.data.id);throw up.error}   /* لا يبقى سجل عقد بلا ملف */
       const upd=await sb.from('contracts').update({original_path:path,original_mime:mime}).eq('id',ins.data.id);
       if(upd.error)throw upd.error;
       await audit('contract.create','contracts',{id:ins.data.id});toast(t('saved'));render({keep:true});return;

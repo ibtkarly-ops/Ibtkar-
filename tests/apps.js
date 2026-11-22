@@ -85,5 +85,27 @@ const now = new Date().toISOString();
   await h.page.check('[data-chg="appsacc"][data-id="u2"]'); await h.page.waitForTimeout(400);
   check('super: enabling the app builder for a user', h.calls.some((c) => c.method === 'PATCH' && /profiles/.test(c.url) && /id=eq\.u2/.test(c.url) && c.body.apps_access === true));
   await h.close();
+  // a file the validator rejects: friendly message + "try again" that resumes (files already written are not rewritten)
+  {
+    const calls = []; let failLeft = 3;
+    const app3 = { id: 'app3', owner_id: UID, name: 'تطبيق', site_type: 'app', created_at: now, config: { app: { chat: [{ role: 'user', content: 'x' }, { role: 'assistant', type: 'plan', content: 'خطة', plan: PLAN }] } } };
+    const h3 = await launch({ role: 'super_admin', viewport: { width: 390, height: 844 }, tables: { websites: [app3] }, functions: { 'ai-gateway': (b) => {
+      calls.push(b);
+      if (b.action === 'app_file') { if (b.path === 'src/theme.js' && failLeft-- > 0) return { ok: false, error: 'invalid_output', detail: 'import_not_allowed:date-fns' }; return { ok: true, path: b.path, code: CODE(b.path), exports: 'default X' }; }
+      if (b.action === 'app_commit') { app3.config.app = { ...app3.config.app, rev: 1, files: b.files }; return { ok: true, rev: 1 }; }
+      return { ok: false, error: 'x' };
+    } } });
+    await h3.open('#/admin/apps/app3'); await h3.page.waitForSelector('[data-act="apbuild"]');
+    await h3.page.click('[data-act="apbuild"]'); await h3.page.waitForSelector('.apfail', { timeout: 15000 });
+    const msg = await h3.page.locator('.apfail').innerText();
+    check('rejected import: readable Arabic reason (library named), not a raw code', /مكتبة غير مدعومة \(date-fns\)/.test(msg) && (await h3.page.locator('[data-act="apretry"]').count()) === 1);
+    const hint = calls.filter((c) => c.action === 'app_file' && c.path === 'src/theme.js');
+    check('the reason is sent with each retry (3 tries) so the AI fixes it', hint.length === 3 && !hint[0].fix && /date-fns/.test(hint[1].fix || '') && /date-fns/.test(hint[2].fix || ''));
+    const appjs1 = calls.filter((c) => c.action === 'app_file' && c.path === 'App.js').length;
+    await h3.page.click('[data-act="apretry"]'); await h3.page.waitForSelector('[data-act="apexpo"]', { timeout: 15000 });
+    check('retry resumes: App.js is not written again, build completes', calls.filter((c) => c.action === 'app_file' && c.path === 'App.js').length === appjs1 && calls.some((c) => c.action === 'app_commit'));
+    check('written exports travel with the next file', calls.some((c) => c.action === 'app_file' && c.path === 'src/screens/HomeScreen.js' && c.written && c.written['App.js'] === 'default X'));
+    await h3.close();
+  }
   process.exit(fails ? 2 : 0);
 })();

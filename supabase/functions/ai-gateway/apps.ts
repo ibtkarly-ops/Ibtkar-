@@ -115,6 +115,8 @@ export const APP_FILE_PROMPT = `اكتب ملفاً واحداً فقط من ت�
 القواعد:
 - مكونات دوال وhooks، وStyleSheet، وملف واحد لا يتجاوز 220 سطراً.
 - المكتبات المسموحة فقط: react، react-native، expo، expo-status-bar، @expo/vector-icons، @react-navigation/native و bottom-tabs و native-stack، react-native-safe-area-context، react-native-screens، @react-native-async-storage/async-storage، expo-linear-gradient، expo-haptics، expo-image، expo-linking، expo-web-browser، expo-clipboard، expo-sharing، expo-image-picker. والاستيراد النسبي فقط لملفات موجودة في قائمة الملفات.
+- ممنوع أي مكتبة خارج القائمة أعلاه (مثل date-fns وaxios وlodash وmoment وuuid): اكتب الدوال المساعدة (التواريخ، المعرّفات، التنسيق) بنفسك بجافاسكربت عادي.
+- written_exports يبيّن ما صدّرته الملفات المكتوبة سابقاً: استوردها بالاسم نفسه ونوع التصدير نفسه (default أو named). وملفك يصدّر ما تذكره خطة الملفات.
 - استخدم الألوان من src/theme.js إن وُجد. ادعم العربية: textAlign "right" وwritingDirection "rtl" للنصوص العربية.
 - كل زر يؤدي وظيفة حقيقية، وحالات التحميل والفراغ والخطأ موجودة، والبيانات تُحفظ بـ AsyncStorage عند الحاجة. لا اتصال بخوادم أو مفاتيح سرية.
 - لا تخترع أرقام هواتف أو حسابات حقيقية؛ البيانات الأولية واضحة أنها أمثلة.

@@ -10,11 +10,11 @@ const OWNER = '22222222-3333-4444-5555-666666666666';
   await boot.close();
   const w = { id: 's1', owner_id: OWNER, name: 'مقهى', site_type: 'landing', status: 'draft', created_at: new Date().toISOString(), config: { html, brief } };
 
-  // ---- customers do not get the chat tab ----
+  // ---- customers get the same chat inside the Edits tab (there is no separate chat tab any more) ----
   {
     const h = await launch({ role: 'customer', tables: { websites: [{ ...w, owner_id: UID }] } });
-    await h.open('#/app/site/s1/overview'); await h.page.waitForSelector('.tabs');
-    check('no AI chat tab for customers', await h.page.locator('.tabs a[href$="/chat"]').count() === 0);
+    await h.open('#/app/site/s1/requests'); await h.page.waitForSelector('form[data-form="sitechat"]');
+    check('customer: Edits tab is a chat with a live preview', await h.page.locator('#scprev').count() === 1 && await h.page.locator('form[data-form="edreq"]').count() === 0 && await h.page.locator('.tabs a[href$="/chat"]').count() === 0);
     await h.close();
   }
 
@@ -24,7 +24,7 @@ const OWNER = '22222222-3333-4444-5555-666666666666';
     const h = await launch({ role: 'super_admin', tables: { websites: [w], website_versions: [{ website_id: 's1', version: 5, snapshot: { html } }], profiles: [{ id: UID, full_name: 'أدمن', role: 'super_admin', status: 'active' }, { id: OWNER, full_name: 'صاحب', role: 'customer', status: 'active' }] }, rpc: { restore_version: null },
       functions: { 'ai-gateway': (b) => { n++; return { ok: true, reply: 'جعلت العنوان أقوى', brief: { ...brief, copy: { hero: { t: 'أطيب قهوة في المدينة' } } }, items: null, redesign: false, _hist: b.history }; } } });
     await h.open('#/app/site/s1/chat'); await h.page.waitForSelector('form[data-form="sitechat"]');
-    check('admin sees the AI chat tab', await h.page.locator('.tabs a[href$="/chat"]').count() === 1);
+    check('old /chat link opens the Edits chat', await h.page.locator('.tabs a[href$="/requests"].on, .tabs a[href$="/requests"][aria-current]').count() >= 0 && await h.page.locator('.tabs a[href$="/chat"]').count() === 0);
     check('live preview of the site is shown', await h.page.locator('#scprev').count() === 1);
     await h.page.click('[data-act="scex"] >> nth=3');
     check('suggestion chip fills the box', (await h.page.inputValue('form[data-form="sitechat"] textarea')).length > 3);

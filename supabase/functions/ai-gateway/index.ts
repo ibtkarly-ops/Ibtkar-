@@ -500,13 +500,16 @@ Deno.serve(async (req) => {
         const p = cleanPlan(body.plan ?? plan ?? {});
         const all = new Set([...codePaths, ...p.files.map((f: any) => f.path), ...(Array.isArray(body.paths) ? body.paths.filter((x: unknown) => typeof x === "string" && isCodePath(x as string)) : [])]);
         const ctx = { plan: { name: p.name, summary: p.summary, screens: p.screens, colors: p.colors, features: p.features }, files: [...all].map((f) => ({ path: f, purpose: p.files.find((x: any) => x.path === f)?.purpose ?? "", exports: files[f] ? exportsOf(files[f]) : "" })), file: path, purpose: String(body.purpose ?? "").slice(0, 300), request: String(body.request ?? "").slice(0, 1500) };
+        const written = body.written && typeof body.written === "object" ? Object.fromEntries(Object.entries(body.written as Record<string, unknown>).filter(([k, v]) => isCodePath(k) && typeof v === "string").slice(0, 14).map(([k, v]) => [k, String(v).slice(0, 200)])) : {};
+        (ctx as Record<string, unknown>).written_exports = written;   // what the files already written export, so imports match
+        const fixNote = body.fix ? "\n\nملاحظة: محاولتك السابقة لهذا الملف رُفضت بسبب: " + String(body.fix).slice(0, 160) + ". صحّح ذلك ولا تستخدم أي مكتبة خارج القائمة المسموحة." : "";
         const cur = files[path] && files[path].length < 9000 ? "\n\nالمحتوى الحالي للملف (عدّله وأعده كاملاً):\n```jsx\n" + files[path] + "\n```" : "";
-        const r = await runAI({ task: "ui", rules: true, userId: user.id, siteId: site.id, maxTokens: 3400, deadlineMs: 100_000, messages: [{ role: "system", content: APP_FILE_PROMPT }, { role: "user", content: JSON.stringify(ctx) + cur }] });
+        const r = await runAI({ task: "ui", rules: true, userId: user.id, siteId: site.id, maxTokens: 3000, deadlineMs: 100_000, messages: [{ role: "system", content: APP_FILE_PROMPT }, { role: "user", content: JSON.stringify(ctx) + cur + fixNote }] });
         const code = extractCode(r.text);
         if (!code) return json({ ok: false, error: "invalid_output", detail: "no_code" });
         const bad = validFile(path, code, all);
         if (bad) return json({ ok: false, error: "invalid_output", detail: bad });
-        return json({ ok: true, path, code, model: r.model });
+        return json({ ok: true, path, code, exports: exportsOf(code), model: r.model });
       }
 
       // 3) commit the written files: validated together, config files generated, version saved, files stored for Expo Go

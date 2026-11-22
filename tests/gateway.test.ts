@@ -346,6 +346,17 @@ Deno.test("app builder: files written one by one are validated (allowed imports,
   assert((await call("admin", { action: "app_file", website_id: "app1", path: "../../etc/passwd", plan: PLAN })).status === 400, "bad path refused");
 });
 
+Deno.test("app builder: a rejected file is retried with the reason; written exports reach the next file; the answer lists its exports", async () => {
+  reset(); appSite();
+  let sent = "";
+  const base = anthropicFake({ text: "```jsx\n" + HOME + "\n```" });
+  providerBehavior = (q) => { if (q.url.includes("/v1/messages") && q.body.max_tokens > 16) sent = JSON.stringify(q.body); return base(q); };
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const r = await call("admin", { action: "app_file", website_id: "app1", path: "src/screens/HomeScreen.js", plan: PLAN, fix: "import_not_allowed:date-fns", written: { "src/theme.js": "theme", "../evil": "x" } });
+  assert(r.json.ok && r.json.exports === "default HomeScreen", "exports returned " + JSON.stringify(r.json));
+  assert(sent.includes("date-fns") && sent.includes("src/theme.js") && !sent.includes("evil"), "fix reason + written exports (only valid paths) sent");
+});
+
 Deno.test("app builder: commit generates the Expo project, saves a version, stores files; Expo Go link uses signed URLs", async () => {
   reset(); appSite();
   const r = await call("admin", { action: "app_commit", website_id: "app1", plan: PLAN, note: "بنيت التطبيق", files: { "App.js": APPJS, "src/theme.js": THEME, "src/screens/HomeScreen.js": HOME } });
