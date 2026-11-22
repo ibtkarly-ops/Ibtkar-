@@ -35,7 +35,9 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
     }
     if (n === 'own-items') check('own items kept (no sample flag)', !sd.sample && sd.items[0].p === '50 د.ل');
     if (n === 'rest-both') check('restaurant: menu layout (rows + category headings)', sd.layout === 'menu' && (await p.locator('#items-list .item.row').count()) === sd.items.length && (await p.locator('#items-list .mcat').count()) >= 2);
-    if (n === 'own-items') check('company: service cards with icons + timeline + CTA band', sd.layout === 'svc' && (await p.locator('#items-list .svc .sic svg').count()) >= 1 && (await p.locator('.tl li').count()) === 3 && (await p.locator('.band').count()) === 1);
+    if (n === 'own-items') check('company: service cards with icons', sd.layout === 'svc' && (await p.locator('#items-list .svc .sic svg').count()) >= 1);
+    // nothing the owner did not give: no ready-made "why us / how to order / FAQ / ready to start?" filler
+    check(n + ': no canned filler sections (timeline, FAQ, CTA band, why-us cards)', (await p.locator('.tl li, details, .band').count()) === 0 && !/خدمة بعناية|كيف أطلب؟|جاهز للبدء|Careful service|How do I order/.test(html));
     if (n === 'own-items') check('company with prices also gets the cart (phone doubles as WhatsApp)', (await p.locator('#items-list .add').count()) === sd.items.length);
     // editing the JSON block is picked up by the renderer
     const html2 = await h.page.evaluate(([x]) => writeSD(x, { items: [{ n: 'جديد </script>', c: '', p: '5', d: '' }] }), [html]);
@@ -44,6 +46,17 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
     await p.setContent(html);
     await p.waitForTimeout(200);
     await p.screenshot({ path: `${out}/site-${n}.png`, fullPage: true });
+    await p.close();
+  }
+  // ---- what the owner (or the AI, from the owner's description) wrote IS shown ----
+  {
+    const copy = { steps: [{ t: 'اختر الخدمة', d: 'من القائمة' }, { t: 'نتواصل معك' }], faq: [{ q: 'هل يوجد توصيل؟', a: 'نعم داخل طرابلس' }], band: { t: 'ابدأ مشروعك اليوم', s: 'نرد خلال ساعة' } };
+    const hh = await h.page.evaluate((c) => genSite({ name: 'ملكي', type: 'company', lang: 'ar', phone: '0912345678', desc: 'شركة', color: '#0f766e', style: 'bold', copy: c }), copy);
+    const p = await h.context.newPage(); await p.setContent(hh); await p.waitForTimeout(200);
+    check('owner steps become the timeline, owner FAQ and closing band are shown', (await p.locator('.tl li').count()) === 2 && /هل يوجد توصيل؟/.test(await p.locator('details').innerText()) && /ابدأ مشروعك اليوم/.test(await p.locator('.band').innerText()));
+    const bare = await h.page.evaluate(() => genSite({ name: 'ملكي', type: 'landing', lang: 'ar', phone: '0912345678', color: '#0f766e' }));
+    await p.setContent(bare); await p.waitForTimeout(200);
+    check('no description: no empty "about" section and no link to it', (await p.locator('#about').count()) === 0 && (await p.locator('a[href="#about"]').count()) === 0);
     await p.close();
   }
   // ---- effects the customer asked for: promo banner, animated background, motion, floating WhatsApp ----

@@ -1,6 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { DISPLAY, KINDS, cleanKey, detectPick, keyHint, listError, modelsRequest, orderModels, parseCurl, parseModels, rankModels, resolveTarget, safeEndpoint, targetFromCurl, type Found, type Kind, type Ranked, type Target } from "./models.ts";
+import { DISPLAY, KINDS, PRESETS, cleanKey, detectPick, keyHint, listError, modelsRequest, orderModels, parseCurl, parseModels, presetRpm, rankModels, resolveTarget, safeEndpoint, targetFromCurl, type Found, type Kind, type Ranked, type Target } from "./models.ts";
 import { APP_CHAT_PROMPT, APP_FILE_PROMPT, cleanPlan, depsOf, exportsOf, extractCode, isCodePath, projectConfig, slugOf, snackUrl, validFile } from "./apps.ts";
+type CodeCheck = typeof import("./codecheck.ts");
+let ccLoad: Promise<CodeCheck | null> | null = null;
+/** The JSX-aware code checker. Loaded on first use; if it ever fails to load the builder keeps working with the basic checks. */
+const codeCheck = (): Promise<CodeCheck | null> => (ccLoad ??= import("./codecheck.ts").catch(() => null));
 import { CORE_RULES, DESIGN_PROMPT, EDIT_PROMPT, SITE_CHAT_PROMPT, applyPatch, cleanCopy, cleanItems, draftMissing, mergeDraft, ownImage, parseJSON } from "./spec.ts";
 
 // Public publishable key (same one shipped in the browser app). Used only as the `apikey` header when we act
@@ -275,7 +279,7 @@ const ADDENDUM = `قيود المنصة (تتقدم على أي متطلبات �
 - روابط الاتصال تستخدم tel:+الرقم الدولي وروابط واتساب https://wa.me/الرقم الدولي، حرفياً كما في بيانات العميل.
 - أعد وثيقة HTML كاملة فقط، بلا شرح ولا Markdown.
 - لا تخترع أرقام هواتف أو آراء عملاء أو إحصائيات أو شهادات أو عناوين أو أسعاراً؛ استخدم ما في بيانات العميل فقط.
-- بيانات العميل تحوي must_have: قائمة بنود إلزامية طلبها العميل صراحةً (خلفية متحركة، حركات، سلة طلبات، ترتيب الأقسام). نفّذها كلها حرفياً بالمعرّفات المذكورة (id/data-attributes) لأنها تُفحص آلياً ثم تُعاد الصفحة إن نقص منها شيء. وإن وُجد design_plan فاتبع عناوينه ونصوصه. استخدم customer_notes وaudience وmain_goal وtone وselling_points لتشكيل المحتوى والنبرة. لا تضف شريط عروض ولا زر واتساب عائماً.
+- بيانات العميل تحوي must_have: قائمة بنود إلزامية طلبها العميل صراحةً (خلفية متحركة، حركات، سلة طلبات، ترتيب الأقسام). نفّذها كلها حرفياً بالمعرّفات المذكورة (id/data-attributes) لأنها تُفحص آلياً ثم تُعاد الصفحة إن نقص منها شيء. وإن وُجد design_plan فاتبع عناوينه ونصوصه. استخدم customer_notes وaudience وmain_goal وtone وselling_points لتشكيل المحتوى والنبرة. لا تضف شريط عروض ولا شريط تواصل ولا زر واتساب عائماً ولا نافذة منبثقة. ولا تضف أي قسم (لماذا نحن، أسئلة شائعة، خطوات، آراء عملاء، إحصائيات) أو عنصر لم يذكره العميل في بياناته؛ الموجود في بياناته فقط.
 - التخطيط حسب نوع النشاط: المتجر = بطاقات منتجات كبيرة بصور ودوائر تصنيفات وشريط تصنيفات متحرك تحت الهيرو؛ المطعم = قائمة طعام بصفوف (الاسم ……… السعر) مجمّعة بعناوين التصنيفات مع تبويبات تصنيف لاصقة، وساعات العمل والعنوان كشارات زجاجية في الهيرو؛ الشركة = هيرو منقسم (نص + لوحة زجاجية بالشعار ونقاط القوة) وبطاقات خدمات بأيقونات SVG وخط زمني «كيف نعمل» وشريط دعوة متدرّج؛ الصفحة التعريفية = هيرو ضخم بعنوان واحد وشبكة مزايا bento وشريط دعوة نهائي كبير.
 - البانرات والشعار: إن وُجدت banners في بيانات العميل فاعرضها كلها كشرائح متتابعة في الهيرو (صورة البانر خلفية كاملة بتدرّج داكن فوقها، ونصه عنوان كبير، ورابطه زر «اكتشف الآن»)، وأضفها في site-data كحقل banners بالشكل [{\"t\":\"النص\",\"img\":\"الرابط\",\"u\":\"الرابط\"}]، وبدّل نصوصها داخل #promo-banner كل بضع ثوانٍ. وإن وُجد logo فاعرضه في الشريط العلوي وكبيراً في الهيرو. صور البانرات والأصناف والشعار مسموحة لأنها مستضافة لدينا.
 - لمسات الحركة: شريط تقدّم التمرير أعلى الصفحة، رأس يصغر ويظهر ظله عند التمرير، ظهور متتابع للبطاقات، توهّج يتبع المؤشر في الهيرو، وإمالة خفيفة للبطاقات على الديسكتوب فقط، وزر «للأعلى».
@@ -288,6 +292,7 @@ const APP_PROMPT = `أنت مصمم تطبيقات ويب جوال محترف. �
 - شاشات واقعية تناسب فكرة التطبيق وميزاته المطلوبة (قوائم، بطاقات، نماذج، ملف شخصي أو إعدادات) ببيانات نموذجية واضحة أنها نموذجية.
 - تصميم مسطّح أنيق باللون الأساسي المطلوب، حواف مدوّرة، أزرار كبيرة سهلة اللمس، دعم RTL كامل ووضع داكن تلقائي حسب prefers-color-scheme.
 - أضف في شاشة الإعدادات أو الرئيسية بطاقة قصيرة تشرح كيف يثبّت المستخدم التطبيق على شاشته (مشاركة ثم إضافة إلى الشاشة الرئيسية).
+- لا تضف شاشات أو أزرار أو أشرطة (تواصل، واتساب، عروض) أو ميزات لم يذكرها المستخدم؛ ما طلبه فقط.
 - لا تخترع أرقام هواتف أو آراء أو إحصائيات حقيقية. لا اتصال بخوادم؛ احفظ ما يلزم في localStorage فقط.`;
 
 // ---- What the customer explicitly asked for must really exist in the page (checked, then repaired) ----
@@ -389,7 +394,8 @@ Deno.serve(async (req) => {
         let pick = String(body.kind ?? "");
         const seen = detectPick(key);
         if (seen && seen !== pick) { switched = seen; pick = seen; }   // e.g. a Groq key pasted under OpenAI: use the right provider
-        const tg = pick === "custom" ? ({ kind: "custom", endpoint: safeEndpoint(String(body.endpoint ?? "")), name: String(body.name ?? "").trim().slice(0, 40) || "Custom" } as Target) : resolveTarget(pick);
+        const tg = pick === "custom" ? ({ kind: "custom", endpoint: safeEndpoint(String(body.endpoint ?? "")), name: String(body.name ?? "").trim().slice(0, 40) || "Custom" } as Target) : resolveTarget(pick, { account_id: body.account_id });
+        if (!tg && PRESETS[pick]?.needs === "account_id") return fail("account_id_required");
         if (!tg) return fail("bad_kind");
         if (tg.kind === "custom" && !tg.endpoint) return fail("endpoint_required");
         target = tg;
@@ -422,7 +428,7 @@ Deno.serve(async (req) => {
         const { data: ex } = await q;
         provider = ex?.[0] ?? null;
         if (!provider) {
-          const ins = await db.from("ai_providers").insert({ name: target.name, kind, endpoint, priority: 100, enabled: true }).select().single();
+          const ins = await db.from("ai_providers").insert({ name: target.name, kind, endpoint, priority: 100, enabled: true, ...(presetRpm(endpoint) ? { max_rpm: presetRpm(endpoint) } : {}) }).select().single();
           if (ins.error) return json({ ok: false, error: "save_failed", detail: ins.error.message });
           provider = ins.data;
         }
@@ -505,11 +511,18 @@ Deno.serve(async (req) => {
         const fixNote = body.fix ? "\n\nملاحظة: محاولتك السابقة لهذا الملف رُفضت بسبب: " + String(body.fix).slice(0, 160) + ". صحّح ذلك ولا تستخدم أي مكتبة خارج القائمة المسموحة." : "";
         const cur = files[path] && files[path].length < 9000 ? "\n\nالمحتوى الحالي للملف (عدّله وأعده كاملاً):\n```jsx\n" + files[path] + "\n```" : "";
         const r = await runAI({ task: "ui", rules: true, userId: user.id, siteId: site.id, maxTokens: 3000, deadlineMs: 100_000, messages: [{ role: "system", content: APP_FILE_PROMPT }, { role: "user", content: JSON.stringify(ctx) + cur + fixNote }] });
-        const code = extractCode(r.text);
-        if (!code) return json({ ok: false, error: "invalid_output", detail: "no_code" });
-        const bad = validFile(path, code, all);
-        if (bad) return json({ ok: false, error: "invalid_output", detail: bad });
-        return json({ ok: true, path, code, exports: exportsOf(code), model: r.model });
+        const raw = extractCode(r.text);
+        if (!raw) return json({ ok: false, error: "invalid_output", detail: "no_code" });
+        // fix what is safe to fix here (missing imports, uuid), then reject what would crash in Expo Go with an exact reason
+        const cc = await codeCheck();
+        const { code, fixed } = cc ? cc.repairCode(raw) : { code: raw, fixed: [] as string[] };
+        let bad = validFile(path, code, all) ?? cc?.checkCode(code) ?? null;
+        // a syntax error or a wrong import always blocks; "undefined name" / "html tag" blocks the first time, but if the AI was already told that
+        // exact reason and still gives the same kind of answer, the file is accepted (with a warning) so a check can never leave the user stuck
+        let soft = !!bad && /^(undefined|html_tag):/.test(bad) && /^(undefined|html_tag):/.test(String(body.fix ?? ""));
+        if (!bad || soft) { const mm = cc?.importMismatch(path, code, written, true)?.reason; if (mm) { bad = mm; soft = false; } }
+        if (bad && !soft) return json({ ok: false, error: "invalid_output", detail: bad });
+        return json({ ok: true, path, code, exports: (cc?.exportsLabel(code) || exportsOf(code)), fixed, warn: soft ? bad : undefined, model: r.model });
       }
 
       // 3) commit the written files: validated together, config files generated, version saved, files stored for Expo Go
@@ -518,7 +531,18 @@ Deno.serve(async (req) => {
         const merged = { ...files };
         for (const [k, v] of Object.entries(inFiles)) if (isCodePath(k) && typeof v === "string") merged[k] = v;
         const all = new Set(Object.keys(merged).filter(isCodePath));
-        for (const k of all) { const bad = validFile(k, merged[k], all); if (bad) return json({ ok: false, error: "invalid_output", detail: k + ": " + bad }, 422); }
+        const changed = new Set(Object.keys(inFiles).filter((k) => all.has(k)));
+        const cc = await codeCheck();
+        if (cc) for (const k of changed) merged[k] = cc.repairCode(merged[k]).code;   // only files written now; older files are left exactly as they were
+        for (const k of all) {
+          const chk = cc && changed.has(k) ? cc.checkCode(merged[k]) : null;
+          const bad = validFile(k, merged[k], all) ?? (chk && chk.startsWith("syntax:") ? chk : null);   // here only a syntax error blocks
+          if (bad) return json({ ok: false, error: "invalid_output", detail: k + ": " + bad, file: k }, 422);
+        }
+        if (cc) for (const k of all) {
+          const mm = cc.importMismatch(k, merged[k], Object.fromEntries([...all].filter((x) => x !== k).map((x) => [x, merged[x]])));
+          if (mm && (changed.has(k) || changed.has(mm.target))) { const file = changed.has(k) ? k : mm.target; return json({ ok: false, error: "invalid_output", detail: file + ": " + (file === k ? mm.reason : `${k} imports something it does not export: ${mm.reason}`), file }, 422); }
+        }
         if (!all.has("App.js")) return json({ ok: false, error: "invalid_output", detail: "App.js missing" }, 422);
         const p = body.plan ? cleanPlan(body.plan) : plan;
         const name = p?.name ?? site.name, slug = app0.slug ?? slugOf(String(name), site.id);

@@ -357,6 +357,38 @@ Deno.test("app builder: a rejected file is retried with the reason; written expo
   assert(sent.includes("date-fns") && sent.includes("src/theme.js") && !sent.includes("evil"), "fix reason + written exports (only valid paths) sent");
 });
 
+Deno.test("app builder: a forgotten import is repaired on the spot; a truncated file or a wrong import between files is rejected with the exact reason", async () => {
+  reset(); appSite();
+  const noImport = HOME.replace("import { View, Text } from 'react-native';", "import { View } from 'react-native';").replace("<Text style", "<ScrollView><Text style").replace("</Text>", "</Text></ScrollView>");
+  providerBehavior = anthropicFake({ text: "```jsx\n" + noImport + "\n```" });
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const fixed = await call("admin", { action: "app_file", website_id: "app1", path: "src/screens/HomeScreen.js", plan: PLAN, written: { "src/theme.js": "theme" } });
+  assert(fixed.json.ok && /import \{[^}]*\bView\b[^}]*\bScrollView\b[^}]*\} from 'react-native'/.test(fixed.json.code) && /import \{[^}]*\bText\b[^}]*\} from 'react-native'/.test(fixed.json.code) && fixed.json.fixed.length === 1, "repaired " + JSON.stringify(fixed.json).slice(0, 300));
+  providerBehavior = anthropicFake({ text: "```jsx\n" + HOME.slice(0, HOME.length - 30) + "\n```" });
+  const cut = await call("admin", { action: "app_file", website_id: "app1", path: "src/screens/HomeScreen.js", plan: PLAN });
+  assert(cut.json.error === "invalid_output" && /^syntax:/.test(cut.json.detail), "truncated " + JSON.stringify(cut.json));
+  providerBehavior = anthropicFake({ text: "```jsx\n" + HOME + "\n```" });
+  const mm = await call("admin", { action: "app_file", website_id: "app1", path: "src/screens/HomeScreen.js", plan: PLAN, written: { "src/theme.js": "default colors" } });
+  assert(mm.json.error === "invalid_output" && /^import_mismatch:\.\.\/theme:theme/.test(mm.json.detail), "import vs written exports " + JSON.stringify(mm.json));
+  // at the end, the file at fault is named so the client rewrites just that one
+  const c = await call("admin", { action: "app_commit", website_id: "app1", plan: PLAN, files: { "App.js": APPJS, "src/theme.js": "export default { text: '#111' };", "src/screens/HomeScreen.js": HOME } });
+  assert(c.status === 422 && c.json.file === "src/screens/HomeScreen.js" && /import_mismatch/.test(c.json.detail), "commit names the file " + JSON.stringify(c.json));
+});
+
+Deno.test("app builder: an undefined component blocks once; if the AI already got that exact reason, the file is accepted with a warning (a check can never leave the user stuck)", async () => {
+  reset(); appSite();
+  const ghost = HOME.replace("<Text style", "<ProductCard /><Text style");
+  providerBehavior = anthropicFake({ text: "```jsx\n" + ghost + "\n```" });
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const first = await call("admin", { action: "app_file", website_id: "app1", path: "src/screens/HomeScreen.js", plan: PLAN, written: { "src/theme.js": "theme" } });
+  assert(first.json.error === "invalid_output" && /^undefined:ProductCard/.test(first.json.detail), "blocked once " + JSON.stringify(first.json));
+  const again = await call("admin", { action: "app_file", website_id: "app1", path: "src/screens/HomeScreen.js", plan: PLAN, written: { "src/theme.js": "theme" }, fix: first.json.detail });
+  assert(again.json.ok && /^undefined:ProductCard/.test(again.json.warn), "accepted with a warning " + JSON.stringify(again.json).slice(0, 200));
+  providerBehavior = anthropicFake({ text: "```jsx\n" + HOME.slice(0, HOME.length - 30) + "\n```" });
+  const syn = await call("admin", { action: "app_file", website_id: "app1", path: "src/screens/HomeScreen.js", plan: PLAN, written: { "src/theme.js": "theme" }, fix: "syntax:1:2 x" });
+  assert(syn.json.error === "invalid_output" && /^syntax:/.test(syn.json.detail), "a syntax error is never accepted");
+});
+
 Deno.test("app builder: commit generates the Expo project, saves a version, stores files; Expo Go link uses signed URLs", async () => {
   reset(); appSite();
   const r = await call("admin", { action: "app_commit", website_id: "app1", plan: PLAN, note: "بنيت التطبيق", files: { "App.js": APPJS, "src/theme.js": THEME, "src/screens/HomeScreen.js": HOME } });

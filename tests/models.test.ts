@@ -73,7 +73,7 @@ Deno.test("orderModels: balanced -> best fast -> other balanced; classify starts
   eq(orderModels("ui", "gemini", ["gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.5-flash"].map((model_id) => ({ model_id }))).map((m) => m.model_id), ["gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.5-flash"], "gemini chain avoids retrying the same backend first");
 });
 
-import { cleanKey, detectPick, parseCurl, rankModels as rk, resolveTarget, targetFromCurl } from "../supabase/functions/ai-gateway/models.ts";
+import { PRESETS, cleanKey, detectPick, parseCurl, presetRpm, rankModels as rk, resolveTarget, targetFromCurl } from "../supabase/functions/ai-gateway/models.ts";
 
 Deno.test("presets: groq is stored as custom + endpoint; key prefix detects the real provider", () => {
   eq(resolveTarget("groq"), { kind: "custom", endpoint: "https://api.groq.com/openai/v1", name: "Groq" }, "groq target");
@@ -139,4 +139,40 @@ Deno.test("free providers from the awesome-freellm list are presets; OpenRouter 
   const r = rk("custom", ["meta-llama/llama-3.1-405b-instruct", "deepseek/deepseek-chat-v3:free", "qwen/qwen3-235b-a22b:free", "openai/gpt-4o"].map((id) => ({ id, created: 1 })));
   eq(r.every((x) => x.id.endsWith(":free")), true, "only free models kept");
   eq(r.find((x) => x.role === "primary")?.id, "qwen/qwen3-235b-a22b:free", "biggest free model is primary");
+});
+
+Deno.test("every preset has a public https endpoint, a button and a 'get a key' link in the Engine page", async () => {
+  const html = await Deno.readTextFile(new URL("../public/index.html", import.meta.url));
+  const kindL = html.match(/const KIND_L=\{([^}]*)\}/)![1], info = html.match(/const PROV_INFO=\{([\s\S]*?)\};/)![1];
+  for (const [id, p] of Object.entries(PRESETS)) {
+    eq(/^https:\/\/[a-z0-9.-]+\//.test(p.endpoint) && new URL(p.endpoint.replace("{account_id}", "0".repeat(32))).hostname === p.host, true, id + " endpoint/host");
+    eq(new RegExp("\\b" + id + ":'").test(kindL), true, id + " has a button");
+    eq(new RegExp("\\b" + id + ":\\['https://").test(info), true, id + " has a key link");
+  }
+});
+
+Deno.test("Cloudflare Workers AI: account id goes in the URL, a bad one is refused, models come from /ai/models/search", () => {
+  const acc = "0123456789abcdef0123456789abcdef";
+  eq(resolveTarget("cloudflare"), null, "no account id");
+  eq(resolveTarget("cloudflare", { account_id: "nope" }), null, "bad account id");
+  eq(resolveTarget("cloudflare", { account_id: "../../x" + "a".repeat(25) }), null, "path injection refused");
+  const t = resolveTarget("cloudflare", { account_id: " " + acc.toUpperCase() + " " })!;
+  eq(t.endpoint, `https://api.cloudflare.com/client/v4/accounts/${acc}/ai/v1`, "endpoint with account id");
+  eq(modelsRequest("custom", t.endpoint, "tok").url, `https://api.cloudflare.com/client/v4/accounts/${acc}/ai/models/search?task=Text%20Generation&per_page=100`, "catalogue url");
+  const found = parseModels("custom", { success: true, result: [{ name: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" }, { name: "@cf/meta/llama-3.1-8b-instruct" }] });
+  eq(found.map((f) => f.id), ["@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/meta/llama-3.1-8b-instruct"], "cloudflare model list");
+  eq(rk("custom", found).find((x) => x.role === "primary")?.id, "@cf/meta/llama-3.3-70b-instruct-fp8-fast", "70b is primary");
+  // a pasted Cloudflare curl keeps its own account URL instead of the {account_id} template
+  const c = parseCurl(`curl https://api.cloudflare.com/client/v4/accounts/${acc}/ai/v1/chat/completions -H "Authorization: Bearer tok" -d '{"model":"@cf/meta/llama-3.1-8b-instruct"}'`);
+  if ("error" in c) throw new Error(c.error);
+  eq((targetFromCurl(c) as any).endpoint, `https://api.cloudflare.com/client/v4/accounts/${acc}/ai/v1`, "curl target");
+});
+
+Deno.test("free-tier limits: a new provider gets its preset requests-per-minute; unknown hosts keep the default", () => {
+  eq(presetRpm("https://integrate.api.nvidia.com/v1"), 40, "nvidia");
+  eq(presetRpm("https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"), 2, "ovh");
+  eq(presetRpm("https://api.kilo.ai/api/gateway"), 3, "kilo 200/h");
+  eq(presetRpm("https://api.groq.com/openai/v1"), undefined, "groq keeps the default");
+  eq(presetRpm("https://example.com/v1"), undefined, "unknown");
+  eq(presetRpm(null), undefined, "native kinds");
 });

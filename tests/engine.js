@@ -52,6 +52,20 @@ const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  ' + n); if (!c)
   await page.click('#cm-curl button.btn.p'); await page.waitForTimeout(400);
   check('curl sent as-is to the gateway', last && last.action === 'connect' && /api\.groq\.com/.test(last.curl));
   check('groq is one of the provider chips', (await page.locator('[data-act="pickkind"][data-kind="groq"]').count()) === 1);
+  // providers from the awesome-freellm list: every chip shows its free limit + a "get a key" link; Cloudflare asks for the Account ID
+  await page.click('[data-act="cmode"][data-mode="key"]');
+  await page.click('[data-kind="nvidia"]');
+  check('picking a provider shows its free limit and a key link (new tab)', /40 RPM/.test(await page.locator('#cinfo').innerText()) && (await page.locator('#cinfo a[target="_blank"]').getAttribute('href')).includes('build.nvidia.com'));
+  check('Account ID field hidden for other providers', await page.locator('#cacc').isHidden());
+  check('every provider chip has a key link', await page.evaluate(() => [...document.querySelectorAll('.pk[data-act="pickkind"]')].every((b) => b.dataset.kind === 'custom' || (PROV_INFO[b.dataset.kind] && /^https:\/\//.test(PROV_INFO[b.dataset.kind][0])))));
+  await page.click('[data-kind="cloudflare"]');
+  check('Cloudflare shows the Account ID field', await page.locator('#cacc').isVisible());
+  last = null; await page.fill('input[name=key]', 'cf-token-xxxxxxxx'); await page.fill('input[name=account_id]', 'not-an-id');
+  await page.click('#cm-key form[data-form="connect"] button.btn.p'); await page.waitForTimeout(300);
+  check('a wrong Account ID is refused before anything is sent', last === null && /Account ID/.test(await page.locator('#toast').innerText()));
+  await page.fill('input[name=account_id]', '0123456789ABCDEF0123456789abcdef');
+  await page.click('#cm-key form[data-form="connect"] button.btn.p'); await page.waitForTimeout(400);
+  check('Cloudflare connect sends kind + key + account_id', last && last.action === 'connect' && last.kind === 'cloudflare' && last.account_id === '0123456789ABCDEF0123456789abcdef' && last.key === 'cf-token-xxxxxxxx');
   await page.click('[data-act="pmodels"]');
   await page.waitForTimeout(300);
   check('refresh calls action=models', last && last.action === 'models' && last.provider_id === 'p1');

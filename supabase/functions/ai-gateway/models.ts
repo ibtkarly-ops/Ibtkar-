@@ -38,6 +38,9 @@ export function modelsRequest(kind: Kind, endpoint: string | null, key: string) 
   const base = (endpoint || BASES[kind] || "").replace(/\/+$/, "");
   if (kind === "anthropic") return { url: `${base}/v1/models?limit=100`, headers: { "x-api-key": key, "anthropic-version": "2023-06-01" } as Record<string, string> };
   if (kind === "gemini") return { url: `${base}/v1beta/models?pageSize=200`, headers: { "x-goog-api-key": key } as Record<string, string> };
+  // Workers AI has no OpenAI-style /models: its catalogue lives at /ai/models/search
+  const cf = base.match(/^(https:\/\/api\.cloudflare\.com\/client\/v4\/accounts\/[0-9a-f]{32})\/ai\/v1$/);
+  if (cf) return { url: `${cf[1]}/ai/models/search?task=Text%20Generation&per_page=100`, headers: { Authorization: `Bearer ${key}` } as Record<string, string> };
   return { url: `${base}/models`, headers: { Authorization: `Bearer ${key}` } as Record<string, string> };
 }
 
@@ -49,6 +52,7 @@ export function parseModels(kind: Kind, data: any): Found[] {
       .filter((m: any) => (m.supportedGenerationMethods ?? []).includes("generateContent"))
       .map((m: any) => ({ id: String(m.name).replace(/^models\//, ""), created: 0 }));
   }
+  if (Array.isArray(data?.result)) return data.result.map((m: any) => ({ id: String(m.name ?? m.id), created: Date.parse(m.created_at) || 0 })).filter((m: Found) => m.id && m.id !== "undefined");   // Cloudflare
   return (data?.data ?? []).map((m: any) => ({ id: String(m.id), created: Number(m.created) || 0 }));
 }
 
@@ -229,39 +233,55 @@ export function orderModels<T extends { model_id: string }>(task: string, kind: 
 // ---------------------------------------------------------------------------
 // Presets: OpenAI-compatible providers are stored as kind="custom" + endpoint (the DB kind check only knows 6 kinds).
 // ---------------------------------------------------------------------------
-export const PRESETS: Record<string, { name: string; endpoint: string; host: string }> = {
+/** rpm = the provider's free-tier requests per minute (from awesome-freellm-apis); the router never exceeds it.
+ *  needs = extra value the admin must give (Cloudflare puts the account id inside the URL). */
+export const PRESETS: Record<string, { name: string; endpoint: string; host: string; rpm?: number; needs?: "account_id" }> = {
   groq: { name: "Groq", endpoint: "https://api.groq.com/openai/v1", host: "api.groq.com" },
   mistral: { name: "Mistral", endpoint: "https://api.mistral.ai/v1", host: "api.mistral.ai" },
   openrouter: { name: "OpenRouter", endpoint: "https://openrouter.ai/api/v1", host: "openrouter.ai" },
   together: { name: "Together", endpoint: "https://api.together.xyz/v1", host: "api.together.xyz" },
   fireworks: { name: "Fireworks", endpoint: "https://api.fireworks.ai/inference/v1", host: "api.fireworks.ai" },
-  cerebras: { name: "Cerebras", endpoint: "https://api.cerebras.ai/v1", host: "api.cerebras.ai" },
+  cerebras: { name: "Cerebras", endpoint: "https://api.cerebras.ai/v1", host: "api.cerebras.ai", rpm: 30 },
   // free tiers from github.com/open-free-llm-api/awesome-freellm-apis (all OpenAI-compatible)
-  nvidia: { name: "NVIDIA NIM", endpoint: "https://integrate.api.nvidia.com/v1", host: "integrate.api.nvidia.com" },
-  cohere: { name: "Cohere", endpoint: "https://api.cohere.ai/compatibility/v1", host: "api.cohere.ai" },
-  llm7: { name: "LLM7", endpoint: "https://api.llm7.io/v1", host: "api.llm7.io" },
-  ovh: { name: "OVHcloud", endpoint: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1", host: "oai.endpoints.kepler.ai.cloud.ovh.net" },
+  nvidia: { name: "NVIDIA NIM", endpoint: "https://integrate.api.nvidia.com/v1", host: "integrate.api.nvidia.com", rpm: 40 },
+  cohere: { name: "Cohere", endpoint: "https://api.cohere.ai/compatibility/v1", host: "api.cohere.ai", rpm: 20 },
+  llm7: { name: "LLM7", endpoint: "https://api.llm7.io/v1", host: "api.llm7.io", rpm: 60 },
+  ovh: { name: "OVHcloud", endpoint: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1", host: "oai.endpoints.kepler.ai.cloud.ovh.net", rpm: 2 },
   ollama: { name: "Ollama Cloud", endpoint: "https://ollama.com/v1", host: "ollama.com" },
   zai: { name: "Z AI", endpoint: "https://open.bigmodel.cn/api/paas/v4", host: "open.bigmodel.cn" },
   chutes: { name: "Chutes", endpoint: "https://llm.chutes.ai/v1", host: "llm.chutes.ai" },
   glhf: { name: "Glhf", endpoint: "https://glhf.chat/api/openai/v1", host: "glhf.chat" },
   siliconflow: { name: "SiliconFlow", endpoint: "https://api.siliconflow.cn/v1", host: "api.siliconflow.cn" },
   modelscope: { name: "ModelScope", endpoint: "https://api-inference.modelscope.cn/v1", host: "api-inference.modelscope.cn" },
-  kilo: { name: "Kilo Code", endpoint: "https://api.kilo.ai/api/gateway", host: "api.kilo.ai" },
+  kilo: { name: "Kilo Code", endpoint: "https://api.kilo.ai/api/gateway", host: "api.kilo.ai", rpm: 3 },
   opencode: { name: "OpenCode Zen", endpoint: "https://opencode.ai/zen/v1", host: "opencode.ai" },
-  aion: { name: "Aion Labs", endpoint: "https://api.aionlabs.ai/v1", host: "api.aionlabs.ai" },
+  aion: { name: "Aion Labs", endpoint: "https://api.aionlabs.ai/v1", host: "api.aionlabs.ai", rpm: 15 },
   agnes: { name: "Agnes AI", endpoint: "https://apihub.agnes-ai.com/v1", host: "apihub.agnes-ai.com" },
   gonka: { name: "Gonka", endpoint: "https://proxy.gonkabroker.com/v1", host: "proxy.gonkabroker.com" },
+  // Workers AI through the OpenAI-compatible endpoint; the account id is part of the URL
+  cloudflare: { name: "Cloudflare Workers AI", endpoint: "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/v1", host: "api.cloudflare.com", needs: "account_id" },
 };
+export const CF_ACCOUNT = /^[0-9a-f]{32}$/;
 
 export interface Target { kind: Kind; endpoint: string | null; name: string }
 
 /** Turn what the admin picked (a DB kind or a preset id) into the row we store. */
-export function resolveTarget(pick: string): Target | null {
+export function resolveTarget(pick: string, extra: { account_id?: unknown } = {}): Target | null {
   if ((KINDS as string[]).includes(pick) && pick !== "custom") return { kind: pick as Kind, endpoint: null, name: DISPLAY[pick] };
   const pr = PRESETS[pick];
-  if (pr) return { kind: "custom", endpoint: pr.endpoint, name: pr.name };
-  return null;
+  if (!pr) return null;
+  if (pr.needs === "account_id") {
+    const id = String(extra.account_id ?? "").trim().toLowerCase();
+    if (!CF_ACCOUNT.test(id)) return null;
+    return { kind: "custom", endpoint: pr.endpoint.replace("{account_id}", id), name: pr.name };
+  }
+  return { kind: "custom", endpoint: pr.endpoint, name: pr.name };
+}
+
+/** The free-tier requests-per-minute of the preset that owns this endpoint (undefined when unknown). */
+export function presetRpm(endpoint: string | null): number | undefined {
+  if (!endpoint) return undefined;
+  return Object.values(PRESETS).find((p) => !p.needs && endpoint.startsWith(p.endpoint))?.rpm;
 }
 
 /** Recognise the provider from the key's own prefix (the usual mistake is a Groq key pasted under OpenAI, etc.). */
@@ -338,7 +358,7 @@ export function targetFromCurl(c: CurlInfo): Target | { error: string } {
   const h = c.url.hostname.toLowerCase();
   const known: Record<string, string> = { "api.openai.com": "openai", "api.anthropic.com": "anthropic", "generativelanguage.googleapis.com": "gemini", "api.deepseek.com": "deepseek", "api.x.ai": "xai" };
   if (known[h]) return resolveTarget(known[h])!;
-  for (const [id, p] of Object.entries(PRESETS)) if (h === p.host) return resolveTarget(id)!;
+  for (const [id, p] of Object.entries(PRESETS)) if (h === p.host && !p.needs) return resolveTarget(id)!;
   const usesBearer = /^bearer\s+/i.test(c.headers["authorization"] ?? "");
   if (!usesBearer) return { error: "curl_unsupported_auth" };
   const base = c.url.origin + c.url.pathname.replace(/\/(chat\/completions|completions|responses|models)\/?$/, "").replace(/\/+$/, "");

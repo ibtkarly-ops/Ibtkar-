@@ -107,5 +107,22 @@ const now = new Date().toISOString();
     check('written exports travel with the next file', calls.some((c) => c.action === 'app_file' && c.path === 'src/screens/HomeScreen.js' && c.written && c.written['App.js'] === 'default X'));
     await h3.close();
   }
+  // the final check finds one file that does not fit the others: only that file is rewritten (with the reason), then saved
+  {
+    const calls = []; let commits = 0;
+    const app4 = { id: 'app4', owner_id: UID, name: 'تطبيق', site_type: 'app', created_at: now, config: { app: { chat: [{ role: 'user', content: 'x' }, { role: 'assistant', type: 'plan', content: 'خطة', plan: PLAN }] } } };
+    const h4 = await launch({ role: 'super_admin', viewport: { width: 390, height: 844 }, tables: { websites: [app4] }, functions: { 'ai-gateway': (b) => {
+      calls.push(b);
+      if (b.action === 'app_file') return { ok: true, path: b.path, code: CODE(b.path), exports: 'default X' };
+      if (b.action === 'app_commit') { if (commits++ === 0) return { status: 422, body: { ok: false, error: 'invalid_output', detail: 'src/screens/HomeScreen.js: import_mismatch:../theme:theme (src/theme.js exports: default)', file: 'src/screens/HomeScreen.js' } }; app4.config.app = { ...app4.config.app, rev: 1, files: b.files }; return { ok: true, rev: 1 }; }
+      return { ok: false, error: 'x' };
+    } } });
+    await h4.open('#/admin/apps/app4'); await h4.page.waitForSelector('[data-act="apbuild"]');
+    await h4.page.click('[data-act="apbuild"]'); await h4.page.waitForSelector('[data-act="apexpo"]', { timeout: 15000 });
+    const per = (p) => calls.filter((c) => c.action === 'app_file' && c.path === p);
+    check('mismatch at save: only the file at fault is rewritten, with the reason, then the app is saved', per('App.js').length === 1 && per('src/theme.js').length === 1 && per('src/screens/HomeScreen.js').length === 2 && /import_mismatch/.test(per('src/screens/HomeScreen.js')[1].fix || '') && commits === 2 && (await h4.page.locator('.apfail').count()) === 0);
+    check('no page errors (repair round)', h4.errors.length === 0 || (console.log(h4.errors), false));
+    await h4.close();
+  }
   process.exit(fails ? 2 : 0);
 })();
