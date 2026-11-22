@@ -17,12 +17,11 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
   check('unsafe banner image/link are dropped', !/javascript:/.test(html));
   check('banner link becomes a button', await p.locator('.slide a.btn[href="https://example.com/sale"]').count() === 1);
   check('logo shown in the hero', await p.locator('.slide .hlogo').count() === 1);
-  check('promo strip starts with the first banner', (await p.locator('#promo-banner .mq span').innerText()) === 'تخفيضات الصيف');
+  check('no promo strip: banners live only in the hero slides', (await p.locator('#promo-banner, .promo').count()) === 0);
   check('page-wide animated background layer', await p.locator('.amb i').count() === 3);
   await p.locator('.dots i').nth(1).click(); await p.waitForTimeout(300);
   check('switching slide shows its image', await p.locator('.himg.on').count() === 1 && (await p.locator('.himg.on').getAttribute('data-k')) === '1');
   await p.waitForTimeout(5000);
-  check('promo strip rotates through the banners', (await p.locator('#promo-banner .mq span').innerText()) === 'وصل حديثاً');
   check('no page errors', errs.length === 0 || (console.log(errs), false));
   // AI page with several banners: writeSD adds the small rotator once
   const ai = '<html><body><div id="promo-banner"><b>عرض</b><a href="#">واتساب</a></div><div id="items-list"><!--sd--><!--/sd--></div><script type="application/json" id="site-data">{"items":[{"n":"a"}]}</script></body></html>';

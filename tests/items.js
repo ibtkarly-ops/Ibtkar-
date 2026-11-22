@@ -52,7 +52,7 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
   check('no page errors', h.errors.length === 0 || (console.log(h.errors), false));
   await h.close();
   // ---- old design -> one-click refresh keeps the customer's items ----
-  const old = html.replace(/id="promo-banner"/g, 'id="x"').replace(/data-animated-bg="/g, 'data-x="').replace('name="ibtikar-tpl" content="6"', 'name="ibtikar-tpl" content="5"');
+  const old = html.replace(/id="promo-banner"/g, 'id="x"').replace(/data-animated-bg="/g, 'data-x="').replace('name="ibtikar-tpl" content="7"', 'name="ibtikar-tpl" content="5"');
   const sd0 = await (async () => { const b = await launch({ role: 'customer' }); await b.open('#/'); const r = await b.page.evaluate(([x]) => readSD(x), [old]); await b.close(); return r; })();
   const ow = { ...w, config: { html: old.replace('{"sample":true,', '{') , brief: { name: 'ملكي', type: 'store', lang: 'ar', phone: '0912345678', desc: 'متجر', color: '#2433ff', style: 'modern' } } };
   const h2 = await launch({ role: 'customer', tables: { websites: [ow], website_versions: [], platform_settings: [{ key: 'public.sites_root_domain', value: '' }, { key: 'public.sites_base_url', value: 'https://x.pages.dev' }] }, rpc: { request_publish: 'd' }, functions: { 'verify-publish': { ok: true, url: 'https://x.pages.dev/royal' } } });
@@ -60,7 +60,7 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
   check('old design shows the refresh banner', true);
   await h2.page.click('[data-act="tplrefresh"]'); await h2.page.waitForTimeout(1200);
   const nv = h2.calls.find((c) => c.method === 'POST' && /website_versions/.test(c.url));
-  check('refresh regenerates the page with the new effects and keeps items', nv && /id="promo-banner"/.test(nv.body.snapshot.html) && /data-animated-bg="/.test(nv.body.snapshot.html));
+  check('refresh regenerates the page with the new effects and keeps items', nv && !/id="promo-banner"/.test(nv.body.snapshot.html) && /data-animated-bg="/.test(nv.body.snapshot.html));
   check('published sites are re-published automatically', h2.calls.some((c) => /rpc\/request_publish/.test(c.url)));
   await h2.close();
   process.exit(fails ? 2 : 0);

@@ -26,14 +26,14 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
         const dna = { ...newDNA(ty), hero, feat };
         const b = { name: 'نموذج', type: ty, lang: 'ar', phone: '0912345678', wa: '0912345678', desc: 'وصف', color: '#0f766e', banner: 'عرض خاص', dna };
         const html = genSite(b), sd = readSD(html);
-        out.push({ ty, hero, feat, ok: !!sd && sd.items.length > 0 && /id="items-list"/.test(html) && /<!--sd-->[\s\S]+<!--\/sd-->/.test(html) && /id="promo-banner"/.test(html) && /data-animated-bg="/.test(html) && /id="wa-float"/.test(html) && (ty !== 'store' || /id="cart"/.test(html)) && /name="ibtikar-tpl" content="6"/.test(html),
+        out.push({ ty, hero, feat, ok: !!sd && sd.items.length > 0 && /id="items-list"/.test(html) && /<!--sd-->[\s\S]+<!--\/sd-->/.test(html) && !/id="promo-banner"/.test(html) && /data-animated-bg="/.test(html) && !/id="wa-float"/.test(html) && (ty !== 'store' || /id="cart"/.test(html)) && /name="ibtikar-tpl" content="7"/.test(html),
           layoutOk: ty === 'store' ? sd.layout === 'cards' : ty === 'restaurant' ? sd.layout === 'menu' : ty === 'company' ? sd.layout === 'svc' : ['svc', 'bento'].includes(sd.layout) });
       }
     }
     return out;
   });
   const bad = res.filter((r) => !r.ok || !r.layoutOk);
-  check(`all ${res.length} hero x layout combinations keep site-data, static items, promo, animated bg, WhatsApp, cart and the v6 mark`, bad.length === 0 || (console.log(bad), false));
+  check(`all ${res.length} hero x layout combinations keep site-data, static items, animated bg, cart and the v7 mark, with no promo strip or floating WhatsApp`, bad.length === 0 || (console.log(bad), false));
 
   // ---- a stored DNA is stable: same brief -> same page; bad values are replaced by valid ones ----
   const stable = await h.page.evaluate(() => {

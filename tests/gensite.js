@@ -29,7 +29,7 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
     if (n === 'store') {
       check('store: no invented prices', sd.sample === true && sd.items.every((i) => !i.p));
       check('store: add-to-cart buttons + cart button', (await p.locator('#items-list .add').count()) === sd.items.length && (await p.locator('#cart-btn').isVisible()));
-      check('store: template version mark', /name="ibtikar-tpl" content="6"/.test(html) && sd.layout === 'cards');
+      check('store: template version mark', /name="ibtikar-tpl" content="7"/.test(html) && sd.layout === 'cards');
       await p.click('#filters button:nth-child(2)'); await p.waitForTimeout(100);
       check('store: category filter works', (await p.locator('#items-list .item').count()) < sd.items.length);
     }
@@ -50,9 +50,9 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
   const royal = { name: 'رويال سكيت', type: 'store', lang: 'both', phone: '0931588884', wa: '0931588884', desc: 'متجر إلكتروني أول ما يدخل خلفية متحركة وبانر إعلاني', notes: 'بانر إعلاني وخلفية متحركة وانيميشن قوي', usp: 'أسرع وأرخص موفر قطع الباتيناج', items: 'Yy|1|', color: '#2433ff', style: 'modern' };
   const fxHtml = await h.page.evaluate((b) => genSite(b), royal);
   const fp = await h.context.newPage(); await fp.setViewportSize({ width: 1280, height: 800 }); await fp.setContent(fxHtml); await fp.waitForTimeout(1500);
-  check('promo banner is the first thing on the page', await fp.evaluate(() => document.body.firstElementChild.id === 'promo-banner'));
+  check('no promo strip at the top of the page', (await fp.locator('#promo-banner, .promo').count()) === 0 && await fp.evaluate(() => document.body.firstElementChild.id !== 'promo-banner'));
   check('animated background layer present (data-animated-bg)', (await fp.locator('.hero [data-animated-bg="aurora"]').count()) === 1 && /@keyframes gs/.test(fxHtml));
-  check('floating WhatsApp button', (await fp.locator('#wa-float').count()) === 1);
+  check('no floating WhatsApp button or bar', (await fp.locator('#wa-float').count()) === 0 && !/id="wa-float"/.test(fxHtml));
   check('store: products come right after the hero (before about)', await fp.evaluate(() => document.querySelector('#items').compareDocumentPosition(document.querySelector('#about')) & Node.DOCUMENT_POSITION_FOLLOWING));
   check('selling point shown as a card', (await fp.locator('#about .card').first().innerText()).includes('الباتيناج'));
   await fp.screenshot({ path: out + '/fx-hero.png' });
@@ -64,7 +64,7 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
     check(bg + ' background renders', (await fp.locator(bg === 'particles' ? '.bg-anim canvas' : '.bg-anim svg').count()) >= 1);
   }
   const off = await h.page.evaluate((b) => genSite({ ...b, bg: 'none', motion: 'none', banner: '', notes: '', desc: 'x', type: 'company', float: '0' }), royal);
-  check('everything can be switched off', !/id="promo-banner"/.test(off) && !/data-animated-bg="/.test(off) && !/id="wa-float"/.test(off));
+  check('the effects can still be switched off, and no strip/float ever exists', !/id="promo-banner"/.test(off) && !/data-animated-bg="/.test(off) && !/id="wa-float"/.test(off));
   const own = await h.page.evaluate((b) => genSite({ ...b, banner: 'خصم 20% هذا الأسبوع' }), royal);
   check('custom banner text is used', /خصم 20% هذا الأسبوع/.test(own));
   await fp.close();

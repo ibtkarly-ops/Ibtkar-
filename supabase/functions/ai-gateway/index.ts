@@ -293,14 +293,10 @@ const APP_PROMPT = `أنت مصمم تطبيقات ويب جوال محترف. �
 // ---- What the customer explicitly asked for must really exist in the page (checked, then repaired) ----
 type Req = { id: string; rule: string; test: (h: string) => boolean };
 export function requirements(brief: any, siteType: string, hasContact: boolean): Req[] {
-  const kwt = [brief?.desc, brief?.notes, brief?.tag, brief?.usp].join(" ");
   const out: Req[] = [];
-  const banner = String(brief?.banner ?? "").trim() || /بانر|إعلان|اعلان|عروض|banner|promo/i.test(kwt) || siteType === "store";
-  if (banner) out.push({ id: "banner", rule: `بانر إعلاني ظاهر أول الصفحة فوق الهيرو: عنصر id="promo-banner" بنص عرض مقنع${brief?.banner ? ` هو حرفياً: «${String(brief.banner).slice(0, 140)}»` : " (صياغة عامة بلا أرقام أو خصومات مخترعة)"} وزر واتساب وزر إغلاق، وبحركة لافتة (لمعان أو تمرير).`, test: (h) => /id=["']promo-banner["']/.test(h) });
   const bg = brief?.bg !== "none" && brief?.motion !== "none";
   if (bg) out.push({ id: "bg", rule: `خلفية متحركة في أعلى الصفحة (الهيرو): عنصر يحمل data-animated-bg="${["aurora", "particles", "waves"].includes(brief?.bg) ? brief.bg : "aurora"}" يملأ الهيرو بحركة مستمرة ناعمة (ألوان متحركة/جزيئات متصلة/أمواج) بـCSS keyframes أو canvas خفيف، ويحترم prefers-reduced-motion، ولا يغطي النصوص.`, test: (h) => /data-animated-bg=/.test(h) && /@keyframes|requestAnimationFrame/.test(h) });
   if (brief?.motion !== "none") out.push({ id: "motion", rule: "حركات دخول عند التمرير (IntersectionObserver) لأقسام وبطاقات الصفحة، وتأثيرات hover للبطاقات والأزرار، وحركة دخول للعنوان الرئيسي.", test: (h) => /IntersectionObserver|animation-timeline/.test(h) });
-  if (brief?.float !== "0" && hasContact) out.push({ id: "float", rule: 'زر واتساب عائم ثابت في زاوية الصفحة: عنصر id="wa-float" برابط https://wa.me/… الحقيقي وبنبض خفيف.', test: (h) => /id=["']wa-float["']/.test(h) && /wa\.me/.test(h) });
   if ((siteType === "store" || siteType === "restaurant") && hasContact) out.push({ id: "cart", rule: 'سلة طلبات واتساب: زر «أضف للسلة» في كل صنف، وزر سلة عائم id="cart-btn" بعدّاد، ولوحة جانبية id="cart" فيها الأصناف بالكمية (+/−/حذف) والمجموع حين تكون الأسعار أرقاماً، وحقلا الاسم والملاحظات، وزر «أرسل الطلب عبر واتساب» يفتح https://wa.me/الرقم?text= برسالة مرتبة (الصنف × الكمية — السعر، ثم المجموع والاسم والملاحظات) مُرمّزة بـencodeURIComponent، وتُحفظ السلة في localStorage. ضع زر السلة في الزاوية المقابلة لزر واتساب العائم.', test: (h) => /id=["']cart["']/.test(h) && /id=["']cart-btn["']/.test(h) && /encodeURIComponent/.test(h) && /wa\.me/.test(h) });
   if (siteType === "store" || siteType === "restaurant") out.push({ id: "order", rule: "ترتيب الأقسام: بانر ← هيرو ← الأصناف/المنتجات مباشرة بعد الهيرو ← من نحن ← كيف تطلب ← أسئلة شائعة ← تواصل.", test: (h) => { const a = h.search(/id=["']items["']/), b = h.search(/id=["']about["']/); return a < 0 || b < 0 || a < b; } });
   return out;

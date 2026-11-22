@@ -408,15 +408,15 @@ Deno.test("build reports which customer-requested features are missing; repair a
   const base = anthropicFake({ text: HTML });
   providerBehavior = (q) => { if (q.url.includes("/v1/messages") && q.body.max_tokens > 16) sent = JSON.stringify(q.body.messages); return base(q); };
   const r = await call("cust", { action: "build", website_id: "site1" });
-  assert(r.json.ok === true && ["banner", "bg", "motion", "float", "cart"].every((x) => r.json.missing.includes(x)), "missing reported: " + JSON.stringify(r.json));
-  assert(sent.includes("promo-banner") && sent.includes("خصم على كل القطع") && sent.includes("must_have"), "requirements sent to the AI with the customer's own banner text");
+  assert(r.json.ok === true && ["bg", "motion", "cart"].every((x) => r.json.missing.includes(x)) && !r.json.missing.includes("banner") && !r.json.missing.includes("float"), "missing reported (no promo strip / floating WhatsApp is ever required): " + JSON.stringify(r.json));
+  assert(!sent.includes("promo-banner") && !sent.includes("wa-float") && sent.includes("must_have"), "no promo strip / floating WhatsApp requirement is sent to the AI");
   assert(sent.includes("cart-btn") && sent.includes("أرسل الطلب عبر واتساب"), "cart requirement sent for a store with WhatsApp");
   assert(sent.includes("banners") && sent.includes("عروض الصيف") && sent.includes("site-assets/s1/b.webp") && !sent.includes("javascript:"), "customer banners (text + own image) sent to the AI, unsafe links dropped");
   const FIXED = HTML.replace("<body>", `<body><div id="promo-banner">x</div><div data-animated-bg="aurora"></div><style>@keyframes a{}</style><script>new IntersectionObserver(()=>{})</script><a id="wa-float" href="https://wa.me/218912345678"></a><button id="cart-btn"></button><aside id="cart"></aside><script>encodeURIComponent("x")</script>`);
   providerBehavior = anthropicFake({ text: FIXED });
   const f = await call("cust", { action: "repair", website_id: "site1" });
   assert(f.json.ok === true && f.json.missing.length === 0, "repaired: " + JSON.stringify(f.json));
-  assert(/promo-banner/.test(T.websites[0].config.html), "repaired page saved");
+  assert(/data-animated-bg/.test(T.websites[0].config.html), "repaired page saved");
   const again = await call("cust", { action: "repair", website_id: "site1" });
   assert(again.json.ok === true && again.json.missing.length === 0, "nothing to repair the second time");
 });

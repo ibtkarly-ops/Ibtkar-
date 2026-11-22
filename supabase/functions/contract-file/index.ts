@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, authorization",
+  "Access-Control-Allow-Headers": "content-type, authorization, apikey, x-client-info",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
@@ -10,7 +10,7 @@ const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SE
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SAFE = {
   status: 1, contract_number: 1, title: 1, created_at: 1, sent_at: 1, received_at: 1, approved_at: 1,
-  original_mime: 1, signed_mime: 1, esign_name: 1, esign_at: 1,
+  original_mime: 1, signed_mime: 1, esign_name: 1, esign_at: 1, kind: 1, body: 1, terms: 1,
 };
 
 function pick(row: Record<string, unknown>) {
@@ -52,6 +52,7 @@ const extFor = (mime: string) => (mime === "application/pdf" ? "pdf" : mime === 
 const ATTEMPTS = new Map<string, number[]>();
 const WINDOW_MS = 5 * 60_000;
 const MAX_ATTEMPTS = 20;
+export const MIN_SIGNATURE_BYTES = 600;
 function rateLimited(key: string): boolean {
   const now = Date.now();
   const hits = (ATTEMPTS.get(key) ?? []).filter((t) => now - t < WINDOW_MS);
@@ -75,7 +76,14 @@ Deno.serve(async (req) => {
     if (rateLimited(`get:${token}:${ip}`)) return json({ error: "rate_limited" }, 429);
     const { data: c } = await db.from("contracts").select("*").eq("share_token", token).maybeSingle();
     if (!c) return json({ error: "not_found" }, 404);
-    if (which === "meta" || !which) return json({ contract: pick(c) });
+    if (which === "meta" || !which) {
+      const out = pick(c) as Record<string, unknown>;
+      if (c.esign_image_path) {
+        const { data: sg } = await db.storage.from("contracts").createSignedUrl(c.esign_image_path, 3600);
+        out.esign_url = sg?.signedUrl ?? null;
+      }
+      return json({ contract: out });
+    }
     const path = which === "original" ? c.original_path : which === "signed" ? c.signed_path : which === "esign" ? c.esign_image_path : null;
     if (!path) return json({ error: "no_file" }, 404);
     const { data: signed, error } = await db.storage.from("contracts").createSignedUrl(path, 300);
@@ -95,34 +103,27 @@ Deno.serve(async (req) => {
   if (c.signed_path || c.esign_image_path) return json({ error: "already_signed" }, 409);
 
   const which = String(b.which ?? "");
-  if (which === "signed") {
-    const mime = String(b.mime ?? "");
-    if (!["application/pdf", "image/jpeg", "image/png", "image/webp"].includes(mime)) return json({ error: "bad_mime" }, 400);
-    let bytes: Uint8Array;
-    try { bytes = b64ToBytes(String(b.file_base64 ?? "")); } catch { return json({ error: "bad_file" }, 400); }
-    if (bytes.length < 200 || bytes.length > 8 * 1024 * 1024) return json({ error: "bad_size" }, 400);
-    const path = `signed/${c.id}.${extFor(mime)}`;
-    const up = await db.storage.from("contracts").upload(path, bytes, { contentType: mime, upsert: false });
-    if (up.error) return json({ error: "upload_failed" }, 500);
-    await db.from("contracts").update({ signed_path: path, signed_mime: mime, status: "received_signed", received_at: new Date().toISOString() }).eq("id", c.id);
-    await db.from("notifications").insert({ user_id: c.customer_id, type: "contract", title: "contract_received" });
-    return json({ ok: true });
-  }
-
   if (which === "esign") {
     const name = String(b.name ?? "").trim().slice(0, 120);
     if (name.length < 2) return json({ error: "name_required" }, 400);
+    if (b.agree !== true) return json({ error: "agree_required" }, 400);
     let bytes: Uint8Array;
     try { bytes = b64ToBytes(String(b.image_base64 ?? "")); } catch { return json({ error: "bad_file" }, 400); }
-    if (bytes.length < 200 || bytes.length > 1024 * 1024) return json({ error: "bad_size" }, 400);
+    // PNG signature + a minimum size: an empty white/transparent canvas encodes to a tiny file
+    if (bytes.length < MIN_SIGNATURE_BYTES || bytes.length > 1024 * 1024 || bytes[0] !== 0x89 || bytes[1] !== 0x50) return json({ error: "empty_signature" }, 400);
     const path = `esign/${c.id}.png`;
     const up = await db.storage.from("contracts").upload(path, bytes, { contentType: "image/png", upsert: false });
     if (up.error) return json({ error: "upload_failed" }, 500);
-    await db.from("contracts").update({
-      esign_image_path: path, esign_name: name, esign_at: new Date().toISOString(),
-      status: "received_signed", received_at: new Date().toISOString(),
-    }).eq("id", c.id);
+    const now = new Date().toISOString();
+    // the status guard in the WHERE keeps two simultaneous signatures from both succeeding
+    const { data: done } = await db.from("contracts").update({
+      esign_image_path: path, esign_name: name, esign_at: now, signed_ip: ip.slice(0, 64), signed_ua: (req.headers.get("user-agent") ?? "").slice(0, 300),
+      status: "received_signed", received_at: now,
+    }).eq("id", c.id).in("status", ["sent", "awaiting_signature"]).is("esign_image_path", null).select("id");
+    if (!done || !done.length) return json({ error: "already_signed" }, 409);
     await db.from("notifications").insert({ user_id: c.customer_id, type: "contract", title: "contract_received" });
+    const { data: admins } = await db.from("profiles").select("id").in("role", ["super_admin", "admin"]).eq("status", "active");
+    if (admins?.length) await db.from("notifications").insert(admins.map((a: { id: string }) => ({ user_id: a.id, type: "contract_signed", title: "contract_signed", body: c.contract_number })));
     return json({ ok: true });
   }
 

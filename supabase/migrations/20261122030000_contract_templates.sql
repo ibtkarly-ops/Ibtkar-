@@ -22,9 +22,12 @@ begin
   return new;
 end $function$;
 
-drop trigger if exists trg_guard_contract_body on public.contracts;
-create trigger trg_guard_contract_body before update on public.contracts for each row execute function public.guard_contract_body();
-
--- admins may delete only drafts (never a contract the customer has seen)
-drop policy if exists ct_del on public.contracts;
-create policy ct_del on public.contracts for delete to authenticated using (public.is_admin() and status = 'draft');
+do $$ begin
+  if not exists (select 1 from pg_trigger where tgname = 'trg_guard_contract_body' and tgrelid = 'public.contracts'::regclass) then
+    create trigger trg_guard_contract_body before update on public.contracts for each row execute function public.guard_contract_body();
+  end if;
+  -- admins may delete only drafts (never a contract the customer has seen)
+  if not exists (select 1 from pg_policy where polname = 'ct_del' and polrelid = 'public.contracts'::regclass) then
+    create policy ct_del on public.contracts for delete to authenticated using (public.is_admin() and status = 'draft');
+  end if;
+end $$;
