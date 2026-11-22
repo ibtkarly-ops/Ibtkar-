@@ -116,6 +116,9 @@ main{animation:in .4s cubic-bezier(.2,.7,.2,1) both}
 .ac-b{max-width:88%;padding:10px 14px;border-radius:14px;white-space:pre-wrap;word-break:break-word;font-size:14.5px;line-height:1.7}.ac-b.u{align-self:flex-start;background:var(--ac);color:#fff}.ac-b.a{align-self:flex-end;background:var(--bg2)}.ac-b.e{align-self:flex-end;background:rgba(220,38,38,.1);color:var(--er)}
 .ac-hello{margin:auto;text-align:center;max-width:46ch}.ac-hello h3{font-size:20px}.ac-hello p{color:var(--tx2);margin:6px 0 14px}.ac-hello .row2{justify-content:center}
 .ac-in{display:flex;gap:10px;padding:12px;border-top:1px solid var(--bd);align-items:flex-end}.ac-in textarea{min-height:48px;max-height:140px}
+.sitechat{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)}.sitechat .ac-msgs{min-height:52vh;max-height:60vh}.sc-pv{padding:0;overflow:hidden;position:sticky;top:80px}.sc-pv iframe{width:100%;height:72vh;border:0;display:block;background:#fff;transition:opacity .25s}.sc-pv iframe.busy{opacity:.45}
+.ac-b .scu{display:block;margin-top:8px}.ac-b.t{align-self:flex-end;background:var(--bg2);color:var(--tx2)}.ac-b.t::after{content:"";display:inline-block;width:1.2em;text-align:start;animation:dots 1.2s steps(4) infinite}@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+@media(max-width:900px){.sitechat{grid-template-columns:1fr}.sc-pv{position:static}.sc-pv iframe{height:60vh}}
 .pwbox{position:relative}.pwbox input{padding-inline-end:46px}.pweye{position:absolute;inset-inline-end:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--tx2);width:36px;height:36px;cursor:pointer;display:grid;place-items:center}
 .auth h2{font-size:26px}.auth-links{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:13.5px}.auth-links a,.auth-alt a{color:var(--ac);font-weight:500}.auth-alt{text-align:center;margin-top:16px;font-size:14px}
 .auth-sep{display:flex;align-items:center;gap:12px;margin:22px 0 14px;color:var(--tx2);font-size:13.5px}.auth-sep::before,.auth-sep::after{content:"";flex:1;height:1px;background:var(--bd)}
@@ -591,6 +594,8 @@ Object.assign(T.ar,{contract_pending:'بانتظار إرسال العقد وت�
 Object.assign(T.en,{contract_pending:'Awaiting the contract to be sent and signed by our team',ctr_pending_tip:'Publishing is blocked until our team sends you a contract and you sign it',ctr_pending_note:'Your site is ready, but it will not publish until our team sends you a service contract and you sign it electronically. We will be in touch soon.',bo_ctr_t:'Your site is ready!',bo_ctr_d:'Our team will send you the contract soon, and your site will publish automatically once it is signed.',ctr_website:'Linked website',ctr_nosite:'No website selected',ctr_storage:'Image storage',ctr_storage_of:'of 20 MB',ctr_storage_full:'This site has used its full image storage (20 MB). Remove an old image to add a new one.'});
 Object.assign(T.ar,{contract_ready:'لديك عقد ينتظر توقيعك',contract_approved:'تم اعتماد عقدك',contract_received:'استلمنا عقدك الموقّع، بانتظار اعتماد الإدارة',ctr_tap_sign:'اضغط لعرض العقد وتوقيعه',ctr_tap_view:'اضغط لعرض عقودك',admin_viewing:'تتصفّح موقع: ',admin_viewing_s:' — بصفتك أدمن',admin_back:'كل المواقع',more:'المزيد',try_other_t:'تصميم فريد لموقعك',try_other_d:'لا يتكرر تصميم موقعك عند غيرك. جرّب تصميماً مختلفاً كلياً بضغطة، وتبقى نصوصك وأصنافك كما هي.',try_other:'جرّب تصميماً آخر'});
 Object.assign(T.en,{contract_ready:'You have a contract waiting for your signature',contract_approved:'Your contract has been approved',contract_received:'We received your signed contract, awaiting admin approval',ctr_tap_sign:'Tap to view and sign the contract',ctr_tap_view:'Tap to view your contracts',admin_viewing:'Browsing website: ',admin_viewing_s:' — as admin',admin_back:'All websites',more:'More',try_other_t:'A one-of-a-kind design',try_other_d:'Your site design is not repeated elsewhere. Try a completely different look in one tap; your texts and items stay as they are.',try_other:'Try another design'});
+Object.assign(T.ar,{tab_requests:'التعديلات',requests:'التعديلات',tab_chat:'شات الذكاء',bo_wait:'نكتب نصوص موقعك ونرسم تصميمه الفريد… ثوانٍ قليلة.',ed_ask:'اكتب التعديل الذي تريده',ed_ph:'مثال: غيّر اللون للأخضر، أضف قسم أسعار بثلاث باقات، اجعل العنوان «أفضل قهوة في طرابلس»',ed_hint:'ينفّذه الذكاء الاصطناعي فوراً، وتقدر تتراجع بضغطة.',ed_send:'نفّذ التعديل',ed_done:'تم',ed_pending:'لم يُنفّذ',ed_runnow:'نفّذ الآن',ed_ok:'تم تنفيذ التعديل',ed_undo:'تراجع',ed_undone:'تم التراجع',ed_working:'نعدّل موقعك الآن',ed_working_s:'الذكاء الاصطناعي ينفّذ طلبك… ثوانٍ قليلة.',ed_page_d:'كل تعديل يُنفَّذ فوراً بالذكاء الاصطناعي ويُحفظ كنسخة يمكن التراجع عنها.',ed_result:'النتيجة',edits_limit:'وصلت لحد التعديلات اليومي لهذا الموقع، جرّب غداً.',sc_hello:'شات الذكاء لهذا الموقع',sc_hello_d:'اكتب ما تريد تغييره وسترى النتيجة فوراً في المعاينة. كل رد يمكن التراجع عنه.',sc_ex1:'صمّم الموقع بشكل مختلف كلياً',sc_ex2:'غيّر الألوان لتكون أفخم',sc_ex3:'أضف قسم أسعار بثلاث باقات',sc_ex4:'اكتب عنواناً رئيسياً أقوى',sc_ph:'اكتب طلبك… (Enter للإرسال، Shift+Enter لسطر جديد)',sc_working:'يعدّل'});
+Object.assign(T.en,{tab_requests:'Edits',requests:'Edits',tab_chat:'AI chat',bo_wait:'Writing your copy and drawing your unique design… a few seconds.',ed_ask:'Describe the change you want',ed_ph:'e.g. make it green, add a pricing section with three plans, change the headline',ed_hint:'The AI applies it right away, and you can undo in one tap.',ed_send:'Apply change',ed_done:'Done',ed_pending:'Not applied',ed_runnow:'Run now',ed_ok:'Change applied',ed_undo:'Undo',ed_undone:'Undone',ed_working:'Editing your site',ed_working_s:'The AI is applying your request… a few seconds.',ed_page_d:'Every edit is applied instantly by AI and saved as a version you can undo.',ed_result:'Result',edits_limit:'Daily edit limit reached for this site, try tomorrow.',sc_hello:'AI chat for this site',sc_hello_d:'Type what to change and watch the preview update. Every reply can be undone.',sc_ex1:'Redesign the site completely',sc_ex2:'Make the colours more premium',sc_ex3:'Add a pricing section with three plans',sc_ex4:'Write a stronger headline',sc_ph:'Type your request… (Enter to send, Shift+Enter for a new line)',sc_working:'Editing'});
 Object.assign(T.en,{slow:'The connection is slow or stalled.',retry:'Try again',resetsession:'Clear session and reload',timeout:'Request timed out, please try again',network:'Could not reach the network',session_timeout:'Session is slow, please retry',not_signed_in:'Please sign in first',verify_failed:'Could not verify the publish',bo_tpl_note:'Published with a basic design because the AI was unavailable'});
 let L=localStorage.getItem('lang')||'ar';
 const t=k=>T[L][k]??k;
@@ -693,6 +698,8 @@ async function vPricing(){
 const SNACK='https://snack.expo.dev/';
 const snackUrl=(name,code,embed)=>SNACK+(embed?'embedded':'')+'?name='+encodeURIComponent(name||'IBTIKAR App')+'&platform='+(embed?'web':'android')+'&dependencies='+encodeURIComponent('@expo/vector-icons')+(embed?'&preview=true&theme=light':'')+(code?'&code='+encodeURIComponent(code):'');
 const acBubble=(r,m)=>`<div class="ac-b ${r==='user'?'u':r==='err'?'e':'a'}">${esc(m)}</div>`;
+const scBubble=(m,id)=>m.role==='user'?`<div class="ac-b u">${esc(m.content)}</div>`:m.role==='err'?`<div class="ac-b e">${esc(m.content)}</div>`:`<div class="ac-b a">${esc(m.content)}${m.v?`<button type="button" class="btn s sm scu" data-act="edundo" data-site="${id}" data-v="${m.v}">${t('ed_undo')}</button>`:''}</div>`;
+let LAST_EDIT=null;
 async function appsBody(base){
   base=base||'#/app/apps';
   if(!isSuper())return `<div class="soon"><span class="chip wa">${t('soon')}</span><h2 style="font-size:34px;margin:14px 0 8px">${t('appsT')}</h2><p style="color:var(--tx2);max-width:52ch;margin:0 auto 22px">${t('appsD')}</p>
@@ -791,16 +798,24 @@ function boSet(title,sub){const el=$('#bo');if(!el)return;el.querySelector('h2')
 function boDone(title,sub,btns,err){const el=$('#bo');if(!el)return;el.className='bo '+(err?'err':'ok');boSet(title,sub);document.querySelectorAll('#bo .bo-s li').forEach(li=>li.className=err?li.className:'done');el.querySelector('.bo-a').innerHTML=btns.join('');
   if(!err&&!matchMedia('(prefers-reduced-motion:reduce)').matches){for(let i=0;i<46;i++){const c=document.createElement('i');c.className='conf';c.style.left=Math.random()*100+'%';c.style.background=['#2433ff','#00c2a8','#f59e0b','#5b4bff','#16a34a'][i%5];c.style.animationDelay=Math.random()*.6+'s';el.append(c);setTimeout(()=>c.remove(),3200)}}}
 function boClose(){const el=$('#bo');if(el)el.remove()}
-async function runApply(id,sid){
-  boOpen(t('mr_applying'),t('mr_applying_s'),[]);
-  const j=await fnPost('ai-gateway',{action:'apply',request_id:id},{ms:120000});
-  if(!j.ok){boDone(t('err'),errText(j.error)||t('err'),[`<button class="btn p lg" data-act="aiapply" data-id="${id}" data-site="${sid||''}">${t('mr_apply')}</button>`,`<button class="btn s lg" data-act="boclose">×</button>`],true);return}
-  if(sid){
-    const pub=await autoPublish(sid);
-    if(pub.ok){boDone(t('mr_done'),t('mr_done_s')+' · '+t('pubok'),[`<a class="btn p lg" href="${esc(pub.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`]);return}
-  }
-  boDone(t('mr_done'),t('mr_done_s'),[`<button class="btn p lg" data-act="boview" data-id="${sid||''}">${t('preview')}</button>`,`<button class="btn s lg" data-act="boclose">×</button>`]);
+/* التعديل الفوري: الوصف ← الذكاء يرجع تعديلاً صغيراً على مواصفات الموقع ← نعيد الرسم ونحفظ نسخة (للتراجع) وننشر إن كان منشوراً */
+const dnaChoices=ty=>({hero:dnaList('hero',ty),feat:dnaList('feat',ty),font:FONTS.map(f=>f[0]),pal:DNA_OPT.pal,page:DNA_OPT.page,ht:DNA_OPT.ht,shape:DNA_OPT.shape,deco:DNA_OPT.deco,btn:DNA_OPT.btn,head:DNA_OPT.head});
+async function runEdit(id,instruction,history,onChat){
+  const w0=await sb.from('websites').select('site_type').eq('id',id).single();if(w0.error)throw w0.error;
+  const j=await fnPost('ai-gateway',{action:'edit',website_id:id,instruction,history:history||[],choices:dnaChoices(w0.data.site_type)},{ms:110000});
+  if(!(j&&j.ok))return j||{ok:false,error:'err'};
+  const w=await sb.from('websites').select('config,name,site_type,status').eq('id',id).single();if(w.error)throw w.error;
+  const s=specOf(w.data),brief={...j.brief};delete brief._data;
+  brief.dna=j.redesign?newDNA(brief.type):(cleanDNA(brief.dna,brief.type)||s.brief.dna);
+  const data=j.items?{items:j.items}:s.data;
+  const vv=await sb.from('website_versions').select('version').eq('website_id',id).order('version',{ascending:false}).limit(1);
+  const before=vv.data?.[0]?.version||0,html=genSite(data?{...brief,_data:data}:brief);
+  if(!before)await saveHtml(id,w.data.config?.html||html,'before-edit',{brief:s.brief});
+  await saveHtml(id,html,'edit: '+instruction.slice(0,150),{brief,...(onChat?{ai_chat:onChat(j.reply,before||1)}:{})});
+  const pub=w.data.status==='published'?await autoPublish(id):null;
+  return{ok:true,reply:j.reply,html,before:before||1,pub};
 }
+
 /* ----- chart helpers ----- */
 function series(rows,n,val,key){key=key||'created_at';const out=Array(n).fill(0),t0=Date.now();
   rows.forEach(r=>{const i=n-1-Math.floor((t0-new Date(r[key]).getTime())/DAY);if(i>=0&&i<n)out[i]+=val?Number(val(r))||0:1});return out}
@@ -843,7 +858,7 @@ const reqRow=r=>`<tr><td>${esc(r.websites&&r.websites.name)}<br><small style="co
 
 async function vCDash(){
   const [ws,tk,sub,nt]=await Promise.all([
-    sb.from('websites').select('id,name,status,site_type,created_at,updated_at').order('updated_at',{ascending:false}),
+    sb.from('websites').select('id,name,status,site_type,created_at,updated_at').neq('site_type','app').order('updated_at',{ascending:false}),
     sb.from('support_tickets').select('id,status').neq('status','closed'),
     sb.from('subscriptions').select('plans(name_ar,name_en,websites_limit)').eq('status','active').limit(1),
     sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(5)]);
@@ -899,9 +914,10 @@ async function vSites(){
   return shell(SIDE_C(),'#/app/sites',`<div class="ph"><h1>${t('mysites')}</h1><span class="sp"></span><a class="btn p" href="#/app/new">${t('newsite')}</a></div>`+(data&&data.length?`<div class="grid sgrid">${data.map(w=>{if(w.config&&w.config.html)THUMBS[w.id]=w.config.html;return `<a class="card h scard" href="#/app/site/${w.id}"><div class="sthumb">${w.config&&w.config.html?`<div class="fr" data-thumb="${w.id}"></div>`:`<div class="noth">${ic('globe')}</div>`}</div><div class="row2"><h3>${esc(w.name)}</h3><span class="sp"></span>${stChip(w.status)}</div><p>${esc(w.site_type||'')}</p><p style="font-size:12px;margin-top:10px">${fmtD(w.updated_at)}</p></a>`}).join('')}</div>`:`<div class="empty">${t('nosites')}<br><br><a class="btn p" href="#/app/new">${t('newsite')}</a></div>`));
 }
 async function vCRequests(){
-  const {data}=await sb.from('modification_requests').select('*,websites(name)').order('created_at',{ascending:false});
-  return shell(SIDE_C(),'#/app/requests',`<div class="ph"><h1>${t('requests')}</h1></div>`+tbl([t('sname'),t('message'),t('status'),t('price'),''],(data||[]).map(r=>`<tr><td>${esc(r.websites&&r.websites.name)}</td><td>${esc(r.description).slice(0,80)}</td><td><span class="chip">${t(r.status==='in_progress'?'in_progress_':r.status)}</span></td><td>${r.final_price!=null?Number(r.final_price):'—'}</td><td class="row2">${r.status==='quoted'?`<button class="btn p sm" data-act="aiaccept" data-id="${r.id}">${t('accept')}</button><button class="btn d sm" data-act="respond" data-id="${r.id}" data-to="false">${t('reject')}</button>`:''}</td></tr>`)));
+  const {data}=await sb.from('modification_requests').select('*,websites(name)').order('created_at',{ascending:false}).limit(100);
+  return shell(SIDE_C(),'#/app/requests',`<div class="ph"><h1>${t('requests')}</h1></div><p style="color:var(--tx2);margin-bottom:14px">${t('ed_page_d')}</p>`+edTable(data,false));
 }
+const edTable=(data,adm)=>tbl([t('sname'),t('message'),t('ed_result'),t('when'),''],(data||[]).map(r=>`<tr><td>${esc(r.websites&&r.websites.name)}${adm&&r.profiles?`<br><small>${esc(r.profiles.full_name)}</small>`:''}</td><td>${esc(String(r.description).slice(0,120))}</td><td><span class="chip ${r.status==='done'?'ok':''}">${r.status==='done'?t('ed_done'):t('ed_pending')}</span>${r.ai_reason?`<br><small style="color:var(--tx2)">${esc(String(r.ai_reason).slice(0,160))}</small>`:''}</td><td>${fmtD(r.created_at)}</td><td><a class="btn s sm" href="#/app/site/${r.website_id}/requests">${t('open_')}</a></td></tr>`));
 function vSettings(){
   return shell(SIDE_C(),'#/app/settings',`<div class="ph"><h1>${t('profile')}</h1></div><div class="grid">
   <form data-form="profile" class="card"><label style="margin-top:0">${t('name')}</label><input name="name" value="${esc(prof.full_name||'')}" required maxlength="80"><br><br><button class="btn p">${t('save')}</button></form>
@@ -1037,7 +1053,7 @@ function specOf(w){
   if(sd&&!sd.sample){if(sd.logo&&!bf.logo)bf.logo=sd.logo;if(sd.cur&&!bf.cur)bf.cur=sd.cur}
   if(sd&&sd.banners&&!(bf.banners&&bf.banners.length))bf.banners=sd.banners;
   bf.dna=cleanDNA(bf.dna,bf.type)||newDNA(bf.type);
-  return{brief:bf,data:sd&&!sd.sample?sd:null};
+  return{brief:bf,data:sd&&Array.isArray(sd.items)&&sd.items.length?sd:null};
 }
 /* يرسم الصفحة ويحفظها مع الـbrief في نفس النسخة، فيستعيد «تراجع» الاثنين معاً */
 const renderSave=(id,brief,data,note)=>saveHtml(id,genSite(data?{...brief,_data:data}:brief),note,{brief});
@@ -1091,14 +1107,15 @@ async function vSite(id,tab){
   const {data:w}=await sb.from('websites').select('*').eq('id',id).maybeSingle();
   const S=SIDE_C();
   if(!w)return shell(S,'#/app/sites',`<div class="empty">404</div>`);
+  if(w.site_type==='app'){location.replace('#/admin/apps/'+id);return ''}
   const asAdmin=isAdm()&&w.owner_id!==me.id;
   let adminBanner='';
   if(asAdmin){
     const {data:op}=await sb.from('profiles').select('full_name').eq('id',w.owner_id).maybeSingle();
     adminBanner=`<div class="card" style="margin-bottom:14px;border-color:var(--ac);display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span>${t('admin_viewing')}<b>${esc(w.name)}${op?.full_name?' — '+esc(op.full_name):''}</b>${t('admin_viewing_s')}</span><span class="sp"></span><a class="btn s sm" href="#/admin/sites">${t('admin_back')}</a></div>`;
   }
-  const tabs=['overview','items','details','analytics','versions','requests','domains'].filter(x=>!(w.site_type==='app'&&x==='items')),html=w.config?.html||'';
-  const TI={overview:'globe',items:'shop',details:'list',analytics:'chart',versions:'pulse',requests:'chat',domains:'server'};SHEET_EXTRA={title:w.name,cur:'#/app/site/'+id+'/'+tab,items:tabs.map(x=>['#/app/site/'+id+'/'+x,t('tab_'+x),TI[x]])};
+  const tabs=['overview','items','requests',...(isAdm()?['chat']:[]),'details','analytics','versions','domains'],html=w.config?.html||'';
+  const TI={overview:'globe',items:'shop',details:'list',analytics:'chart',versions:'pulse',requests:'bolt',chat:'chat',domains:'server'};SHEET_EXTRA={title:w.name,cur:'#/app/site/'+id+'/'+tab,items:tabs.map(x=>['#/app/site/'+id+'/'+x,t('tab_'+x),TI[x]])};
   const {data:pss}=await sb.from('platform_settings').select('key,value').in('key',['public.sites_base_url','public.sites_root_domain']);const root=((pss||[]).find(x=>x.key==='public.sites_root_domain')||{}).value||'',pbase=((pss||[]).find(x=>x.key==='public.sites_base_url')||{}).value||'';const hostOk=!!(pss&&pss.length);
   const needsCtr=w.status!=='published';let ctrCleared=true;
   if(needsCtr){const cr=await sb.rpc('site_is_contract_cleared',{p_site:id});ctrCleared=!!cr.data}
@@ -1137,9 +1154,16 @@ async function vSite(id,tab){
     b=tbl(['#',t('message'),t('when'),''],(data||[]).map(v=>`<tr><td>${v.version}</td><td>${esc(v.note||'')}</td><td>${fmtD(v.created_at)}</td><td><button class="btn s sm" data-act="restore" data-site="${id}" data-v="${v.version}">${t('restore')}</button></td></tr>`));
   }
   if(tab==='requests'){
-    const {data}=await sb.from('modification_requests').select('*').eq('website_id',id).order('created_at',{ascending:false});
-    b=`<form data-form="modreq" data-id="${id}" class="card" style="margin-bottom:18px"><label style="margin-top:0">${t('mr_ask')}</label><textarea name="d" required maxlength="2000" placeholder="${esc(t('mr_ph'))}"></textarea><br><br><button class="btn p">${t('mr_send')}</button></form>`+
-    (data||[]).map(r=>`<div class="card rq"><div class="row2"><b>${esc(r.description).slice(0,140)}</b><span class="sp"></span><span class="chip">${t(r.status==='in_progress'?'in_progress_':r.status)}</span></div>${r.status==='quoted'?`<div class="pricecard"><small>${t('mr_price')}</small><strong>$${Number(r.final_price)}</strong><p>${esc(r.ai_reason||'')}</p><div class="row2"><button class="btn p" data-act="aiaccept" data-id="${r.id}" data-site="${id}">${t('mr_accept')}</button><button class="btn d" data-act="respond" data-id="${r.id}" data-to="false">${t('reject')}</button></div></div>`:''}${r.status==='submitted'?`<br><button class="btn s sm" data-act="aiquote" data-id="${r.id}">${t('mr_getprice')}</button>`:''}${r.status==='approved'?`<br><button class="btn p sm" data-act="aiapply" data-id="${r.id}" data-site="${id}">${t('mr_apply')}</button>`:''}</div>`).join('');
+    const {data}=await sb.from('modification_requests').select('*').eq('website_id',id).order('created_at',{ascending:false}).limit(40);
+    const le=LAST_EDIT&&LAST_EDIT.id===id?LAST_EDIT:null;LAST_EDIT=null;
+    b=(le?`<div class="card" style="margin-bottom:18px;border-color:var(--ok)"><div class="row2"><b>${t('ed_ok')}</b><span class="sp"></span>${le.pub&&le.pub.ok?`<a class="btn s sm" href="${esc(le.pub.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`:''}<button class="btn s sm" data-act="edundo" data-site="${id}" data-v="${le.before}">${t('ed_undo')}</button></div><p style="margin-top:8px">${esc(le.reply)}</p><iframe sandbox="allow-scripts" srcdoc="${esc(html)}" style="margin-top:12px;height:420px"></iframe></div>`:'')+`<form data-form="edreq" data-id="${id}" class="card" style="margin-bottom:18px"><label style="margin-top:0">${t('ed_ask')}</label><textarea name="d" required maxlength="1500" placeholder="${esc(t('ed_ph'))}"></textarea><div class="row2" style="margin-top:12px"><span style="color:var(--tx2);font-size:13px">${t('ed_hint')}</span><span class="sp"></span><button class="btn p">${t('ed_send')}</button></div></form><div id="edres"></div>`+
+    (data||[]).map(r=>`<div class="card rq"><div class="row2"><b>${esc(r.description).slice(0,160)}</b><span class="sp"></span><span class="chip ${r.status==='done'?'ok':''}">${r.status==='done'?t('ed_done'):t('ed_pending')}</span></div>${r.status==='done'&&r.ai_reason?`<p style="color:var(--tx2);font-size:14px;margin-top:6px">${esc(r.ai_reason)}</p>`:''}${r.status!=='done'&&r.status!=='rejected'?`<button class="btn s sm" style="margin-top:10px" data-act="edrun" data-id="${id}" data-text="${esc(r.description)}">${t('ed_runnow')}</button>`:''}<small style="color:var(--tx2);display:block;margin-top:6px">${fmtD(r.created_at)}</small></div>`).join('');
+  }
+  if(tab==='chat'&&isAdm()){
+    const chat=Array.isArray(w.config?.ai_chat)?w.config.ai_chat:[];
+    b=`<div class="appchat sitechat"><div class="card ac-chat"><div class="ac-msgs" id="scm">${chat.length?chat.map(m=>scBubble(m,id)).join(''):`<div class="ac-hello"><h3>${t('sc_hello')}</h3><p>${t('sc_hello_d')}</p><div class="row2">${['sc_ex1','sc_ex2','sc_ex3','sc_ex4'].map(k=>`<button type="button" class="chip pk" data-act="scex">${t(k)}</button>`).join('')}</div></div>`}</div>
+      <form data-form="sitechat" data-id="${id}" class="ac-in"><textarea name="m" required maxlength="1500" placeholder="${esc(t('sc_ph'))}" rows="2"></textarea><button class="btn p">${t('c_send')}</button></form></div>
+      <div class="card sc-pv"><iframe id="scprev" title="preview" sandbox="allow-scripts" srcdoc="${esc(html)}"></iframe></div></div>`;
   }
   if(tab==='domains'){
     const {data}=await sb.from('domains').select('*').eq('website_id',id).order('created_at');
@@ -1556,20 +1580,20 @@ function siteFX(C){
 
 
 const intlNum=x=>{let q=String(x||'').trim().replace(/[^\d+]/g,'');if(!q)return'';if(q[0]==='+')return q.slice(1);if(q.startsWith('00'))return q.slice(2);if(q[0]==='0')return '218'+q.slice(1);return q.length<=9?'218'+q:q};
-/* خط البناء بالذكاء الاصطناعي على مراحل (كل مرحلة طلب مستقل بمهلة كاملة): خطة ← بناء ← إكمال ما ينقص */
-async function aiPipeline(id,stage){
-  stage=stage||(()=>{});
-  stage(0);await fnPost('ai-gateway',{action:'plan',website_id:id},{ms:45000});          // الخطة اختيارية: فشلها لا يوقف البناء
-  stage(1);let j=await fnPost('ai-gateway',{action:'build',website_id:id},{ms:150000});
+/* البناء بالذكاء: يكتب الذكاء النصوص كلها (رد صغير يعمل مع المزوّدات المجانية) ثم يرسم المحرك التصميم الفريد.
+   صفحة عاملة تُحفظ أولاً دائماً، فإن تعطّل الذكاء يبقى الموقع بتصميمه الفريد ونصوص جاهزة */
+async function aiDesign(id,brief,data){
+  const j=await fnPost('ai-gateway',{action:'design',website_id:id},{ms:110000});
   if(!(j&&j.ok))return{ok:false,error:(j&&j.error)||'err',detail:j&&j.detail};
-  let missing=j.missing||[];
-  if(missing.length){stage(2);const r=await fnPost('ai-gateway',{action:'repair',website_id:id},{ms:150000});if(r&&r.ok)missing=r.missing||[]}
-  return{ok:true,missing,model:j.model};
+  const nb={...brief,copy:j.copy};
+  await renderSave(id,nb,data||(j.items?{sample:true,items:j.items}:null),'design');
+  return{ok:true,model:j.model};
 }
 async function buildSite(id,b,note){
-  await saveHtml(id,genSite(b),note||'initial');           // a working page always exists first
+  const {_data,...brief}=b;brief.dna=cleanDNA(brief.dna,brief.type)||newDNA(brief.type);
+  await renderSave(id,brief,_data||null,note||'initial');
   LAST_AI_ERR='';
-  const j=await aiPipeline(id);
+  const j=await aiDesign(id,brief,_data||null);
   if(j.ok)return'ai';
   LAST_AI_ERR=j.error||'';LAST_AI_DETAIL=j.detail||'';
   return'tpl';
@@ -1712,9 +1736,7 @@ async function vAdmin(sub){
   if(sub&&sub.startsWith('tickets/'))return shell(S,'#/admin/tickets',await thread(sub.slice(8),'#/admin/tickets',true));
   if(sub==='requests'){
     const {data}=await sb.from('modification_requests').select('*,websites(name),profiles!user_id(full_name)').order('created_at',{ascending:false}).limit(200);
-    return shell(S,'#/admin/requests',`<h2>${t('requests')}</h2><br>`+tbl([t('sname'),t('message'),t('level'),t('status'),t('price'),''],(data||[]).map(r=>`<tr><td>${esc(r.websites?.name)}<br><small>${esc(r.profiles?.full_name)}</small></td><td>${esc(r.description).slice(0,90)}</td><td>${t(r.level)}</td><td><span class="chip">${t(r.status==='in_progress'?'in_progress_':r.status)}</span></td>
-    <td>${r.final_price!=null?Number(r.final_price):'—'}${r.ai_reason?'<br><small style="color:var(--tx2)">'+esc(r.ai_reason)+'</small>':''}</td>
-    <td>${['submitted','analyzing'].includes(r.status)?`<button class="btn s sm" data-act="quote" data-id="${r.id}">${t('retryprice')}</button>`:''}</td></tr>`)));
+    return shell(S,'#/admin/requests',`<h2>${t('requests')}</h2><p style="color:var(--tx2);margin:6px 0 14px">${t('ed_page_d')}</p>`+edTable(data,true));
   }
   if(sub==='invoices'){
     const [{data},{data:us}]=await Promise.all([sb.from('invoices').select('*,profiles(full_name)').order('created_at',{ascending:false}).limit(200),sb.from('profiles').select('id,full_name').order('full_name').limit(500)]);
@@ -1912,9 +1934,12 @@ document.addEventListener('click',async e=>{
       if(r.ok)boDone(t('bo_live'),r.url,[`<a class="btn p lg" href="${esc(r.url)}" target="_blank" rel="noopener">${t('openlive')}</a>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`]);
       else boDone(t('pubfail'),errText(r.error),[`<button class="btn p lg" data-act="bopublish" data-id="${sid}">${t('send')}</button>`,`<button class="btn s lg" data-act="boview" data-id="${sid}">${t('bo_manage')}</button>`],true);
       return}
-    if(a==='aiquote'){const j=await fnPost('ai-gateway',{action:'quote',request_id:id});if(!j.ok)throw new Error(t(j.error||'err'))}
-    if(a==='aiaccept'){const r=await sb.rpc('respond_quote',{p_id:id,p_accept:true});if(r.error)throw r.error;await runApply(id,b.dataset.site);return}
-    if(a==='aiapply'){await runApply(id,b.dataset.site);return}
+    if(a==='edundo'){const sid=b.dataset.site;if(!confirm(t('ed_undo')+'?')){b.disabled=false;return}const r=await sb.rpc('restore_version',{p_site:sid,p_version:+b.dataset.v});if(r.error)throw r.error;
+      const w=await sb.from('websites').select('status').eq('id',sid).single();if(w.data&&w.data.status==='published'){const p=await autoPublish(sid);if(!p.ok)throw new Error(t('pubfail')+': '+errText(p.error))}
+      if(b.closest('#scm')){const pv=$('#scprev'),w2=await sb.from('websites').select('config').eq('id',sid).single();if(pv&&w2.data)pv.srcdoc=w2.data.config.html||'';b.remove();toast(t('ed_undone'));return}
+      toast(t('ed_undone'));render({keep:true});return}
+    if(a==='edrun'){const f=document.querySelector('form[data-form="edreq"]');if(f){f.elements.d.value=b.dataset.text;f.requestSubmit()}b.disabled=false;return}
+    if(a==='scex'){const ta=document.querySelector('form[data-form="sitechat"] textarea');ta.value=b.textContent;ta.focus();b.disabled=false;return}
     if(a==='saveprompt'){const ta=$('#pr_'+b.dataset.key);if(!ta||ta.value.trim().length<20)throw new Error(t('err'));const r=await sb.from('ai_prompts').update({body:ta.value,updated_by:me.id,updated_at:new Date().toISOString()}).eq('key',b.dataset.key);if(r.error)throw r.error;await audit('prompt.update','ai_prompts',{key:b.dataset.key});toast(t('saved'));b.disabled=false;return}
     if(a==='theme'){document.body.classList.toggle('dark');localStorage.setItem('theme',document.body.classList.contains('dark')?'dark':'light');b.disabled=false;return}
     if(a==='range'){const c=ST[b.dataset.id],n=+b.dataset.n,box=$('#ch-'+b.dataset.id);if(c&&box){box.innerHTML=area(c.v.slice(-n),c.l.slice(-n));b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))}b.disabled=false;return}
@@ -1927,8 +1952,6 @@ document.addEventListener('click',async e=>{
     if(a==='deldom'){const r=await sb.from('domains').delete().eq('id',id);if(r.error)throw r.error}
     if(a==='readall'){const r=await sb.from('notifications').update({read_at:new Date().toISOString()}).is('read_at',null).eq('user_id',me.id);if(r.error)throw r.error}
     if(a==='restore'){if(!confirm(t('restore')+'?'))return;const r=await sb.rpc('restore_version',{p_site:b.dataset.site,p_version:+b.dataset.v});if(r.error)throw r.error}
-    if(a==='respond'){const r=await sb.rpc('respond_quote',{p_id:id,p_accept:b.dataset.to==='true'});if(r.error)throw r.error}
-    if(a==='quote'){b.textContent=t('pricing_now');const j=await gw({action:'quote',request_id:id});if(!j.ok)throw new Error(j.error||t('err'))}
     if(a==='paid'){const r=await sb.from('invoices').update({status:'paid'}).eq('id',id);if(r.error)throw r.error;await audit('invoice.paid','invoices',{id})}
     if(a==='runcheck'){const j=await fx('uptime-check',{},120000);if(j.error)throw new Error(errText(j.error)||t('err'));toast(t('checked')+': '+j.checked);render({keep:true});return}
     if(a==='ctrsend'){const r=await sb.from('contracts').update({status:'sent',sent_at:new Date().toISOString()}).eq('id',id).eq('status','draft').select('customer_id,share_token').single();if(r.error)throw r.error;await audit('contract.send','contracts',{id});if(r.data)try{await sb.from('notifications').insert({user_id:r.data.customer_id,type:'contract_ready',title:'contract_ready',body:r.data.share_token})}catch(e){}}
@@ -1994,6 +2017,8 @@ document.addEventListener('change',e=>{
   if(e.target.id==='ctrcust'){const si=document.getElementById('ctrsite');if(si){[...si.options].forEach(o=>{if(o.value)o.hidden=o.dataset.owner!==e.target.value});si.value=''}}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.body.classList.remove('dr-open')});
+/* الشات: Enter يرسل، Shift+Enter سطر جديد */
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.shiftKey||e.isComposing||e.target.tagName!=='TEXTAREA')return;const f=e.target.closest('form[data-form="sitechat"],form[data-form="appmsg"]');if(f){e.preventDefault();f.requestSubmit()}});
 document.addEventListener('click',e=>{if(e.target.closest('.dr-i:not([data-act="logout"])'))document.body.classList.remove('dr-open')});
 document.addEventListener('submit',async e=>{
   const f=e.target.closest('[data-form]');if(!f)return;e.preventDefault();
@@ -2006,9 +2031,21 @@ document.addEventListener('submit',async e=>{
     if(k==='banner'){const r=await sb.from('banners').insert({placement:d.placement,title_ar:d.ar,title_en:d.en,link:d.link||null});if(r.error)throw r.error;await audit('banner.add','banners',{});toast(t('saved'));render({keep:true});return}
     if(k==='ticket'){const r=await sb.from('support_tickets').insert({user_id:me.id,subject:d.subject}).select().single();if(r.error)throw r.error;const m=await sb.from('ticket_messages').insert({ticket_id:r.data.id,author_id:me.id,body:d.body});if(m.error)throw m.error;location.hash='#/app/support/'+r.data.id;return}
     if(k==='reply'){const r=await sb.from('ticket_messages').insert({ticket_id:f.dataset.id,author_id:me.id,body:d.body});if(r.error)throw r.error;toast(t('sent'));render({keep:true});return}
-    if(k==='modreq'){const r=await sb.from('modification_requests').insert({website_id:f.dataset.id,user_id:me.id,description:d.d}).select().single();if(r.error)throw r.error;
-      toast(t('mr_analyzing'));const j=await fnPost('ai-gateway',{action:'quote',request_id:r.data.id});
-      if(j&&j.error&&j.error!=='service_not_configured')throw new Error(t(j.error));toast(j&&j.ok?t('mr_priced'):t('mr_wait'));render({keep:true});return}
+    if(k==='edreq'){
+      const id=f.dataset.id,m=(d.d||'').trim();if(m.length<2)throw new Error(t('err'));
+      boOpen(t('ed_working'),t('ed_working_s'),[]);
+      const r=await runEdit(id,m,[]);
+      if(!r.ok){boDone(t('err'),errText(r.error)+(r.detail?' ('+String(r.detail).slice(0,120)+')':''),[`<button class="btn s lg" data-act="boclose">×</button>`],true);btn.disabled=false;return}
+      boClose();LAST_EDIT={id,reply:r.reply,before:r.before,pub:r.pub};toast(t('ed_ok'));render({keep:true});return}
+    if(k==='sitechat'){
+      const id=f.dataset.id,m=(d.m||'').trim();if(!m)return;
+      const box=$('#scm'),hello=box.querySelector('.ac-hello'),pv=$('#scprev');if(hello)hello.remove();
+      box.insertAdjacentHTML('beforeend',scBubble({role:'user',content:m},id)+`<div class="ac-b t" id="sctyping">${esc(t('sc_working'))}</div>`);box.scrollTop=box.scrollHeight;f.elements.m.value='';if(pv)pv.classList.add('busy');
+      const w=await sb.from('websites').select('config').eq('id',id).single(),chat=Array.isArray(w.data?.config?.ai_chat)?w.data.config.ai_chat:[];
+      const r=await runEdit(id,m,chat.slice(-6).map(x=>({role:x.role,content:x.content})),(reply,v)=>[...chat,{role:'user',content:m},{role:'assistant',content:reply,v}].slice(-40));
+      const ty=$('#sctyping');if(ty)ty.remove();if(pv)pv.classList.remove('busy');
+      if(!r.ok){box.insertAdjacentHTML('beforeend',scBubble({role:'err',content:errText(r.error||'err')+(r.detail?' ('+String(r.detail).slice(0,140)+')':'')},id));box.scrollTop=box.scrollHeight;btn.disabled=false;f.elements.m.value=m;return}
+      box.insertAdjacentHTML('beforeend',scBubble({role:'assistant',content:r.reply,v:r.before},id));box.scrollTop=box.scrollHeight;if(pv)pv.srcdoc=r.html;btn.disabled=false;f.elements.m.focus();return}
     if(k==='invoice'){const r=await sb.from('invoices').insert({user_id:d.user,amount:parseFloat(d.amount)});if(r.error)throw r.error;await audit('invoice.create','invoices',{user:d.user});toast(t('saved'));render({keep:true});return}
     if(k==='forgot'){const r=await sb.auth.resetPasswordForEmail(d.email,{redirectTo:location.origin+location.pathname});if(r.error&&r.error.status===429)throw new Error('rate_limited');f.innerHTML=`<div class="card" style="border-color:var(--ok)">${t('forgot_sent')}</div>`;return}
     if(k==='reset'){const r=await sb.auth.updateUser({password:d.pass});if(r.error)throw r.error;toast(t('reset_ok'));await loadMe();location.hash='#/app';return}
@@ -2056,7 +2093,8 @@ document.addEventListener('submit',async e=>{
         const wr=[...f.querySelectorAll('#wzitems .wzrow')].filter(r=>r.querySelector('[data-wi="n"]').value.trim()),imf=wr.map(r=>{const i=r.querySelector('[data-pv]');return(i&&i._file)||null});let gd=null;
         if(imf.some(Boolean)){const its=siteItems({type:brief.type,lang:brief.lang,items:brief.items}).items.map(x=>({...x}));for(let i=0;i<its.length;i++)if(imf[i])its[i].img=await uploadAsset(sid,imf[i],1000);gd={items:its}}
         await saveHtml(sid,genSite(gd?{...brief,_data:gd}:brief),'initial',{brief});let how='tpl',why='',det='';
-        const j=await aiPipeline(sid,n=>{boStage(n);if(n===1)boSet(t('bo_building'),t('bo_wait'))});
+        boStage(1);boSet(t('bo_building'),t('bo_wait'));
+        const j=await aiDesign(sid,brief,gd);
         if(j.ok)how='ai';else{why=j.error||'';det=j.detail||''}
         boStage(3);
         const pub=await autoPublish(sid);
@@ -2073,7 +2111,7 @@ document.addEventListener('submit',async e=>{
       const w=await sb.from('websites').select('config').eq('id',f.dataset.id).single();
       const oc=(w.data&&w.data.config)||{},ob=oc.brief||{},keep={logo:ob.logo,cur:ob.cur,banners:ob.banners,dna:cleanDNA(ob.dna,d.type)||newDNA(d.type),copy:ob.copy,custom_css:ob.custom_css};const osd=readSD(oc.html);
       const up=await sb.from('websites').update({name:d.name,site_type:d.type,config:{...oc,brief:{...d,...keep}}}).eq('id',f.dataset.id);if(up.error)throw up.error;
-      const how=await buildSite(f.dataset.id,{...d,...keep,_data:osd&&!osd.sample?osd:null},'rebuild');toast(how==='ai'?t('designed'):t('designed_tpl')+(LAST_AI_ERR?' ('+errText(LAST_AI_ERR)+')':''));
+      const how=await buildSite(f.dataset.id,{...d,...keep,_data:osd&&osd.items&&osd.items.length?osd:null},'rebuild');toast(how==='ai'?t('designed'):t('designed_tpl')+(LAST_AI_ERR?' ('+errText(LAST_AI_ERR)+')':''));
       const h='#/app/site/'+f.dataset.id+'/overview';if(location.hash===h)render({keep:true});else location.hash=h;return}
     if(k==='appmsg'){
       const id=f.dataset.id,m=(d.m||'').trim();if(!m)return;

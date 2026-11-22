@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { DISPLAY, KINDS, cleanKey, detectPick, keyHint, listError, modelsRequest, orderModels, parseCurl, parseModels, rankModels, resolveTarget, safeEndpoint, targetFromCurl, type Found, type Kind, type Ranked, type Target } from "./models.ts";
+import { DESIGN_PROMPT, EDIT_PROMPT, applyPatch, cleanCopy, cleanItems, ownImage, parseJSON } from "./spec.ts";
 
 // Public publishable key (same one shipped in the browser app). Used only as the `apikey` header when we act
 // *as the signed-in admin* (their JWT goes in Authorization), e.g. to call admin_set_provider_key.
@@ -589,72 +590,76 @@ Deno.serve(async (req) => {
       return json({ ok: true, model: r.model, missing: missingOf(reqs, html).map((x) => x.id) });
     }
 
-    // ---- Price a modification request: AI classifies it, the price itself is COMPUTED from the
-    //      admin's own per-token prices (platform_settings 'ai.cost_markup') and the real size of the
-    //      page, not guessed freeform by the model. Bounds stay as safety rails only. ----
-    if (body.action === "quote") {
-      const { data: rq } = await db.from("modification_requests").select("*").eq("id", body.request_id).maybeSingle();
-      if (!rq) return json({ error: "not_found" }, 404);
-      const { data: site } = await db.from("websites").select("id,owner_id,org_id,name,site_type,stack,config").eq("id", rq.website_id).maybeSingle();
-      if (!site || !(await canAccess(user.id, prof.role, site))) return json({ error: "forbidden" }, 403);
-      if (!["submitted", "analyzing"].includes(rq.status)) return json({ error: "not_pending" }, 409);
+    // ---- Read a site's spec (brief + items) for the design/edit actions ----
+    const loadSpec = async (id: unknown) => {
+      const { data: site } = await db.from("websites").select("id,owner_id,org_id,name,site_type,status,config").eq("id", id).maybeSingle();
+      if (!site || site.site_type === "app") return { error: json({ error: "website_not_found" }, 404) };
+      if (!(await canAccess(user.id, prof.role, site))) return { error: json({ error: "forbidden" }, 403) };
       const bd = await budget(site.id, site.owner_id);
-      if (!bd.ok) return json({ error: "budget_exceeded" }, 402);
-      const bs = await setting("ai.quote_bounds");
-      let bounds: Record<string, [number, number]> = { simple: [0, 10], medium: [10, 60], advanced: [60, 300], major: [300, 2000] };
-      try { if (bs) bounds = { ...bounds, ...JSON.parse(bs) }; } catch { /* keep defaults */ }
-      const markup = Math.max(1, Number(await setting("ai.cost_markup")) || 4);
+      if (!bd.ok) return { error: json({ error: "budget_exceeded" }, 402) };
+      const { _data, ...brief } = { name: site.name, type: site.site_type, ...(site.config?.brief ?? {}) };
+      const sdm = /<script[^>]*id=["']site-data["'][^>]*>([\s\S]*?)<\/script>/i.exec(site.config?.html ?? "");
+      let sd: any = null;
+      try { sd = sdm ? JSON.parse(sdm[1]) : null; } catch { /* no items */ }
+      return { site, brief, sd };
+    };
+    const img = ownImage(Deno.env.get("SUPABASE_URL") ?? "https://invalid.local");
+    const siteLang = (b: any) => (b.lang === "en" ? "English" : "العربية");
 
-      const sys = `أنت مصنّف طلبات تعديل المواقع في منصة ابتكار. حدد مستوى الطلب فقط ولا تضع سعراً (السعر يُحسب آلياً من تكلفة التوكنات).\nبسيط: نص/صورة/لون/معلومات تواصل. متوسط: قسم جديد أو تعديل تصميم صفحة. متقدم: نظام جديد أو ربط خارجي. كبير: تطوير واسع.\nأعد JSON فقط: {"level":"simple|medium|advanced|major","reason_ar":"جملة قصيرة بالعربية"}`;
-      const r = await runAI({ task: "classify", userId: user.id, siteId: site.id, maxTokens: 200, messages: [{ role: "system", content: sys }, { role: "user", content: JSON.stringify({ request: rq.description, site_type: site.site_type, site_name: site.name }) }] });
-      const j = parseJson(r.text) ?? {};
-      const level = ["simple", "medium", "advanced", "major"].includes(j.level) ? j.level : "medium";
-      const [lo, hi] = bounds[level] ?? [0, 100];
-
-      const curLen = (site.config?.html ?? "").length || 6000;
-      const reqLen = String(rq.description ?? "").length;
-      const estIn = Math.ceil((curLen + reqLen + 1200) / 3);
-      const estOut = Math.ceil(curLen / 3);
-      const cand = await candidates("ui");
-      const m0 = cand[0]?.model;
-      const rawCost = m0 ? (estIn * Number(m0.cost_in_per_1m) + estOut * Number(m0.cost_out_per_1m)) / 1_000_000 : 0;
-      const computed = rawCost * markup;
-      const price = Math.round(Math.min(hi, Math.max(lo, computed)) * 2) / 2;
-
-      await db.from("modification_requests").update({ level, estimated_price: price, final_price: price, ai_reason: String(j.reason_ar ?? "").slice(0, 300), status: "quoted" }).eq("id", rq.id);
-      await db.from("notifications").insert({ user_id: rq.user_id, type: "modification", title: "quote_ready" });
-      await db.from("audit_logs").insert({ actor_id: user.id, action: "modification.ai_quote", entity: "modification_requests", meta: { id: rq.id, level, price, raw_cost: rawCost, markup, est_in: estIn, est_out: estOut } });
-      return json({ ok: true, level, price, reason: j.reason_ar ?? "" });
+    // ---- New site: the AI writes all the copy (small JSON); the page engine renders the design ----
+    if (body.action === "design") {
+      const L0 = await loadSpec(body.website_id);
+      if (L0.error) return L0.error;
+      const { site, brief, sd } = L0;
+      if (prof.role === "customer") {
+        const limit = await monthlyLimit(site.owner_id);
+        const { count } = await db.from("ai_usage").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "ok").gte("created_at", monthStart());
+        if ((count ?? 0) >= limit) return json({ error: "quota_exceeded", limit }, 429);
+      }
+      const needs = !(sd && !sd.sample && Array.isArray(sd.items) && sd.items.length) && !String(brief.items ?? "").trim();
+      const info = {
+        name: brief.name, business_type: site.site_type, tagline: brief.tag ?? "", description: brief.desc ?? "", language: siteLang(brief),
+        audience: brief.aud ?? "", main_goal: brief.goal ?? "", tone: brief.tone ?? "", selling_points: String(brief.usp ?? "").split("\n").map((x: string) => x.trim()).filter(Boolean).slice(0, 6),
+        notes: String(brief.notes ?? "").slice(0, 600), hours: brief.hours ?? "", address: brief.addr ?? "",
+        offerings: String(brief.items ?? "").split("\n").map((x: string) => x.split("|")[0].trim()).filter(Boolean).slice(0, 12), needs_items: needs,
+      };
+      const r = await runAI({ task: "ui", json: true, userId: user.id, siteId: site.id, maxTokens: 2600, deadlineMs: 100_000, messages: [{ role: "system", content: DESIGN_PROMPT }, { role: "user", content: JSON.stringify(info) }] });
+      const out = parseJSON(r.text);
+      if (!out || typeof out !== "object") return json({ ok: false, error: "invalid_output", detail: "design_unparseable" });
+      const copy = cleanCopy(out.copy, img);
+      if (!copy.hero) return json({ ok: false, error: "invalid_output", detail: "design_missing_hero" });
+      const items = needs ? cleanItems(out.items, img).map((x) => ({ ...x, p: "" })) : [];
+      return json({ ok: true, copy, items: items.length >= 3 ? items : null, model: r.model });
     }
 
-    // ---- Apply an approved modification to the site ----
-    if (body.action === "apply") {
-      const { data: rq } = await db.from("modification_requests").select("*").eq("id", body.request_id).maybeSingle();
-      if (!rq) return json({ error: "not_found" }, 404);
-      const { data: site } = await db.from("websites").select("id,owner_id,org_id,name,site_type,stack,config").eq("id", rq.website_id).maybeSingle();
-      if (!site || !(await canAccess(user.id, prof.role, site))) return json({ error: "forbidden" }, 403);
-      if (rq.status !== "approved") return json({ error: "not_approved" }, 409);
-      const cur = site.config?.html ?? "";
-      if (!cur || cur === "{}" || cur.length > 120_000) return json({ error: "page_too_large_for_edit" }, 413);
-      const bd = await budget(site.id, site.owner_id);
-      if (!bd.ok) return json({ error: "budget_exceeded" }, 402);
-      await db.from("modification_requests").update({ status: "in_progress" }).eq("id", rq.id);
-
-      const sys = (await prompts(site.site_type)) + "\n\n---\n\nوضع التعديل: عدّل فقط ما يطلبه العميل وحافظ على بقية الصفحة كما هي حرفياً (النصوص وأرقام الهاتف والروابط). أعد وثيقة HTML الكاملة المحدّثة فقط.";
-      try {
-        const r = await runAI({ task: "ui", userId: user.id, siteId: site.id, maxTokens: 12000, messages: [{ role: "system", content: sys }, { role: "user", content: "CURRENT_HTML:\n" + cur + "\n\nREQUESTED_CHANGE:\n" + rq.description }] });
-        const html = cleanHtml(r.text);
-        if (!validHtml(html, site.config?.brief ?? { name: site.name }, /id=[\"']site-data[\"']/.test(cur))) throw new AIError("invalid_output", 502);
-        await db.from("websites").update({ config: { ...(site.config ?? {}), html }, updated_at: new Date().toISOString() }).eq("id", site.id);
-        const { data: vv } = await db.from("website_versions").select("version").eq("website_id", site.id).order("version", { ascending: false }).limit(1);
-        await db.from("website_versions").insert({ website_id: site.id, version: (vv?.[0]?.version ?? 0) + 1, snapshot: { html }, note: "edit: " + String(rq.description).slice(0, 150), created_by: user.id });
-        await db.from("modification_requests").update({ status: "done" }).eq("id", rq.id);
-        await db.from("notifications").insert({ user_id: rq.user_id, type: "modification", title: "mod_done" });
-        return json({ ok: true });
-      } catch (e) {
-        await db.from("modification_requests").update({ status: "approved" }).eq("id", rq.id);
-        throw e;
+    // ---- Instant edit: the customer (or the admin chat) describes a change, the AI returns a small patch,
+    //      validated here; the browser re-renders, saves a version (undo) and re-publishes ----
+    if (body.action === "edit") {
+      const instruction = String(body.instruction ?? "").trim().slice(0, 1500);
+      if (instruction.length < 2) return json({ error: "invalid_messages" }, 400);
+      const L0 = await loadSpec(body.website_id);
+      if (L0.error) return L0.error;
+      const { site, brief, sd } = L0;
+      const staff = ["super_admin", "admin", "technical_manager", "developer"].includes(prof.role);
+      if (!staff) {
+        const perDay = Number(await setting("ai.edits_per_day") ?? 20) || 20;
+        const day = new Date(); day.setUTCHours(0, 0, 0, 0);
+        const { count } = await db.from("modification_requests").select("id", { count: "exact", head: true }).eq("website_id", site.id).eq("status", "done").gte("created_at", day.toISOString());
+        if ((count ?? 0) >= perDay) return json({ error: "edits_limit", limit: perDay }, 429);
       }
+      const history = (cleanMessages(body.history) ?? []).filter((m) => m.role !== "system").slice(-6).map((m) => ({ role: m.role, content: m.content.slice(0, 1200) }));
+      const items = sd && Array.isArray(sd.items) ? sd.items.slice(0, 60).map((x: any) => ({ n: x.n, c: x.c, p: x.p, d: x.d, ...(x.img ? { img: x.img } : {}) })) : [];
+      const { aud, goal, insp, notes, items: _txt, ...specBrief } = brief;
+      const choices = JSON.stringify(body.choices ?? {}).slice(0, 1500);
+      const user0 = JSON.stringify({ spec: { brief: specBrief, items, sample_items: !!(sd && sd.sample) }, choices: JSON.parse(choices.length < 1500 ? choices : "{}"), request: instruction });
+      const r = await runAI({ task: "ui", json: true, userId: user.id, siteId: site.id, maxTokens: 3000, deadlineMs: 100_000, messages: [{ role: "system", content: EDIT_PROMPT }, ...history, { role: "user", content: user0 }] });
+      const out = parseJSON(r.text);
+      if (!out || typeof out !== "object") return json({ ok: false, error: "invalid_output", detail: "edit_unparseable" });
+      const res = applyPatch({ brief, items }, out.patch, img);
+      const reply = String(out.reply ?? "").trim().slice(0, 600) || "تم";
+      await db.from("modification_requests").insert({ website_id: site.id, user_id: user.id, description: instruction, status: "done", level: "simple", estimated_price: 0, final_price: 0, ai_reason: reply.slice(0, 300) });
+      await db.from("audit_logs").insert({ actor_id: user.id, action: "website.ai_edit", entity: "websites", meta: { id: site.id, model: r.model, redesign: res.redesign, items: !!res.items } });
+      return json({ ok: true, reply, brief: res.brief, items: res.items, redesign: res.redesign, model: r.model });
     }
 
     // ---- Legacy plain chat (kept for internal use) ----

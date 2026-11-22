@@ -392,3 +392,78 @@ Deno.test("a provider with no credit (429 insufficient_quota) is skipped after o
   const openaiTries = T.ai_usage.filter((u) => u.status === "error" && /gpt/.test(u.model)).length;
   assert(openaiTries === 1, "OpenAI tried once, not once per model (" + openaiTries + ")");
 });
+
+// ---- design / edit: the AI returns small JSON, validated before use (no HTML, fits free providers) ----
+Deno.test("design: AI copy is validated; sample items generated without prices only when the site has none", async () => {
+  reset();
+  const reply = { copy: { hero: { t: "عنوان", s: "وصف" }, why: [{ t: "أ", d: "ب" }], faq: [{ q: "س", a: "ج" }, { q: "", a: "x" }], sections: [{ type: "evil", body: "نص" }] }, items: [{ n: "أ", p: "99" }, { n: "ب" }, { n: "ج" }, { n: "" }] };
+  let req: any = null;
+  const base = anthropicFake({ text: JSON.stringify(reply) });
+  providerBehavior = (r) => { if (r.url.includes("/v1/messages") && r.body.max_tokens > 16) req = r.body; return base(r); };
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const r = await call("cust", { action: "design", website_id: "site1" });
+  assert(r.json.ok && r.json.copy.hero.t === "عنوان", "copy " + JSON.stringify(r.json));
+  assert(r.json.copy.faq.length === 1, "empty faq dropped");
+  assert(r.json.copy.sections[0].type === "text", "unknown section type falls back to text");
+  assert(r.json.items.length === 3 && r.json.items.every((x: any) => x.p === ""), "3 items, prices stripped");
+  assert(req.max_tokens <= 3000, "small output budget: " + req.max_tokens);
+  assert(!T.websites[0].config.html, "design does not write HTML itself");
+});
+
+Deno.test("design: a site that already has its own items gets no invented ones", async () => {
+  reset();
+  T.websites[0].config.html = `<html>${SD([{ n: "عطر" }, { n: "ب" }, { n: "ج" }])}</html>`;
+  providerBehavior = anthropicFake({ text: JSON.stringify({ copy: { hero: { t: "ع" } }, items: [{ n: "x" }, { n: "y" }, { n: "z" }] }) });
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const r = await call("cust", { action: "design", website_id: "site1" });
+  assert(r.json.ok && r.json.items === null, "no items");
+});
+
+Deno.test("edit: patch merged and sanitised, logged as a done request, daily cap for customers, not for staff", async () => {
+  reset();
+  T.websites[0].config.html = `<html>${SD(GOOD_ITEMS)}</html>`;
+  const patch = { reply: "غيّرت اللون", patch: { brief: { color: "#ff0000", phone: "not a phone", lang: "fr", name: "" }, copy: { hero: { t: "جديد" } }, custom_css: "a{color:red}</style><script>x</script>", items: [{ n: "واحد", img: "https://evil.example/a.png" }], banners: [{ t: "خصم", u: "javascript:alert(1)" }], dna: { hero: "mesh", font: 3, x: "<b>" } } };
+  providerBehavior = anthropicFake({ text: "```json\n" + JSON.stringify(patch) + "\n```" });
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  const r = await call("cust", { action: "edit", website_id: "site1", instruction: "غيّر اللون للأحمر" });
+  assert(r.json.ok && r.json.reply === "غيّرت اللون", "ok " + JSON.stringify(r.json));
+  const b = r.json.brief;
+  assert(b.color === "#ff0000" && b.phone === "0912345678" && !b.lang && b.name === "الملكي", "brief fields validated " + JSON.stringify(b));
+  assert(b.copy.hero.t === "جديد", "copy merged");
+  assert(!/[<>]/.test(b.custom_css), "css cannot close the style tag");
+  assert(r.json.items.length === 1 && !r.json.items[0].img, "foreign image dropped");
+  assert(b.banners.length === 1 && !b.banners[0].u, "unsafe link dropped");
+  assert(b.dna.hero === "mesh" && b.dna.font === 3 && !("x" in b.dna), "dna shape-checked");
+  assert(T.modification_requests.length === 1 && T.modification_requests[0].status === "done" && T.modification_requests[0].final_price === 0, "logged as done, free");
+  T.platform_settings.push({ key: "ai.edits_per_day", value: "1" });
+  const r2 = await call("cust", { action: "edit", website_id: "site1", instruction: "تعديل ثاني" });
+  assert(r2.status === 429 && r2.json.error === "edits_limit", "customer capped");
+  const r3 = await call("admin", { action: "edit", website_id: "site1", instruction: "تعديل الأدمن" });
+  assert(r3.json.ok, "staff not capped");
+});
+
+Deno.test("edit: other customers cannot edit someone else's site; apps are not websites", async () => {
+  reset();
+  T.profiles.push({ id: "other", role: "customer", status: "active" });
+  T.websites.push({ id: "app1", owner_id: "cust", name: "تطبيق", site_type: "app", config: {} });
+  providerBehavior = anthropicFake({ text: "{}" });
+  await call("admin", { action: "connect", kind: "anthropic", key: "sk-ant-good" });
+  assert((await call("other", { action: "edit", website_id: "site1", instruction: "x y" })).status === 403, "forbidden");
+  assert((await call("cust", { action: "edit", website_id: "app1", instruction: "x y" })).status === 404, "app is not a website");
+});
+
+Deno.test("openai-compatible hosts get max_tokens within the per-minute cap, JSON mode and low reasoning for gpt-oss", async () => {
+  reset();
+  let chat: any = null;
+  providerBehavior = ({ url, headers, body }) => {
+    if (url.endsWith("/models")) return { status: 200, body: { data: [{ id: "openai/gpt-oss-120b", created: 1 }] } };
+    if (url.endsWith("/chat/completions")) { if (body.max_tokens > 64) chat = body; return headers.get("authorization") === "Bearer gsk_GOODKEY123" ? { status: 200, body: { choices: [{ message: { content: JSON.stringify({ copy: { hero: { t: "ع" } }, items: [] }) } }], usage: { prompt_tokens: 1, completion_tokens: 1 } } } : { status: 401, body: {} }; }
+    return { status: 404, body: {} };
+  };
+  await call("admin", { action: "connect", kind: "groq", key: "gsk_GOODKEY123" });
+  const r = await call("cust", { action: "design", website_id: "site1" });
+  assert(r.json.ok, "design ok " + JSON.stringify(r.json));
+  assert(chat.model === "openai/gpt-oss-120b", "strongest model first");
+  assert(chat.response_format?.type === "json_object" && chat.reasoning_effort === "low", "json + low reasoning");
+  assert(chat.max_tokens >= 900 && chat.max_tokens <= 2600, "max_tokens sent and capped: " + chat.max_tokens);
+});
