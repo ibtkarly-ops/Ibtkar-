@@ -372,7 +372,7 @@ Deno.test("app builder: a forgotten import is repaired on the spot; a truncated 
   assert(mm.json.error === "invalid_output" && /^import_mismatch:\.\.\/theme:theme/.test(mm.json.detail), "import vs written exports " + JSON.stringify(mm.json));
   // at the end, the file at fault is named so the client rewrites just that one
   const c = await call("admin", { action: "app_commit", website_id: "app1", plan: PLAN, files: { "App.js": APPJS, "src/theme.js": "export default { text: '#111' };", "src/screens/HomeScreen.js": HOME } });
-  assert(c.status === 422 && c.json.file === "src/screens/HomeScreen.js" && /import_mismatch/.test(c.json.detail), "commit names the file " + JSON.stringify(c.json));
+  assert(c.json.ok && /import_mismatch/.test(c.json.warn?.[0] ?? ""), "commit saves and only warns " + JSON.stringify(c.json));
 });
 
 Deno.test("app builder: an undefined component blocks once; if the AI already got that exact reason, the file is accepted with a warning (a check can never leave the user stuck)", async () => {

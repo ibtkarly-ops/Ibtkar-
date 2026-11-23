@@ -539,9 +539,11 @@ Deno.serve(async (req) => {
           const bad = validFile(k, merged[k], all) ?? (chk && chk.startsWith("syntax:") ? chk : null);   // here only a syntax error blocks
           if (bad) return json({ ok: false, error: "invalid_output", detail: k + ": " + bad, file: k }, 422);
         }
+        // a mismatch between two files is reported, never blocking: the final step of a build must not fail on a heuristic
+        const warns: string[] = [];
         if (cc) for (const k of all) {
           const mm = cc.importMismatch(k, merged[k], Object.fromEntries([...all].filter((x) => x !== k).map((x) => [x, merged[x]])));
-          if (mm && (changed.has(k) || changed.has(mm.target))) { const file = changed.has(k) ? k : mm.target; return json({ ok: false, error: "invalid_output", detail: file + ": " + (file === k ? mm.reason : `${k} imports something it does not export: ${mm.reason}`), file }, 422); }
+          if (mm && (changed.has(k) || changed.has(mm.target))) warns.push(k + ": " + mm.reason);
         }
         if (!all.has("App.js")) return json({ ok: false, error: "invalid_output", detail: "App.js missing" }, 422);
         const p = body.plan ? cleanPlan(body.plan) : plan;
@@ -553,7 +555,7 @@ Deno.serve(async (req) => {
         const note = String(body.note ?? "").slice(0, 300);
         await save({ ...app0, name, slug, plan: p, files: full, rev, chat: note ? [...chat, { role: "assistant", content: note, type: "built", rev }].slice(-60) : chat }, "app: " + note, true);
         for (const [k, v] of Object.entries(full)) await db.storage.from("app-files").upload(`${site.id}/${rev}/${k}`, new Blob([v], { type: "text/plain" }), { upsert: true, contentType: "text/plain" });
-        return json({ ok: true, rev, files: Object.keys(full), deps: depsOf(code) });
+        return json({ ok: true, rev, files: Object.keys(full), deps: depsOf(code), warn: warns.length ? warns.slice(0, 3) : undefined });
       }
 
       // 4) "View in Expo Go": a Snack link whose files are short-lived signed links to this revision
