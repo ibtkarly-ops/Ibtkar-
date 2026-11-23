@@ -39,7 +39,11 @@ npm start            # يتطلب Node.js 22 أو أحدث
 | نصوص «من نحن» والسياسات | مسودات عامة؛ راجعها قبل الاعتماد. |
 | استعادة كلمة المرور بالبريد | غير مفعّلة (لا مزوّد بريد). المعتمد: واتساب الدعم + رابط يولّده المدير. |
 
-## النشر (VPS + Docker)
+## النشر على Cloudflare (موصى به)
+
+المتجر يعمل على سيرفر (VPS أو أي جهاز Docker) وCloudflare أمامه عبر **Tunnel** (نطاق + SSL + CDN + حماية، بلا فتح منافذ). الخطوات الكاملة والنسخ الاحتياطي في [`docs/DEPLOY-CLOUDFLARE.md`](docs/DEPLOY-CLOUDFLARE.md). لا يعمل على Workers/Pages مباشرة لأنه يحتاج قرصًا دائمًا لقاعدة SQLite.
+
+## النشر (VPS + Docker بدون Cloudflare Tunnel)
 
 ```bash
 cp .env.example .env     # عدّل SITE_URL و ADMIN_* و APP_SECRET
