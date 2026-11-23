@@ -1,0 +1,8 @@
+node_modules/
+data/
+.env
+*.log
+tests/.tmp/
+tests/shots/
+.wrangler/
+.dev.vars

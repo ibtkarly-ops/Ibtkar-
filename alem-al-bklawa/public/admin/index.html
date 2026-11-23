@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#4B071B">
+<title>لوحة إدارة عالم البكلاوه</title>
+<link rel="icon" href="/assets/favicon-64.png" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="preload" href="/fonts/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
+<style>#no-app{position:fixed;inset:0;z-index:2000;background:#faf8f6;color:#2b0713;overflow:auto;padding:28px 22px;font-family:Cairo,system-ui,sans-serif;line-height:1.9;opacity:0;pointer-events:none;animation:noapp 0s 5s forwards}
+#no-app h1{color:#800020;margin:0 0 8px}#no-app code{background:#f1e8e2;padding:2px 8px;border-radius:6px}
+@keyframes noapp{to{opacity:1;pointer-events:auto}}
+</style>
+<link rel="stylesheet" href="/css/app.css">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body class="admin">
+<div id="splash" style="display:none"></div>
+<div id="no-app" role="alert" dir="rtl"><h1>الخادم غير متصل</h1><p>هذا المتجر يحتاج إلى خادم ليعمل (Node.js، أو Cloudflare Workers مع قاعدة D1) لأن فيه قاعدة البيانات وواجهة الـ API. فتحه كملف مباشر أو رفعه على استضافة ملفات ثابتة لن يُظهر المنتجات ولا لوحة الإدارة.</p><ol><li>ثبّت Node.js 22 أو أحدث.</li><li>من داخل مجلد المتجر شغّل: <code dir="ltr">npm start</code></li><li>افتح <code dir="ltr">http://localhost:3000</code> (والإدارة على <code dir="ltr">/admin</code>).</li></ol><p>للنشر على Cloudflare بلا سيرفر: <code dir="ltr">npx wrangler@4 deploy</code>، أو على سيرفرك: <code dir="ltr">docker compose up -d --build</code> (التفاصيل في README.md).</p></div>
+<div id="root"></div>
+<div id="toasts" role="status" aria-live="polite"></div>
+<noscript><p style="padding:24px;text-align:center">تحتاج لوحة الإدارة إلى تفعيل JavaScript.</p></noscript>
+<script type="module" src="/admin/admin.js"></script>
+</body>
+</html>

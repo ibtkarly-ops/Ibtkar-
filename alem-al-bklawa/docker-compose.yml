@@ -1,0 +1,12 @@
+services:
+  store:
+    build: .
+    restart: unless-stopped
+    ports: ["127.0.0.1:3000:3000"]   # put Caddy/Nginx in front for HTTPS
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+    volumes:
+      - abk-data:/data               # database, uploaded images and the encryption key — back this up
+volumes:
+  abk-data:
