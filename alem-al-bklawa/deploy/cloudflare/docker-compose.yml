@@ -1,0 +1,21 @@
+# Store + Cloudflare Tunnel. No ports are opened on the server: Cloudflare reaches the store through an outbound tunnel.
+# Run from the alem-al-bklawa/ folder:  docker compose -f deploy/cloudflare/docker-compose.yml --env-file .env up -d --build
+services:
+  store:
+    build: ../..
+    restart: unless-stopped
+    env_file: ../../.env
+    environment:
+      DATA_DIR: /data
+      TRUST_PROXY: "1"
+    volumes:
+      - abk-data:/data            # database, uploaded images, encryption key — back this up (see scripts/backup.js)
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env (Zero Trust → Networks → Tunnels)}
+    depends_on: [store]
+volumes:
+  abk-data:
