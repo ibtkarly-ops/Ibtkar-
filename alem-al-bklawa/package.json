@@ -2,15 +2,24 @@
   "name": "alem-al-bklawa",
   "version": "1.0.0",
   "private": true,
-  "description": "متجر عالم البكلاوه — Alem Al Bklawa e-commerce (Node.js + SQLite, no runtime dependencies)",
+  "description": "متجر عالم البكلاوه — Alem Al Bklawa e-commerce (Node.js + SQLite, or Cloudflare Workers + D1; no runtime dependencies)",
   "type": "module",
-  "engines": { "node": ">=22.13" },
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server.js",
     "dev": "node --disable-warning=ExperimentalWarning --watch server.js",
     "create-admin": "node --disable-warning=ExperimentalWarning scripts/create-admin.js",
     "seed:demo": "node --disable-warning=ExperimentalWarning scripts/seed-demo.js",
     "test": "node --disable-warning=ExperimentalWarning --test tests/api.test.js tests/setup.test.js",
-    "test:e2e": "node --disable-warning=ExperimentalWarning tests/e2e.js"
+    "test:e2e": "node --disable-warning=ExperimentalWarning tests/e2e.js",
+    "deploy": "wrangler deploy",
+    "dev:cf": "wrangler dev",
+    "test:worker": "WRANGLER=./node_modules/.bin/wrangler node --disable-warning=ExperimentalWarning --test tests/worker.test.js",
+    "test:e2e:worker": "E2E_WRANGLER=./node_modules/.bin/wrangler node --disable-warning=ExperimentalWarning tests/e2e.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.45.0"
   }
 }

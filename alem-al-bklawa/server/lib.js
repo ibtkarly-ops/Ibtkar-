@@ -26,7 +26,8 @@ export function normalizeAr(input) {
   }).join(' ');
 }
 
-export const tokens = (q) => normalizeAr(q).split(' ').filter(Boolean).slice(0, 8);
+// Tokens are capped at 20 characters: D1 rejects LIKE patterns longer than 50 bytes.
+export const tokens = (q) => normalizeAr(q).split(' ').filter(Boolean).slice(0, 8).map((t) => t.slice(0, 20));
 
 // ── Money: integer dirhams (1 LYD = 1000) ──────────────────────────────────
 export function lydToDirham(v) {

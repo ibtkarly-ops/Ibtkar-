@@ -13,12 +13,17 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const shots = path.join(root, 'tests', 'shots'); fs.mkdirSync(shots, { recursive: true });
 const PORT = 3991; const BASE = `http://127.0.0.1:${PORT}`;
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'abk-e2e-'));
-const server = spawn('node', ['--disable-warning=ExperimentalWarning', 'server.js'], {
-  cwd: root, stdio: ['ignore', 'pipe', 'pipe'],
-  env: { ...process.env, PORT: String(PORT), HOST: '127.0.0.1', DATA_DIR: dataDir, NODE_ENV: 'development', SITE_URL: BASE, ADMIN_EMAIL: 'owner@example.ly', ADMIN_PASSWORD: 'Owner-Strong-Pass-9', PAYMENT_SANDBOX: '1', ORDER_RATE_MAX: '500' },
-});
+// E2E_WRANGLER=/path/to/wrangler runs the very same scenario against the Cloudflare Worker (wrangler dev, local D1).
+const creds = { ADMIN_EMAIL: 'owner@example.ly', ADMIN_PASSWORD: 'Owner-Strong-Pass-9', PAYMENT_SANDBOX: '1', ORDER_RATE_MAX: '500' };
+const server = process.env.E2E_WRANGLER
+  ? spawn(process.env.E2E_WRANGLER, ['dev', '--local', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', dataDir,
+    '--var', 'NODE_ENV:development', '--var', `SITE_URL:${BASE}`, ...Object.entries(creds).flatMap(([k, v]) => ['--var', `${k}:${v}`])], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], detached: true })
+  : spawn('node', ['--disable-warning=ExperimentalWarning', 'server.js'], {
+    cwd: root, stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, PORT: String(PORT), HOST: '127.0.0.1', DATA_DIR: dataDir, NODE_ENV: 'development', SITE_URL: BASE, ...creds },
+  });
 let serverLog = ''; server.stdout.on('data', (d) => { serverLog += d; }); server.stderr.on('data', (d) => { serverLog += d; });
-for (let i = 0; i < 50; i++) { try { if ((await fetch(BASE + '/healthz')).ok) break; } catch { /* wait */ } await new Promise((r) => setTimeout(r, 150)); }
+for (let i = 0; i < 300; i++) { try { if ((await fetch(BASE + '/healthz')).ok) break; } catch { /* wait */ } await new Promise((r) => setTimeout(r, 150)); }
 
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 const browser = await chromium.launch();
@@ -234,7 +239,7 @@ await step('checkout: confirm after seeing the new total → order saved with nu
 await step('order tracking by number + phone (guest)', async () => {
   const g = await browser.newContext({ locale: 'ar-LY' }); const gp = await g.newPage();
   await gp.goto(BASE + '/track'); await gp.fill('#tn', orderNumber); await gp.fill('#tp', '0900000000'); await gp.click('button[type=submit]'); await gp.waitForSelector('.notice-err');
-  await gp.fill('#tp', '0911234567'); await gp.click('button[type=submit]'); await gp.waitForURL(/\/order\//); await expectText(gp.locator('h1'), new RegExp(orderNumber)); await g.close();
+  await gp.fill('#tp', '0911234567'); await gp.click('button[type=submit]'); await gp.waitForURL(/\/order\//); await expectText(gp.locator('h1').filter({ hasText: new RegExp(orderNumber) }), new RegExp(orderNumber)); await g.close();
 });
 await step('bundle: WhatsApp order registers first, never claims confirmation, correct number/message', async () => {
   await c.goto(BASE + '/bundles'); await c.waitForSelector('.bcard'); await c.locator('.bcard a:has-text("التفاصيل")').first().click();
@@ -266,7 +271,7 @@ await step('footer: TikTok link, support numbers, exact maker line', async () =>
 console.log('\n▶ الحسابات والدفع');
 await step('register, logout, login, bad login message', async () => {
   await c.goto(BASE + '/register'); await c.fill('[name=name]', 'سارة محمد'); await c.fill('[name=phone]', '0921112233'); await c.fill('[name=password]', 'sara-pass-2026'); await c.click('button[type=submit]');
-  await c.waitForURL(/\/account/); await expectText(c.locator('h1'), /سارة محمد/);
+  await c.waitForURL(/\/account/); await expectText(c.locator('h1').filter({ hasText: /سارة محمد/ }), /سارة محمد/);
   await c.click('#logout'); await c.waitForURL(BASE + '/');
   await c.goto(BASE + '/login'); await c.fill('[name=identifier]', '0921112233'); await c.fill('[name=password]', 'bad-bad-bad-1'); await c.click('button[type=submit]'); await expectToast(c, /غير صحيحة/);
   await c.fill('[name=password]', 'sara-pass-2026'); await c.click('button[type=submit]'); await c.waitForURL(/\/account/);
@@ -365,7 +370,8 @@ await step('security: staff role limits and unauthenticated admin API', async ()
 });
 await step('no JavaScript errors were thrown anywhere', async () => { if (jsErrors.length) throw new Error(jsErrors.slice(0, 5).join(' | ')); });
 
-await browser.close(); server.kill();
+await browser.close();
+if (process.env.E2E_WRANGLER) { try { process.kill(-server.pid); } catch { server.kill(); } } else server.kill();
 fs.rmSync(dataDir, { recursive: true, force: true });
 const failed = results.filter((r) => !r[0]);
 console.log(`\n${results.length - failed.length}/${results.length} passed`);

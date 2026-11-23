@@ -97,10 +97,27 @@ test('auth: register, login, wrong password, logout, session cookie flags', asyn
 });
 
 test('password hashes are never plain text', async () => {
-  const { get } = await import('../server/db.js');
-  const row = get("SELECT password_hash FROM profiles WHERE email = 'sara@example.com'");
-  assert.match(row.password_hash, /^scrypt\$/);
+  const { db } = await import('../server/runtime.js');
+  const row = await db.get("SELECT password_hash FROM profiles WHERE email = 'sara@example.com'");
+  assert.match(row.password_hash, /^pbkdf2\$sha256\$/);
   assert.ok(!row.password_hash.includes('sara-pass-2026'));
+});
+
+test('data written by the first release still works: scrypt passwords and v1-sealed gateway secrets', async () => {
+  const { db, rt } = await import('../server/runtime.js');
+  const { unseal } = await import('../server/vault.js');
+  const nodeCrypto = await import('node:crypto');
+  const salt = nodeCrypto.randomBytes(16);
+  const key = nodeCrypto.scryptSync('legacy-pass-2025', salt, 64, { N: 16384, r: 8, p: 1 });
+  await db.run("INSERT INTO profiles (name, email, password_hash, role) VALUES ('قديم', 'legacy@example.com', ?, 'customer')", `scrypt$16384$8$1$${salt.toString('base64')}$${key.toString('base64')}`);
+  const c = client();
+  assert.equal((await c('POST', '/api/auth/login', { identifier: 'legacy@example.com', password: 'legacy-pass-2024' })).status, 401);
+  assert.equal((await c('POST', '/api/auth/login', { identifier: 'legacy@example.com', password: 'legacy-pass-2025' })).status, 200);
+  // v1 secrets: AES-256-GCM with the same 32-byte key the server uses
+  const k = Buffer.from(await rt.platform.getSecretKey()); const iv = nodeCrypto.randomBytes(12);
+  const ci = nodeCrypto.createCipheriv('aes-256-gcm', k, iv);
+  const ct = Buffer.concat([ci.update(JSON.stringify({ api_key: 'OLD-KEY' }), 'utf8'), ci.final()]);
+  assert.deepEqual(await unseal(`v1:${iv.toString('base64')}:${ci.getAuthTag().toString('base64')}:${ct.toString('base64')}`), { api_key: 'OLD-KEY' });
 });
 
 test('csrf: cross-origin mutation is rejected', async () => {
@@ -220,7 +237,7 @@ test('admin: order status flow, staff limits, payment review', async () => {
   const list = (await admin('GET', '/api/admin/orders?status=new')).json;
   const row = list.items.find((x) => x.number === o.order.number);
   assert.ok(row);
-  const id = (await admin('GET', `/api/admin/orders?q=${o.order.number}`)).json.items.length && (await import('../server/db.js')).get('SELECT id FROM orders WHERE number = ?', o.order.number).id;
+  const id = (await admin('GET', `/api/admin/orders?q=${o.order.number}`)).json.items.length && (await (await dbq()).get('SELECT id FROM orders WHERE number = ?', o.order.number)).id;
   for (const s of ['confirming', 'preparing', 'ready']) assert.equal((await admin('POST', `/api/admin/orders/${id}/status`, { status: s })).status, 200);
   assert.equal((await admin('POST', `/api/admin/orders/${id}/status`, { status: 'bogus' })).status, 400);
   assert.equal((await admin('POST', `/api/admin/orders/${id}/status`, { status: 'delivered', markPaid: true })).status, 200);
@@ -239,7 +256,7 @@ test('admin: order status flow, staff limits, payment review', async () => {
   assert.equal((await st('POST', `/api/admin/orders/${id}/status`, { status: 'new' })).status, 403);
   // cash orders can be set paid/unpaid; refunded needs a paid order
   const o2 = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: pid, qty: 1 }]))).json;
-  const id2 = (await import('../server/db.js')).get('SELECT id FROM orders WHERE number = ?', o2.order.number).id;
+  const id2 = (await (await dbq()).get('SELECT id FROM orders WHERE number = ?', o2.order.number)).id;
   assert.equal((await admin('POST', `/api/admin/orders/${id2}/payment`, { status: 'refunded' })).status, 409);
   assert.equal((await admin('POST', `/api/admin/orders/${id2}/payment`, { status: 'paid' })).status, 200);
 });
@@ -335,9 +352,9 @@ test('path traversal on static files is blocked', async () => {
 
 // ── Payments ───────────────────────────────────────────────────────────────
 import http from 'node:http';
+const dbq = async () => (await import('../server/runtime.js')).db;
 const hmacHex = (algo, secret, data) => crypto.createHmac(algo, secret).update(data).digest('hex');
-const dbq = async () => await import('../server/db.js');
-const orderId = async (number) => (await dbq()).get('SELECT id FROM orders WHERE number = ?', number).id;
+const orderId = async (number) => (await (await dbq()).get('SELECT id FROM orders WHERE number = ?', number)).id;
 let sandboxId; let payProduct;
 
 test('gateways: admin-only, secrets masked + encrypted at rest, validation', async () => {
@@ -361,8 +378,8 @@ test('gateways: admin-only, secrets masked + encrypted at rest, validation', asy
   assert.equal(view.secrets_masked.api_key, '••••456');
   assert.ok(!JSON.stringify(view).includes('PLUTU-KEY-123456') && !JSON.stringify(view).includes('SUPER-SECRET-9'));
   assert.ok(!JSON.stringify((await admin('GET', '/api/admin/payment-gateways')).json).includes('TOKEN-ABCDEF'));
-  const row = (await dbq()).get('SELECT config, secrets FROM payment_gateways WHERE id = ?', view.id);
-  assert.match(row.secrets, /^v1:/); assert.ok(!row.secrets.includes('PLUTU-KEY') && !row.config.includes('PLUTU-KEY'));
+  const row = await (await dbq()).get('SELECT config, secrets FROM payment_gateways WHERE id = ?', view.id);
+  assert.match(row.secrets, /^v2:/); assert.ok(!row.secrets.includes('PLUTU-KEY') && !row.config.includes('PLUTU-KEY'));
   // updating without secrets keeps them
   const upd = await admin('PUT', `/api/admin/payment-gateways/${view.id}`, { label: 'بطاقات ليبية', mode: 'test', enabled: false, config: view.config, secrets: {} });
   assert.equal(upd.json.item.secrets_masked.secret_key, '••••T-9');
@@ -372,18 +389,19 @@ test('gateways: admin-only, secrets masked + encrypted at rest, validation', asy
 
 test('vault: seal/unseal round trip, tamper → empty', async () => {
   const { seal, unseal } = await import('../server/vault.js');
-  const s = seal({ a: 'سر', b: 2 }); assert.deepEqual(unseal(s), { a: 'سر', b: 2 });
-  assert.notEqual(seal({ a: 1 }), seal({ a: 1 })); // random IV
-  assert.deepEqual(unseal(s.slice(0, -4) + 'AAAA'), {}); assert.deepEqual(unseal('garbage'), {}); assert.deepEqual(unseal(''), {});
+  const s = await seal({ a: 'سر', b: 2 }); assert.deepEqual(await unseal(s), { a: 'سر', b: 2 });
+  assert.notEqual(await seal({ a: 1 }), await seal({ a: 1 })); // random IV
+  assert.deepEqual(await unseal(s.slice(0, -4) + 'AAAA'), {}); assert.deepEqual(await unseal('garbage'), {}); assert.deepEqual(await unseal(''), {});
 });
 
 test('SSRF guard: gateway URLs must be public https', async () => {
   const { assertPublicHttps, isPrivateIp } = await import('../server/payments/net.js');
-  const saved = process.env.PAYMENT_ALLOW_LOCAL; delete process.env.PAYMENT_ALLOW_LOCAL;
+  const { rt } = await import('../server/runtime.js');
+  const saved = rt.config.allowLocalGateways; rt.config.allowLocalGateways = false;
   try {
     for (const u of ['http://example.com/x', 'https://127.0.0.1/x', 'https://10.1.2.3/x', 'https://192.168.1.5/x', 'https://169.254.169.254/latest/meta-data', 'https://[::1]/x', 'https://user:pw@example.com/x', 'ftp://example.com']) await assert.rejects(() => assertPublicHttps(u), u);
     assert.ok(isPrivateIp('172.16.0.1') && isPrivateIp('100.64.0.1') && isPrivateIp('::ffff:10.0.0.1') && !isPrivateIp('8.8.8.8'));
-  } finally { process.env.PAYMENT_ALLOW_LOCAL = saved; }
+  } finally { rt.config.allowLocalGateways = saved; }
 });
 
 test('payments (sandbox gateway): success needs gateway confirmation; duplicates are no-ops', async () => {
@@ -408,7 +426,7 @@ test('payments (sandbox gateway): success needs gateway confirmation; duplicates
   assert.equal((await fetch(`${base}${o.redirectUrl}/paid`, { method: 'POST', redirect: 'manual' })).status, 303);
   assert.equal((await c('GET', `/api/orders/${number}?t=${token}`)).json.order.payment_status, 'paid');
   const { all } = await dbq();
-  assert.equal(all("SELECT * FROM order_events WHERE kind = 'payment' AND to_value = 'paid' AND order_id = ?", await orderId(number)).length, 1); // duplicate webhook did nothing
+  assert.equal((await all("SELECT * FROM order_events WHERE kind = 'payment' AND to_value = 'paid' AND order_id = ?", await orderId(number))).length, 1); // duplicate webhook did nothing
   assert.equal((await c('POST', `/api/orders/${number}/pay?t=${token}`)).status, 409);
   assert.equal((await admin('POST', `/api/admin/orders/${await orderId(number)}/payment`, { status: 'unpaid' })).status, 409); // online status only from the gateway
 });
@@ -432,8 +450,8 @@ test('payments: amount mismatch from a gateway is never marked paid', async () =
   const { get } = await dbq();
   const c = client();
   const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: `online:${sandboxId}` }))).json;
-  const pay = get('SELECT * FROM payments WHERE order_id = ? ORDER BY id DESC', await orderId(o.order.number));
-  const r = applyResult(pay.id, { status: 'paid', amount: 1 });
+  const pay = await get('SELECT * FROM payments WHERE order_id = ? ORDER BY id DESC', await orderId(o.order.number));
+  const r = await applyResult(pay.id, { status: 'paid', amount: 1 });
   assert.equal(r.payment.status, 'failed'); assert.equal(r.order.payment_status, 'failed');
 });
 
@@ -490,7 +508,7 @@ test('Plutu gateway: real request contract, signed return query decides the resu
   const q2 = (() => { const p = { gateway: 'localbankcards', approved: '1', canceled: '0', invoice_no: inv2, amount: '20.000', transaction_id: 'T-88' }; return new URLSearchParams({ ...p, hashed: hmacHex('sha256', secret, Object.entries(p).map(([k, v]) => `${k}=${v}`).join('&')).toUpperCase() }).toString(); })();
   await ret(q2); assert.equal(await status(), 'paid');
   await ret(q2); assert.equal(await status(), 'paid'); // replay is a no-op
-  assert.equal((await dbq()).all("SELECT 1 FROM order_events WHERE kind='payment' AND to_value='paid' AND order_id = ?", await orderId(number)).length, 1);
+  assert.equal((await (await dbq()).all("SELECT 1 FROM order_events WHERE kind='payment' AND to_value='paid' AND order_id = ?", await orderId(number))).length, 1);
   // gateway rejection (bad credentials) → order kept, payment failed with a clear error
   assert.equal((await admin('PUT', `/api/admin/payment-gateways/${gid}`, { label: 'بطاقات ليبية', enabled: true, config: made.json.item.config, secrets: { api_key: 'WRONG' } })).status, 200);
   const bad = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: `online:${gid}` }))).json;
@@ -504,13 +522,13 @@ test('Plutu Tlync: callback (POST) is verified with the secret key', async () =>
   const { get } = await dbq();
   const c = client(); const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: 'cash' }))).json;
   const oid = await orderId(o.order.number);
-  const info = (await dbq()).run("INSERT INTO payments (order_id, provider, gateway_id, amount, currency, status, idempotency_key) VALUES (?, 'plutu', ?, ?, 'LYD', 'pending', ?)", oid, gid, 20000, `${o.order.number}-1`);
+  const info = await (await dbq()).run("INSERT INTO payments (order_id, provider, gateway_id, amount, currency, status, idempotency_key) VALUES (?, 'plutu', ?, ?, 'LYD', 'pending', ?)", oid, gid, 20000, `${o.order.number}-1`);
   const p = { gateway: 'tlync', approved: '1', amount: '20.000', invoice_no: `${o.order.number}-1`, canceled: '0', payment_method: 'sadad', transaction_id: 'TX9' };
   const hashed = hmacHex('sha256', secret, Object.entries(p).map(([k, v]) => `${k}=${v}`).join('&')).toUpperCase();
   const post = (body, ct) => fetch(`${base}/api/payments/webhook/${gid}`, { method: 'POST', body, headers: { 'content-type': ct } });
   assert.equal((await post(new URLSearchParams({ ...p, hashed: 'AAAA' }).toString(), 'application/x-www-form-urlencoded')).status, 401);
   assert.equal((await post(JSON.stringify({ ...p, hashed }), 'application/json')).status, 200);
-  assert.equal(get('SELECT status FROM payments WHERE id = ?', Number(info.lastInsertRowid)).status, 'paid');
+  assert.equal((await get('SELECT status FROM payments WHERE id = ?', Number(info.lastInsertRowid))).status, 'paid');
   assert.equal((await post(JSON.stringify({ ...p, hashed }), 'application/json')).json?.duplicate ?? true, true);
   await admin('DELETE', `/api/admin/payment-gateways/${gid}`);
 });
@@ -588,14 +606,14 @@ test('account: update profile, change password (others signed out), delete accou
   const pid = (await admin('GET', '/api/admin/products')).json.items[0].id;
   const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: pid, qty: 1 }], { name: 'خالد حسن', phone: '0944443333', notes: 'ملاحظة خاصة' }))).json;
   assert.equal((await c('DELETE', '/api/account', { password: 'new-pass-2026', confirm: 'حذف' })).status, 409); // active order
-  const oid = (await import('../server/db.js')).get('SELECT id FROM orders WHERE number = ?', o.order.number).id;
+  const oid = (await (await dbq()).get('SELECT id FROM orders WHERE number = ?', o.order.number)).id;
   await admin('POST', `/api/admin/orders/${oid}/status`, { status: 'cancelled' });
   assert.equal((await c('DELETE', '/api/account', { password: 'new-pass-2026', confirm: 'نعم' })).status, 400);
   assert.equal((await c('DELETE', '/api/account', { password: 'wrong-pass-1', confirm: 'حذف' })).status, 403);
   assert.equal((await c('DELETE', '/api/account', { password: 'new-pass-2026', confirm: 'حذف' })).status, 200);
   assert.equal((await c('GET', '/api/auth/me')).json.user, null);
   assert.equal((await client()('POST', '/api/auth/login', { identifier: '0944443333', password: 'new-pass-2026' })).status, 401);
-  const row = (await import('../server/db.js')).get('SELECT customer_name, customer_phone, notes, total FROM orders WHERE id = ?', oid);
+  const row = await (await dbq()).get('SELECT customer_name, customer_phone, notes, total FROM orders WHERE id = ?', oid);
   assert.equal(row.customer_name, 'عميل محذوف');
   assert.equal(row.customer_phone, 'deleted');
   assert.equal(row.notes, null);

@@ -1,0 +1,35 @@
+// Cloudflare Workers deployment of عالم البكلاوه (Worker + D1 database + static assets).
+//   npx wrangler@4 deploy          ← creates the D1 database automatically and publishes the store
+// The D1 binding has no database_id on purpose: Wrangler (≥ 4.45) / the Cloudflare dashboard creates it for you.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "alem-al-bklawa",
+  "main": "cloudflare/worker.js",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // The database migrations are plain .sql files bundled into the Worker as text.
+  "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+
+  "d1_databases": [{ "binding": "DB", "database_name": "alem-al-bklawa-db" }],
+
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    // The Worker renders pages (SEO, data) and the API; real files are served straight from the edge (free, no Worker).
+    "run_worker_first": [
+      "/*",
+      "!/css/*", "!/js/*", "!/assets/*", "!/fonts/*",
+      "!/favicon.svg", "!/manifest.webmanifest",
+      "!/admin/*.js", "!/admin/*.css"
+    ]
+  },
+
+  // Optional settings (all can also be added later in the dashboard: Worker → Settings → Variables and Secrets):
+  //   SITE_URL             – only if you want a fixed public address (default: the address the visitor used)
+  //   SETUP_CODE           – require a code on the first-run "create owner account" form
+  //   APP_SECRET           – (secret, ≥ 32 chars) encrypts payment-gateway keys; recommended before adding a gateway
+  //   PASSWORD_ITERATIONS  – password hashing cost (default 50000 fits the Free plan; raise it on the Paid plan)
+  "observability": { "enabled": true }
+}

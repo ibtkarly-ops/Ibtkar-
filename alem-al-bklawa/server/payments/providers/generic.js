@@ -103,7 +103,7 @@ export default {
     if (!secret) throw new Error('webhook secret not configured');
     const algo = cfg.webhook_algo === 'sha512' ? 'sha512' : 'sha256';
     const expected = crypto.createHmac(algo, secret).update(rawBody).digest(cfg.webhook_encoding === 'base64' ? 'base64' : 'hex');
-    const given = String(headers[String(cfg.webhook_sig_header || 'x-signature').toLowerCase()] || '').replace(/^(sha256|sha512)=/i, '');
+    const given = String(headers.get(String(cfg.webhook_sig_header || 'x-signature').toLowerCase()) || '').replace(/^(sha256|sha512)=/i, '');
     const a = Buffer.from(given); const b = Buffer.from(expected);
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) throw new Error('bad signature');
     const json = JSON.parse(rawBody.toString('utf8'));

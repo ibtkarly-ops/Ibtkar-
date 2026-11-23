@@ -21,14 +21,14 @@ async function loadBoot() {
 // Shown when the page is opened without the Node.js server behind it (static hosting / opened as a file).
 function noServerView() {
   setHtml(root, html`<div class="login-wrap"><div class="login-card form" style="max-width:560px"><h1 style="font-size:22px;margin:0">الخادم غير متصل</h1>
-    <div class="notice notice-err">هذه اللوحة تحتاج إلى خادم Node.js (قاعدة البيانات وواجهة الـ API). فتحها كملف مباشر أو رفع المجلد على استضافة ملفات ثابتة لن يعمل.</div>
+    <div class="notice notice-err">هذه اللوحة تحتاج إلى خادم المتجر (Cloudflare Worker أو Node.js) وقاعدة البيانات وواجهة الـ API. فتحها كملف مباشر أو رفع المجلد على استضافة ملفات ثابتة لن يعمل.</div>
     <p style="margin:0"><b>التشغيل:</b></p>
     <ol style="margin:0;padding-inline-start:20px;line-height:2"><li>ثبّت Node.js 22 أو أحدث.</li><li>من داخل مجلد المتجر شغّل: <code dir="ltr">npm start</code></li><li>افتح <code dir="ltr">http://localhost:3000/admin</code></li></ol>
     <p class="cl-sub" style="margin:0">للنشر على سيرفر: <code dir="ltr">docker compose up -d --build</code> أو أي استضافة تدعم Node.js. تفاصيل أكثر في README.md.</p></div></div>`);
 }
 
 // First run: no admin exists yet → create the owner account right here.
-function setupView(needsCode) {
+function setupView(st) {
   setHtml(root, html`<div class="login-wrap"><form class="login-card form" id="sf" novalidate style="max-width:460px">${logoDisc(boot.settings, 84)}
     <h1 style="text-align:center;font-size:22px;margin:0">إعداد المتجر لأول مرة</h1>
     <p class="cl-sub" style="text-align:center;margin:0">أنشئ حساب مدير المتجر. يظهر هذا النموذج مرة واحدة فقط، وبعد إنشاء الحساب يُغلق نهائيًا.</p>
@@ -36,7 +36,8 @@ function setupView(needsCode) {
     <div class="field"><label for="se">البريد الإلكتروني (للدخول)</label><input class="input" id="se" name="email" type="email" autocomplete="username" required dir="ltr" style="text-align:right"></div>
     <div class="field"><label for="sp">كلمة المرور (8 أحرف على الأقل)</label><input class="input" id="sp" name="password" type="password" autocomplete="new-password" required minlength="8"></div>
     <div class="field"><label for="sc">تأكيد كلمة المرور</label><input class="input" id="sc" name="confirm" type="password" autocomplete="new-password" required></div>
-    ${needsCode ? html`<div class="field"><label for="sk">رمز الإعداد</label><input class="input" id="sk" name="code" autocomplete="off" required dir="ltr" style="text-align:right;letter-spacing:2px;text-transform:uppercase"><span class="hint">تجده في سجل تشغيل الخادم (سطر «إعداد أولي») أو في الملف <bdi dir="ltr">data/setup-code.txt</bdi>. من نفس جهاز الخادم لا تحتاجه.</span></div>` : ''}
+    ${st.needsCode ? html`<div class="field"><label for="sk">رمز الإعداد</label><input class="input" id="sk" name="code" autocomplete="off" required dir="ltr" style="text-align:right;letter-spacing:2px;text-transform:uppercase"><span class="hint">${st.codeWhere}</span></div>` : ''}
+    ${st.openClaim ? html`<p class="notice notice-warn" style="margin:0">⚠ من يفتح هذه الصفحة أولًا يصبح مدير المتجر — أكمل الإنشاء الآن. (لحماية إضافية أضف المتغير <bdi dir="ltr">SETUP_CODE</bdi> في إعدادات الـ Worker قبل الاستخدام.)</p>` : ''}
     <button class="btn btn-primary btn-block" type="submit">إنشاء حساب المدير وبدء الإعداد</button></form></div>`);
   const f = $('#sf');
   f.addEventListener('submit', async (e) => {
@@ -137,6 +138,6 @@ function start() { layout(); render(); poll(); clearInterval(pollTimer); pollTim
 (async () => {
   try { await loadBoot(); } catch { noServerView(); return; }
   try { const r = await api('/api/auth/me'); if (r.user && r.user.role !== 'customer') { user = r.user; start(); return; } } catch { /* show login */ }
-  try { const st = await api('/api/setup/status'); if (st.needsSetup) { setupView(st.needsCode); return; } } catch { /* fall through to login */ }
+  try { const st = await api('/api/setup/status'); if (st.needsSetup) { setupView(st); return; } } catch { /* fall through to login */ }
   loginView();
 })();

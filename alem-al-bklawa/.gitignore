@@ -4,3 +4,5 @@ data/
 *.log
 tests/.tmp/
 tests/shots/
+.wrangler/
+.dev.vars

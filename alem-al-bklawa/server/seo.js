@@ -1,23 +1,13 @@
 // HTML shell rendering (per-route meta, Open Graph, JSON-LD, embedded bootstrap data), sitemap & robots.
-import fs from 'node:fs';
-import path from 'node:path';
-import { config } from './config.js';
-import { all } from './db.js';
+import { rt, db } from './runtime.js';
 import { getProduct, getBundle } from './catalog.js';
 import { bootstrapData } from './routes/public.js';
 import { effectiveLogo } from './settings.js';
+import { originOf } from './http.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const jsonSafe = (o) => JSON.stringify(o).replace(/</g, '\\u003c').replace(/[\u2028\u2029]/g, (c) => '\\u' + c.charCodeAt(0).toString(16));
-const abs = (u) => (!u ? '' : /^https?:/.test(u) ? u : config.siteUrl + u);
 const cut = (s, n) => { const t = String(s || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
-
-let tpl = { mtime: 0, html: '' };
-function template(file) {
-  const st = fs.statSync(file);
-  if (st.mtimeMs !== tpl.mtime || tpl.file !== file) tpl = { mtime: st.mtimeMs, html: fs.readFileSync(file, 'utf8'), file };
-  return tpl.html;
-}
 
 export const logoUrl = effectiveLogo;
 
@@ -32,14 +22,15 @@ const KNOWN = /^\/(shop|bundles|branches|about|privacy|terms|rights|track)?\/?$|
 
 export function routeStatus(pathname) { return KNOWN.test(pathname) ? 200 : 404; }
 
-function metaFor(pathname, boot) {
+async function metaFor(pathname, boot, origin) {
   const s = boot.settings; const brand = s.brand_name_ar;
-  const meta = { title: `${brand} | ${s.tagline}`, description: s.meta_description, image: logoUrl(s), canonical: config.siteUrl + (pathname === '/' ? '/' : pathname), type: 'website', noindex: NOINDEX.test(pathname), ld: [] };
+  const abs = (u) => (!u ? '' : /^https?:/.test(u) ? u : origin + u);
+  const meta = { title: `${brand} | ${s.tagline}`, description: s.meta_description, image: logoUrl(s), canonical: origin + (pathname === '/' ? '/' : pathname), type: 'website', noindex: NOINDEX.test(pathname), ld: [] };
   const titled = (t, d) => { meta.title = `${t} | ${brand}`; if (d) meta.description = d; };
   let m;
   if (pathname === '/') {
     meta.ld.push({
-      '@context': 'https://schema.org', '@type': 'Store', name: brand, alternateName: s.brand_name_en, url: config.siteUrl + '/',
+      '@context': 'https://schema.org', '@type': 'Store', name: brand, alternateName: s.brand_name_en, url: origin + '/',
       ...(meta.image ? { logo: abs(meta.image), image: abs(meta.image) } : {}),
       description: s.meta_description,
       telephone: '+' + (s.main_whatsapp || s.support_whatsapp),
@@ -54,11 +45,11 @@ function metaFor(pathname, boot) {
   else if (pathname === '/terms') titled('شروط الاستخدام');
   else if (pathname === '/rights') titled('حقوق العملاء');
   else if ((m = /^\/product\/(\d+)/.exec(pathname))) {
-    const p = getProduct(Number(m[1]));
+    const p = await getProduct(Number(m[1]));
     if (p) {
       titled(p.name, cut(p.description || `${p.name} من ${brand}`, 160)); meta.type = 'product';
       if (p.image) meta.image = p.image;
-      meta.canonical = `${config.siteUrl}/product/${p.id}`;
+      meta.canonical = `${origin}/product/${p.id}`;
       meta.ld.push({
         '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: cut(p.description, 300) || undefined,
         image: p.image ? [abs(p.image)] : undefined, category: p.category_name,
@@ -70,19 +61,19 @@ function metaFor(pathname, boot) {
       });
     } else meta.noindex = true;
   } else if ((m = /^\/bundle\/(\d+)/.exec(pathname))) {
-    const b = getBundle(Number(m[1]));
+    const b = await getBundle(Number(m[1]));
     if (b) {
-      titled(b.name, cut(b.description || `${b.name} من ${brand}`, 160)); if (b.image) meta.image = b.image; meta.canonical = `${config.siteUrl}/bundle/${b.id}`;
+      titled(b.name, cut(b.description || `${b.name} من ${brand}`, 160)); if (b.image) meta.image = b.image; meta.canonical = `${origin}/bundle/${b.id}`;
       meta.ld.push({
         '@context': 'https://schema.org', '@type': 'Product', name: b.name, description: cut(b.description, 300) || undefined, image: b.image ? [abs(b.image)] : undefined,
         offers: { '@type': 'Offer', priceCurrency: s.currency, price: b.price / 1000, availability: b.available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock', url: meta.canonical },
       });
     } else meta.noindex = true;
   }
-  return meta;
+  return { meta, abs };
 }
 
-function headTags(meta) {
+function headTags(meta, abs) {
   const t = [
     `<title>${esc(meta.title)}</title>`,
     `<meta name="description" content="${esc(cut(meta.description, 300))}">`,
@@ -98,24 +89,29 @@ function headTags(meta) {
   return t.filter(Boolean).join('\n');
 }
 
-export function renderApp(pathname) {
-  const boot = bootstrapData();
-  const html = template(path.join(config.publicDir, 'index.html'));
-  const logo = logoUrl(boot.settings);
-  boot.settings = { ...boot.settings, logo_url: logo };
+export async function renderApp(request, pathname) {
+  const origin = originOf(request);
+  const [boot, html] = await Promise.all([bootstrapData(), rt.platform.assets.text('/index.html')]);
+  boot.settings = { ...boot.settings, logo_url: logoUrl(boot.settings) };
+  const { meta, abs } = await metaFor(pathname, boot, origin);
   return html
-    .replace('<!--SEO-->', () => headTags(metaFor(pathname, boot)))
+    .replace('<!--SEO-->', () => headTags(meta, abs))
     .replace('<!--LOGO-->', () => logoInner(boot.settings))
     .replace('<!--BOOT-->', () => `<script id="boot" type="application/json">${jsonSafe(boot)}</script>`);
 }
 
-export function sitemapXml() {
+export async function sitemapXml(request) {
+  const origin = originOf(request);
   const now = new Date().toISOString().slice(0, 10);
   const urls = ['/', '/shop', '/bundles', '/branches', '/about', '/privacy', '/terms', '/rights'].map((p) => ({ loc: p, mod: now }));
-  for (const p of all("SELECT p.id, p.updated_at FROM products p JOIN categories c ON c.id = p.category_id WHERE p.active = 1 AND c.active = 1")) urls.push({ loc: `/product/${p.id}`, mod: p.updated_at.slice(0, 10) });
-  for (const b of all('SELECT id, updated_at FROM bundles WHERE active = 1')) urls.push({ loc: `/bundle/${b.id}`, mod: b.updated_at.slice(0, 10) });
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${esc(config.siteUrl + u.loc)}</loc><lastmod>${u.mod}</lastmod></url>`).join('\n')}\n</urlset>\n`;
+  const [prods, bundles] = await db.batch([
+    ['SELECT p.id, p.updated_at FROM products p JOIN categories c ON c.id = p.category_id WHERE p.active = 1 AND c.active = 1'],
+    ['SELECT id, updated_at FROM bundles WHERE active = 1'],
+  ]);
+  for (const p of prods.rows) urls.push({ loc: `/product/${p.id}`, mod: p.updated_at.slice(0, 10) });
+  for (const b of bundles.rows) urls.push({ loc: `/bundle/${b.id}`, mod: b.updated_at.slice(0, 10) });
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${esc(origin + u.loc)}</loc><lastmod>${u.mod}</lastmod></url>`).join('\n')}\n</urlset>\n`;
 }
 
-export const robotsTxt = () =>
-  `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nDisallow: /account\nDisallow: /checkout\nDisallow: /order/\nDisallow: /pay/\nDisallow: /sandbox/\n\nSitemap: ${config.siteUrl}/sitemap.xml\n`;
+export const robotsTxt = (request) =>
+  `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nDisallow: /account\nDisallow: /checkout\nDisallow: /order/\nDisallow: /pay/\nDisallow: /sandbox/\n\nSitemap: ${originOf(request)}/sitemap.xml\n`;

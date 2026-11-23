@@ -5,7 +5,7 @@ on:
   pull_request:
     paths: ["alem-al-bklawa/**", ".github/workflows/store-tests.yml"]
 jobs:
-  store:
+  node:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: alem-al-bklawa } }
     steps:
@@ -16,3 +16,15 @@ jobs:
       - run: npm install --no-save playwright@1 && npx playwright install --with-deps chromium
       - run: node tests/e2e.js
       - run: node tests/first-run.js
+  cloudflare:
+    # The same store on Workers + D1 (local wrangler dev). Does not touch any Cloudflare account.
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: alem-al-bklawa } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - run: npm run test:worker
+      - run: npm install --no-save playwright@1 && npx playwright install --with-deps chromium
+      - run: npm run test:e2e:worker

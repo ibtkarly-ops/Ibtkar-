@@ -18,7 +18,7 @@
 </head>
 <body class="admin">
 <div id="splash" style="display:none"></div>
-<div id="no-app" role="alert" dir="rtl"><h1>الخادم غير متصل</h1><p>هذا المتجر يحتاج إلى خادم Node.js ليعمل (قاعدة البيانات وواجهة الـ API). فتحه كملف مباشر أو رفعه على استضافة ملفات ثابتة لن يُظهر المنتجات ولا لوحة الإدارة.</p><ol><li>ثبّت Node.js 22 أو أحدث.</li><li>من داخل مجلد المتجر شغّل: <code dir="ltr">npm start</code></li><li>افتح <code dir="ltr">http://localhost:3000</code> (والإدارة على <code dir="ltr">/admin</code>).</li></ol><p>للنشر: <code dir="ltr">docker compose up -d --build</code> أو أي استضافة تدعم Node.js (التفاصيل في README.md).</p></div>
+<div id="no-app" role="alert" dir="rtl"><h1>الخادم غير متصل</h1><p>هذا المتجر يحتاج إلى خادم ليعمل (Node.js، أو Cloudflare Workers مع قاعدة D1) لأن فيه قاعدة البيانات وواجهة الـ API. فتحه كملف مباشر أو رفعه على استضافة ملفات ثابتة لن يُظهر المنتجات ولا لوحة الإدارة.</p><ol><li>ثبّت Node.js 22 أو أحدث.</li><li>من داخل مجلد المتجر شغّل: <code dir="ltr">npm start</code></li><li>افتح <code dir="ltr">http://localhost:3000</code> (والإدارة على <code dir="ltr">/admin</code>).</li></ol><p>للنشر على Cloudflare بلا سيرفر: <code dir="ltr">npx wrangler@4 deploy</code>، أو على سيرفرك: <code dir="ltr">docker compose up -d --build</code> (التفاصيل في README.md).</p></div>
 <div id="root"></div>
 <div id="toasts" role="status" aria-live="polite"></div>
 <noscript><p style="padding:24px;text-align:center">تحتاج لوحة الإدارة إلى تفعيل JavaScript.</p></noscript>

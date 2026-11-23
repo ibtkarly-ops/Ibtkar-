@@ -1,99 +1,54 @@
-// HTTP server: routing, auth context, CSRF, errors, static files, SPA shell.
+// Node.js adapter: HTTP server around the shared request handler (server/app.js).
 import http from 'node:http';
-import path from 'node:path';
-import { config } from './config.js';
-import { migrate, db } from './db.js';
-import { seedIfEmpty } from './settings.js';
-import { Router, readJson, sendJson, send, serveStatic, securityHeaders, sameOriginOk, clientIp } from './http.js';
-import { currentUser, bootstrapAdmin } from './auth.js';
-import { HttpError } from './lib.js';
-import { renderApp, sitemapXml, robotsTxt, routeStatus } from './seo.js';
-import * as publicRoutes from './routes/public.js';
-import * as accountRoutes from './routes/account.js';
-import * as orderRoutes from './routes/orders.js';
-import * as adminRoutes from './routes/admin.js';
-import * as setupRoutes from './routes/setup.js';
+import { Readable } from 'node:stream';
+import { rt } from './runtime.js';
+import { createNodeRuntime } from './node-runtime.js';
+import { handle, ensureReady } from './app.js';
 
-const router = new Router();
-for (const m of [publicRoutes, accountRoutes, orderRoutes, adminRoutes, setupRoutes]) m.register(router);
-
-const uploadsDir = path.join(config.dataDir, 'uploads');
-const adminDir = path.join(config.publicDir, 'admin');
-
-async function handleApi(req, res, url, ctx) {
-  const m = router.match(req.method === 'HEAD' ? 'GET' : req.method, url.pathname);
-  if (!m) throw new HttpError(404, 'not_found', 'غير موجود');
-  if (req.method !== 'GET' && req.method !== 'HEAD' && !sameOriginOk(req)) throw new HttpError(403, 'bad_origin', 'طلب غير مسموح');
-  ctx.params = m.params;
-  ctx.user = currentUser(req);
-  let out;
-  for (const fn of m.fns) { out = await fn(ctx); }
-  sendJson(req, res, ctx.status || 200, out ?? { ok: true });
+/** node:http request → Web Request */
+function toRequest(req, port) {
+  const host = req.headers.host || `localhost:${port}`;
+  const headers = new Headers();
+  for (const [k, v] of Object.entries(req.headers)) { if (Array.isArray(v)) v.forEach((x) => headers.append(k, x)); else if (v !== undefined) headers.set(k, v); }
+  const hasBody = req.method !== 'GET' && req.method !== 'HEAD';
+  return new Request(new URL(req.url, `http://${host}`), { method: req.method, headers, body: hasBody ? Readable.toWeb(req) : undefined, duplex: 'half' });
 }
 
-async function handle(req, res) {
-  const started = Date.now();
-  const url = new URL(req.url, 'http://local');
-  const ctx = {
-    req, res, url, query: url.searchParams, ip: clientIp(req), user: null, params: {}, status: 0,
-    json: (limit) => readJson(req, limit),
-  };
-  securityHeaders(req, res);
-  try {
-    const p = url.pathname;
-    if (!['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return send(res, 405, 'Method Not Allowed');
-    if (p === '/healthz') { db.prepare('SELECT 1').get(); return send(res, 200, 'ok', { 'Content-Type': 'text/plain' }); }
-    if (p.startsWith('/api/')) return await handleApi(req, res, url, ctx);
-
-    if (p.startsWith('/uploads/') && serveStatic(req, res, uploadsDir, p.slice('/uploads/'.length), { immutable: true })) return;
-    if (p.startsWith('/pay/') || p.startsWith('/sandbox/')) {
-      ctx.user = currentUser(req);
-      if (await orderRoutes.pageRoutes(req, res, url, ctx)) return;
-    }
-    if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Method Not Allowed');
-
-    if (p === '/sitemap.xml') return send(res, 200, sitemapXml(), { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=600' });
-    if (p === '/robots.txt') return send(res, 200, robotsTxt(), { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
-
-    // Admin app: separate shell, separate assets.
-    if (p === '/admin' || p.startsWith('/admin/')) {
-      const rel = p.slice('/admin'.length).replace(/^\/+/, '');
-      if (rel && serveStatic(req, res, adminDir, rel)) return;
-      return serveStatic(req, res, adminDir, 'index.html') || send(res, 404, 'not found');
-    }
-
-    if (p !== '/' && !p.endsWith('.html') && serveStatic(req, res, config.publicDir, p)) return;
-
-    // Storefront SPA shell (with per-route SEO + embedded bootstrap data).
-    const html = renderApp(p);
-    return send(res, routeStatus(p), req.method === 'HEAD' ? '' : html, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
-  } catch (e) {
-    if (res.headersSent) { res.destroy(); return; }
-    if (e instanceof HttpError) {
-      const body = { error: e.code, message: e.message, ...(e.extra || {}) };
-      return sendJson(req, res, e.status, body);
-    }
-    console.error('[error]', req.method, url.pathname, e);
-    return sendJson(req, res, 500, { error: 'server_error', message: 'حدث خطأ غير متوقع. حاول مرة أخرى.' });
-  } finally {
-    if (url.pathname.startsWith('/api/') && process.env.LOG_REQUESTS === '1') console.log(`${req.method} ${url.pathname} ${res.statusCode} ${Date.now() - started}ms`);
-  }
+/** Web Response → node:http response */
+async function send(res, response, head) {
+  const headers = {};
+  for (const [k, v] of response.headers) if (k !== 'set-cookie') headers[k] = v;
+  const cookies = response.headers.getSetCookie?.() || [];
+  if (cookies.length) headers['set-cookie'] = cookies;
+  res.writeHead(response.status, headers);
+  if (head || !response.body) return res.end();
+  const buf = Buffer.from(await response.arrayBuffer());
+  res.end(buf);
 }
 
-export async function start({ port = config.port, host = config.host } = {}) {
-  migrate();
-  seedIfEmpty();
-  await bootstrapAdmin();
-  if (config.payment.sandboxRequestedInProd) console.warn('[payments] PAYMENT_SANDBOX تجاهل: بوابة الاختبار ممنوعة في الإنتاج.');
-  const server = http.createServer((req, res) => { handle(req, res).catch((e) => { console.error('[fatal]', e); try { res.destroy(); } catch { /* */ } }); });
+export async function start({ port, host, env = process.env } = {}) {
+  const { config, db, platform } = createNodeRuntime(env);
+  port ??= config.port; host ??= config.host;
+  await ensureReady();
+  if (config.sandboxRequestedInProd) console.warn('[payments] PAYMENT_SANDBOX تجاهل: بوابة الاختبار ممنوعة في الإنتاج.');
+  const server = http.createServer((req, res) => {
+    const started = Date.now();
+    handle(toRequest(req, port), { remoteAddress: req.socket.remoteAddress })
+      .then((response) => send(res, response, req.method === 'HEAD'))
+      .then(() => { if (env.LOG_REQUESTS === '1' && req.url.startsWith('/api/')) console.log(`${req.method} ${req.url.split('?')[0]} ${res.statusCode} ${Date.now() - started}ms`); })
+      .catch((e) => { console.error('[fatal]', e); try { if (!res.headersSent) { res.writeHead(500); res.end(); } else res.destroy(); } catch { /* */ } });
+  });
   server.requestTimeout = 30_000; server.headersTimeout = 15_000; server.keepAliveTimeout = 65_000;
   await new Promise((resolve) => server.listen(port, host, resolve));
-  const code = setupRoutes.ensureSetupCode();
+  const code = await platform.setup.pending();
   if (code) {
     const url = `${config.siteUrl.startsWith('http://localhost') ? `http://localhost:${server.address().port}` : config.siteUrl}/admin`;
-    console.log(`\n[إعداد أولي] لا يوجد حساب مدير بعد. افتح ${url} وأنشئ حساب المدير من المتصفح.\n             من نفس الجهاز لا تحتاج رمزًا. من جهاز آخر استخدم رمز الإعداد: ${code}  (محفوظ أيضًا في ${setupRoutes.setupCodePath()})\n`);
+    console.log(`\n[إعداد أولي] لا يوجد حساب مدير بعد. افتح ${url} وأنشئ حساب المدير من المتصفح.\n             من نفس الجهاز لا تحتاج رمزًا. من جهاز آخر استخدم رمز الإعداد: ${code}  (محفوظ أيضًا في ${platform.setup.codePath})\n`);
   }
   const close = () => { server.close(() => { try { db.close(); } catch { /* */ } process.exit(0); }); setTimeout(() => process.exit(0), 5000).unref(); };
-  if (process.env.NODE_ENV !== 'test') { process.on('SIGTERM', close); process.on('SIGINT', close); }
+  if (env.NODE_ENV !== 'test') { process.on('SIGTERM', close); process.on('SIGINT', close); }
+  server.config = config; server.db = db; // handy for tests and scripts
   return server;
 }
+
+export { rt };
