@@ -4,10 +4,15 @@ services:
   store:
     build: ../..
     restart: unless-stopped
-    env_file: ../../.env
-    environment:
+    environment:                    # explicit list: the tunnel token is NOT passed to the store
+      NODE_ENV: production
       DATA_DIR: /data
       TRUST_PROXY: "1"
+      SITE_URL: ${SITE_URL:?set SITE_URL in .env (https://your-domain)}
+      APP_SECRET: ${APP_SECRET:-}
+      ADMIN_NAME: ${ADMIN_NAME:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     volumes:
       - abk-data:/data            # database, uploaded images, encryption key — back this up (see scripts/backup.js)
   tunnel:
