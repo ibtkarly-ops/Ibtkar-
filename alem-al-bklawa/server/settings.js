@@ -1,4 +1,7 @@
 // Site settings (editable from the admin panel) + first-run seed.
+import fs from 'node:fs';
+import path from 'node:path';
+import { config } from './config.js';
 import { all, get, run, tx, nowIso } from './db.js';
 
 /** Defaults are only used when a key was never saved. Nothing here is invented business data:
@@ -104,4 +107,13 @@ export function seedIfEmpty() {
       run(`INSERT INTO branches (slug, name, sort_order) VALUES (?, ?, ?)`, 'al-siraj', 'السراج', 30);
     });
   }
+}
+
+/** The logo actually in use: one uploaded from the admin panel, else the file shipped in public/assets, else ''. */
+export function effectiveLogo(settings) {
+  if (settings.logo_url) return settings.logo_url;
+  for (const f of ['logo.webp', 'logo.png', 'logo.jpg', 'logo.svg']) {
+    if (fs.existsSync(path.join(config.publicDir, 'assets', f))) return '/assets/' + f;
+  }
+  return '';
 }

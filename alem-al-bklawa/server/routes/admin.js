@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { all, get, run, tx, nowIso } from '../db.js';
 import { config } from '../config.js';
-import { getSettings, saveSettings, DEFAULTS } from '../settings.js';
+import { getSettings, saveSettings, DEFAULTS, effectiveLogo } from '../settings.js';
 import {
   HttpError, str, int, flag, bad, slugify, lydToDirham, normalizePhone, emailOrEmpty, safeUrl, safeImage, isoOrNull,
   ORDER_STATUSES,
@@ -52,6 +52,15 @@ export function register(r) {
     return {
       counts, total, sales, open, paidOnline, top, unavailable, unavailableBundles, recent, openSupport,
       newestOrderId: get('SELECT COALESCE(MAX(id),0) AS m FROM orders').m, gateways: gatewaySummary(),
+      // "get started" checklist: real state only
+      setup: {
+        logo: !!effectiveLogo(getSettings()),
+        products: get('SELECT COUNT(*) AS n FROM products WHERE active = 1').n,
+        bundles: get('SELECT COUNT(*) AS n FROM bundles WHERE active = 1').n,
+        banners: get('SELECT COUNT(*) AS n FROM banners WHERE active = 1').n,
+        branchesIncomplete: get("SELECT COUNT(*) AS n FROM branches WHERE active = 1 AND (phone = '' OR maps_url = '')").n,
+        gateways: gatewaySummary().enabled,
+      },
     };
   });
 

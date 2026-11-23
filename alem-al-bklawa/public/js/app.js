@@ -6,6 +6,16 @@ import { mountShell } from './shell.js';
 import { cart } from './cart.js';
 import { $, prefersReducedMotion } from './util.js';
 
+// The storefront is rendered by the Node.js server (it embeds the catalogue settings and talks to the database).
+// If this page was opened as a plain file or from static hosting there is no server: say so clearly instead of showing a broken shop.
+function noServer() {
+  document.getElementById('splash')?.remove(); document.getElementById('no-app')?.remove();
+  document.getElementById('root').innerHTML = '<div style="max-width:620px;margin:8vh auto;padding:24px;font-family:Cairo,sans-serif;line-height:1.9;direction:rtl"><h1 style="color:#800020">الخادم غير متصل</h1><p>هذا المتجر يحتاج إلى خادم Node.js ليعمل (قاعدة البيانات وواجهة الـ API). فتحه كملف مباشر أو رفعه على استضافة ملفات ثابتة لن يُظهر المنتجات ولا لوحة الإدارة.</p><ol><li>ثبّت Node.js 22 أو أحدث.</li><li>من داخل مجلد المتجر شغّل: <code dir=\"ltr\">npm start</code></li><li>افتح <code dir=\"ltr\">http://localhost:3000</code> (والإدارة على <code dir=\"ltr\">/admin</code>).</li></ol><p>للنشر: <code dir=\"ltr\">docker compose up -d --build</code> أو أي استضافة تدعم Node.js (التفاصيل في README.md).</p></div>';
+}
+if (!document.getElementById('boot')) { noServer(); } else { main(); }
+
+function main() {
+document.getElementById('no-app')?.remove(); // the app loaded: hide the "server not connected" hint
 initBoot();
 
 route('/', () => import('./views/home.js'));
@@ -53,4 +63,4 @@ function runSplash(tasks) {
   splash.addEventListener('click', finish);
 }
 runSplash([fontTask, logoTask, meTask, routeTask]);
-
+}

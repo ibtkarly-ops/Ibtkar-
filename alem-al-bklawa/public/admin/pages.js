@@ -14,7 +14,15 @@ const ok = (msg = 'تم الحفظ') => toast(msg, 'ok');
 export async function dashboard({ el, signal }) {
   const d = await api('/api/admin/dashboard', { signal });
   const c = d.counts; const pend = c.confirming + c.preparing + c.ready;
+  const st = d.setup; const steps = [
+    ['أضف أول منتج (أو أكثر) من «المنتجات»', st.products > 0, '/admin/products', 'products'],
+    ['أضف إعلانات البانر (صور تتبدّل تلقائيًا)', st.banners > 0, '/admin/banners', 'banners'],
+    ['أكمل بيانات الفروع: الهاتف ورابط الخريطة', st.branchesIncomplete === 0, '/admin/branches', 'branches'],
+    ['اربط بوابة الدفع الإلكتروني (اختياري)', st.gateways > 0, '/admin/payments', 'payments'],
+  ]; const done = steps.filter((x) => x[1]).length;
   setHtml(el, html`
+    ${done < steps.length ? html`<section class="card2" style="margin-bottom:16px;border-color:var(--gold)"><h2>ابدأ إعداد متجرك <span class="status">${done} من ${steps.length}</span></h2>
+      <ul class="tl" style="gap:8px">${steps.map(([t, ok_, href, key]) => html`<li style="border-inline-start-color:${ok_ ? 'var(--ok)' : 'var(--gold)'}">${ok_ ? '✓' : '○'} ${ok_ ? html`<s style="color:var(--muted)">${t}</s>` : html`<a href="${href}" data-r="${key}">${t}</a>`}</li>`)}</ul></section>` : ''}
     <div class="stats">
       <div class="stat ${c.new ? 'hot' : ''}"><b>${c.new}</b><span>طلبات جديدة</span></div>
       <div class="stat"><b>${pend}</b><span>قيد التأكيد / التحضير / الجاهزة</span></div>

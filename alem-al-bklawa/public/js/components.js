@@ -143,7 +143,7 @@ export function mountCatalog(el, { limit = 12, initial = 'all', syncUrl = false,
         const { items: bs } = await api('/api/bundles', { signal: sig }); reg('bundle', bs); bundlesShown = bs.length > 0;
         if (bs.length) extra = html`<h3 class="mt2">باقات المناسبات</h3><div class="grid grid-wide">${bs.map(bundleCard)}</div>`;
       }
-      if (!items.length && !bundlesShown) setHtml(grid, emptyState(active === 'all' ? 'لا توجد منتجات بعد' : 'لا توجد منتجات في هذا القسم حاليًا', 'يمكنك تجربة قسم آخر أو العودة لاحقًا.'));
+      if (!items.length && !bundlesShown) setHtml(grid, active === 'all' ? html`<div class="empty"><b>المتجر قيد التجهيز</b>لم تُضف منتجات بعد.${state.user?.role === 'admin' ? html`<div class="mt"><a class="btn btn-primary btn-sm" href="/admin/products" data-native>أضف منتجاتك من لوحة الإدارة</a></div>` : ''}</div>` : emptyState('لا توجد منتجات في هذا القسم حاليًا', 'يمكنك تجربة قسم آخر أو العودة لاحقًا.'));
       else setHtml(grid, html`${items.length ? html`<div class="grid fade">${out}</div>` : ''}${extra}`);
       if (items.length < total) setHtml(more, html`<button class="btn btn-ghost" type="button" data-loadmore>عرض المزيد</button>`);
       else if (moreLink && items.length) setHtml(more, html`<a class="btn btn-ghost" href="/shop${active === 'all' ? '' : `?category=${active}`}">عرض كل المنتجات</a>`);

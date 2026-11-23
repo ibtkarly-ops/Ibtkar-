@@ -1,6 +1,6 @@
 // Public, read-only storefront API.
 import { all, get, run } from '../db.js';
-import { getSettings } from '../settings.js';
+import { getSettings, effectiveLogo } from '../settings.js';
 import { listProducts, getProduct, listBundles, getBundle, search } from '../catalog.js';
 import { priceCart } from '../pricing.js';
 import { onlineMethods } from '../payments/index.js';
@@ -22,7 +22,8 @@ export const activeCategories = () =>
 
 /** Everything the storefront needs on first paint (also embedded into index.html). */
 export function bootstrapData() {
-  const settings = getSettings();
+  const settings = { ...getSettings() };
+  settings.logo_url = effectiveLogo(settings);
   const branches = activeBranches();
   const main = branches.find((b) => b.slug === settings.main_branch_slug) || branches[0] || null;
   return {

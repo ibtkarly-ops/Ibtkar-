@@ -1,7 +1,7 @@
 // Admin app: login gate → sidebar layout → page router. Pages live in pages.js and load on demand.
 import { html, setHtml, $, $$, logoDisc, icon } from '/js/util.js';
 import { api, ApiError } from '/js/api.js';
-import { toast, lockScroll } from '/js/ui.js';
+import { toast, lockScroll, showFieldError, clearFieldErrors } from '/js/ui.js';
 
 const NAV = [
   ['/admin', 'لوحة المعلومات', 'dashboard', 'staff'], ['/admin/orders', 'الطلبات', 'orders', 'staff'], ['/admin/products', 'المنتجات', 'products', 'admin'],
@@ -11,8 +11,47 @@ const NAV = [
 const TITLES = Object.fromEntries(NAV.map(([, t, k]) => [k, t]));
 let user = null; let boot = null; let navAbort = null; let pollTimer = null; let lastOrderId = null;
 const root = $('#root');
+document.getElementById('no-app')?.remove(); // admin.js loaded, so JavaScript works; noServerView() explains if the API is missing
 
-async function loadBoot() { boot = await api('/api/bootstrap'); }
+async function loadBoot() {
+  boot = await api('/api/bootstrap');
+  if (!boot || !boot.settings) throw new Error('no-server');
+}
+
+// Shown when the page is opened without the Node.js server behind it (static hosting / opened as a file).
+function noServerView() {
+  setHtml(root, html`<div class="login-wrap"><div class="login-card form" style="max-width:560px"><h1 style="font-size:22px;margin:0">الخادم غير متصل</h1>
+    <div class="notice notice-err">هذه اللوحة تحتاج إلى خادم Node.js (قاعدة البيانات وواجهة الـ API). فتحها كملف مباشر أو رفع المجلد على استضافة ملفات ثابتة لن يعمل.</div>
+    <p style="margin:0"><b>التشغيل:</b></p>
+    <ol style="margin:0;padding-inline-start:20px;line-height:2"><li>ثبّت Node.js 22 أو أحدث.</li><li>من داخل مجلد المتجر شغّل: <code dir="ltr">npm start</code></li><li>افتح <code dir="ltr">http://localhost:3000/admin</code></li></ol>
+    <p class="cl-sub" style="margin:0">للنشر على سيرفر: <code dir="ltr">docker compose up -d --build</code> أو أي استضافة تدعم Node.js. تفاصيل أكثر في README.md.</p></div></div>`);
+}
+
+// First run: no admin exists yet → create the owner account right here.
+function setupView(needsCode) {
+  setHtml(root, html`<div class="login-wrap"><form class="login-card form" id="sf" novalidate style="max-width:460px">${logoDisc(boot.settings, 84)}
+    <h1 style="text-align:center;font-size:22px;margin:0">إعداد المتجر لأول مرة</h1>
+    <p class="cl-sub" style="text-align:center;margin:0">أنشئ حساب مدير المتجر. يظهر هذا النموذج مرة واحدة فقط، وبعد إنشاء الحساب يُغلق نهائيًا.</p>
+    <div class="field"><label for="sn">اسمك</label><input class="input" id="sn" name="name" autocomplete="name" required maxlength="80"></div>
+    <div class="field"><label for="se">البريد الإلكتروني (للدخول)</label><input class="input" id="se" name="email" type="email" autocomplete="username" required dir="ltr" style="text-align:right"></div>
+    <div class="field"><label for="sp">كلمة المرور (8 أحرف على الأقل)</label><input class="input" id="sp" name="password" type="password" autocomplete="new-password" required minlength="8"></div>
+    <div class="field"><label for="sc">تأكيد كلمة المرور</label><input class="input" id="sc" name="confirm" type="password" autocomplete="new-password" required></div>
+    ${needsCode ? html`<div class="field"><label for="sk">رمز الإعداد</label><input class="input" id="sk" name="code" autocomplete="off" required dir="ltr" style="text-align:right;letter-spacing:2px;text-transform:uppercase"><span class="hint">تجده في سجل تشغيل الخادم (سطر «إعداد أولي») أو في الملف <bdi dir="ltr">data/setup-code.txt</bdi>. من نفس جهاز الخادم لا تحتاجه.</span></div>` : ''}
+    <button class="btn btn-primary btn-block" type="submit">إنشاء حساب المدير وبدء الإعداد</button></form></div>`);
+  const f = $('#sf');
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault(); clearFieldErrors(f); const b = f.querySelector('[type=submit]'); b.disabled = true;
+    try {
+      const r = await api('/api/setup', { method: 'POST', body: { name: f.name.value, email: f.email.value, password: f.password.value, confirm: f.confirm.value, code: f.code?.value || '' } });
+      user = r.user; toast('تم إنشاء حساب المدير. أهلًا بك!', 'ok'); start();
+    } catch (err) {
+      if (err.code === 'already_setup') { loginView('تم إعداد المتجر بالفعل. سجّل الدخول.'); return; }
+      if (!(err.data?.field && showFieldError(f, err.data.field, err.message))) toast(err.message, 'err', { ms: 6000 });
+      b.disabled = false;
+    }
+  });
+  $('#sn').focus();
+}
 const settings = () => boot.settings;
 
 function loginView(msg = '') {
@@ -96,7 +135,8 @@ async function poll() {
 function start() { layout(); render(); poll(); clearInterval(pollTimer); pollTimer = setInterval(poll, 30000); }
 
 (async () => {
-  try { await loadBoot(); } catch { setHtml(root, html`<div class="empty" style="margin:40px">تعذّر الاتصال بالخادم.</div>`); return; }
+  try { await loadBoot(); } catch { noServerView(); return; }
   try { const r = await api('/api/auth/me'); if (r.user && r.user.role !== 'customer') { user = r.user; start(); return; } } catch { /* show login */ }
+  try { const st = await api('/api/setup/status'); if (st.needsSetup) { setupView(st.needsCode); return; } } catch { /* fall through to login */ }
   loginView();
 })();

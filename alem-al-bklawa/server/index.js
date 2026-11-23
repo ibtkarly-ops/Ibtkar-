@@ -12,9 +12,10 @@ import * as publicRoutes from './routes/public.js';
 import * as accountRoutes from './routes/account.js';
 import * as orderRoutes from './routes/orders.js';
 import * as adminRoutes from './routes/admin.js';
+import * as setupRoutes from './routes/setup.js';
 
 const router = new Router();
-for (const m of [publicRoutes, accountRoutes, orderRoutes, adminRoutes]) m.register(router);
+for (const m of [publicRoutes, accountRoutes, orderRoutes, adminRoutes, setupRoutes]) m.register(router);
 
 const uploadsDir = path.join(config.dataDir, 'uploads');
 const adminDir = path.join(config.publicDir, 'admin');
@@ -41,7 +42,7 @@ async function handle(req, res) {
   try {
     const p = url.pathname;
     if (!['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return send(res, 405, 'Method Not Allowed');
-    if (p === '/healthz') return send(res, 200, 'ok', { 'Content-Type': 'text/plain' });
+    if (p === '/healthz') { db.prepare('SELECT 1').get(); return send(res, 200, 'ok', { 'Content-Type': 'text/plain' }); }
     if (p.startsWith('/api/')) return await handleApi(req, res, url, ctx);
 
     if (p.startsWith('/uploads/') && serveStatic(req, res, uploadsDir, p.slice('/uploads/'.length), { immutable: true })) return;
@@ -87,6 +88,11 @@ export async function start({ port = config.port, host = config.host } = {}) {
   const server = http.createServer((req, res) => { handle(req, res).catch((e) => { console.error('[fatal]', e); try { res.destroy(); } catch { /* */ } }); });
   server.requestTimeout = 30_000; server.headersTimeout = 15_000; server.keepAliveTimeout = 65_000;
   await new Promise((resolve) => server.listen(port, host, resolve));
+  const code = setupRoutes.ensureSetupCode();
+  if (code) {
+    const url = `${config.siteUrl.startsWith('http://localhost') ? `http://localhost:${server.address().port}` : config.siteUrl}/admin`;
+    console.log(`\n[إعداد أولي] لا يوجد حساب مدير بعد. افتح ${url} وأنشئ حساب المدير من المتصفح.\n             من نفس الجهاز لا تحتاج رمزًا. من جهاز آخر استخدم رمز الإعداد: ${code}  (محفوظ أيضًا في ${setupRoutes.setupCodePath()})\n`);
+  }
   const close = () => { server.close(() => { try { db.close(); } catch { /* */ } process.exit(0); }); setTimeout(() => process.exit(0), 5000).unref(); };
   if (process.env.NODE_ENV !== 'test') { process.on('SIGTERM', close); process.on('SIGINT', close); }
   return server;

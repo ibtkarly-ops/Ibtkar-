@@ -96,10 +96,7 @@ export function audit(ctx, action, entity, entityId, details) {
 export async function bootstrapAdmin() {
   if (get("SELECT 1 AS x FROM profiles WHERE role = 'admin' AND deleted_at IS NULL LIMIT 1")) return;
   const { email, password, name } = config.admin;
-  if (!email || !password) {
-    console.warn('[setup] لا يوجد مدير بعد. عيّن ADMIN_EMAIL و ADMIN_PASSWORD أو شغّل: npm run create-admin');
-    return;
-  }
+  if (!email || !password) return; // no env credentials: the owner creates the account from /admin (first-run setup)
   checkPasswordPolicy(password);
   run("INSERT INTO profiles (name, email, password_hash, role) VALUES (?, ?, ?, 'admin')", name, email.toLowerCase(), await hashPassword(password));
   console.log('[setup] تم إنشاء حساب المدير الأول:', email);

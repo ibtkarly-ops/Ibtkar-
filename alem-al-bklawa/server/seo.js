@@ -5,6 +5,7 @@ import { config } from './config.js';
 import { all } from './db.js';
 import { getProduct, getBundle } from './catalog.js';
 import { bootstrapData } from './routes/public.js';
+import { effectiveLogo } from './settings.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const jsonSafe = (o) => JSON.stringify(o).replace(/</g, '\\u003c').replace(/[\u2028\u2029]/g, (c) => '\\u' + c.charCodeAt(0).toString(16));
@@ -18,14 +19,7 @@ function template(file) {
   return tpl.html;
 }
 
-/** Real logo (uploaded / dropped into public/assets) or, until then, a clearly temporary typographic emblem. */
-export function logoUrl(settings) {
-  if (settings.logo_url) return settings.logo_url;
-  for (const f of ['logo.png', 'logo.webp', 'logo.jpg', 'logo.svg']) {
-    if (fs.existsSync(path.join(config.publicDir, 'assets', f))) return '/assets/' + f;
-  }
-  return '';
-}
+export const logoUrl = effectiveLogo;
 
 const PLACEHOLDER_LOGO = '<svg viewBox="0 0 200 200" role="img" aria-label="عالم البكلاوه"><rect width="200" height="200" fill="#800020"/><circle cx="100" cy="100" r="88" fill="none" stroke="#C6A15B" stroke-width="1.5"/><circle cx="100" cy="100" r="81" fill="none" stroke="#C6A15B" stroke-width=".6" opacity=".6"/><text x="100" y="94" text-anchor="middle" font-family="Cairo,sans-serif" font-weight="800" font-size="34" fill="#fff">عالم</text><text x="100" y="134" text-anchor="middle" font-family="Cairo,sans-serif" font-weight="800" font-size="34" fill="#C6A15B">البكلاوه</text></svg>';
 function logoInner(settings) {
