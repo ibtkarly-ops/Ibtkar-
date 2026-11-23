@@ -12,7 +12,9 @@ import { requireStaff, requireAdmin, audit, hashPassword, checkPasswordPolicy, d
 import { readBody, randomHex, sha256 } from '../http.js';
 import { refreshProductSearch, refreshBundleSearch, refreshCategoryProducts } from '../catalog.js';
 import { orderView } from './orders.js';
-import { paymentsForOrder, paymentStatus } from '../payments/index.js';
+import { paymentsForOrder, gatewaySummary, onlineMethods, webhookUrlForId } from '../payments/index.js';
+import { TYPES, catalog } from '../payments/registry.js';
+import { seal, unseal, mask } from '../vault.js';
 
 const price = (v, field) => {
   const d = lydToDirham(v);
@@ -49,7 +51,7 @@ export function register(r) {
     const openSupport = get("SELECT COUNT(*) AS n FROM support_requests WHERE status != 'resolved'").n;
     return {
       counts, total, sales, open, paidOnline, top, unavailable, unavailableBundles, recent, openSupport,
-      newestOrderId: get('SELECT COALESCE(MAX(id),0) AS m FROM orders').m, payment: paymentStatus(),
+      newestOrderId: get('SELECT COALESCE(MAX(id),0) AS m FROM orders').m, gateways: gatewaySummary(),
     };
   });
 
@@ -67,7 +69,7 @@ export function register(r) {
     const { size, offset } = page(ctx);
     const total = get(`SELECT COUNT(*) AS n FROM orders o ${w}`, ...params).n;
     const items = all(`SELECT o.* FROM orders o ${w} ORDER BY o.id DESC LIMIT ? OFFSET ?`, ...params, size, offset)
-      .map((o) => orderView(o, { withItems: false }));
+      .map((o) => ({ ...orderView(o, { withItems: false }), id: o.id }));
     return { items, total, pageSize: size };
   });
   r.get('/api/admin/orders/:id', staff, (ctx) => {
@@ -269,8 +271,9 @@ export function register(r) {
     const b = await ctx.json();
     const starts_at = isoOrNull(b.starts_at, 'starts_at'); const ends_at = isoOrNull(b.ends_at, 'ends_at');
     if (starts_at && ends_at && ends_at < starts_at) throw bad('invalid_ends_at', 'تاريخ النهاية قبل البداية', { field: 'ends_at' });
+    if (!str(b.title, { max: 100, field: 'title' }) && !safeImage(b.image)) throw bad('invalid_title', 'أضف صورة أو عنوانًا للإعلان', { field: 'title' });
     return {
-      title: str(b.title, { min: 2, max: 100, required: true, field: 'title' }), description: str(b.description, { max: 300, field: 'description' }), image: safeImage(b.image),
+      title: str(b.title, { max: 100, field: 'title' }), description: str(b.description, { max: 300, field: 'description' }), image: safeImage(b.image),
       button_text: str(b.button_text, { max: 40, field: 'button_text' }), link: safeUrl(b.link, 'link'), starts_at, ends_at,
       active: flag(b.active, 1), sort_order: int(b.sort_order, { min: 0, max: 100000, required: false, def: 0 }),
     };
@@ -326,7 +329,7 @@ export function register(r) {
   });
 
   // ── Settings ───────────────────────────────────────────────────────────────
-  r.get('/api/admin/settings', admin, () => ({ settings: getSettings(), payment: paymentStatus(), siteUrl: config.siteUrl }));
+  r.get('/api/admin/settings', admin, () => ({ settings: getSettings(), siteUrl: config.siteUrl }));
   r.put('/api/admin/settings', admin, async (ctx) => {
     const b = await ctx.json(64 * 1024); const out = {};
     const text = (k, max, req = false) => { if (k in b) out[k] = str(b[k], { max, required: req, field: k }); };
@@ -338,10 +341,11 @@ export function register(r) {
     for (const k of ['support_phone', 'main_phone']) if (k in b) { const s = str(b[k], { max: 30, field: k }); if (s && !normalizePhone(s)) throw bad('invalid_' + k, 'رقم غير صالح', { field: k }); out[k] = s; }
     for (const k of ['support_whatsapp', 'main_whatsapp']) if (k in b) { const s = str(b[k], { max: 30, field: k }); if (s && !normalizePhone(s)) throw bad('invalid_' + k, 'رقم غير صالح', { field: k }); out[k] = s ? normalizePhone(s) : ''; }
     if ('tiktok_url' in b) { out.tiktok_url = safeUrl(b.tiktok_url, 'tiktok_url'); }
+    if ('banner_interval_ms' in b) out.banner_interval_ms = int(b.banner_interval_ms, { min: 1500, max: 15000, field: 'banner_interval_ms' });
     if ('hero_button_link' in b) out.hero_button_link = safeUrl(b.hero_button_link, 'hero_button_link') || '/shop';
     if ('logo_url' in b) out.logo_url = safeImage(b.logo_url, 'logo_url') || '';
     if ('main_branch_slug' in b) { if (!get('SELECT 1 AS x FROM branches WHERE slug = ?', b.main_branch_slug)) throw bad('invalid_main_branch_slug', 'الفرع غير موجود'); out.main_branch_slug = b.main_branch_slug; }
-    for (const k of ['delivery_enabled', 'cash_enabled', 'online_payment_enabled']) if (k in b) out[k] = !!flag(b[k]);
+    for (const k of ['delivery_enabled', 'cash_enabled']) if (k in b) out[k] = !!flag(b[k]);
     if ('delivery_fee' in b) out.delivery_fee = price(b.delivery_fee || 0, 'delivery_fee');
     if ('home_sections' in b) {
       const keys = DEFAULTS.home_sections.map((s) => s.key);
@@ -350,7 +354,7 @@ export function register(r) {
       out.home_sections = list;
     }
     const merged = { ...getSettings(), ...out };
-    if (!merged.cash_enabled && !merged.online_payment_enabled) throw bad('no_payment_method', 'يجب إبقاء طريقة دفع واحدة على الأقل مفعّلة');
+    if (!merged.cash_enabled && !onlineMethods().length) throw bad('no_payment_method', 'يجب إبقاء طريقة دفع واحدة على الأقل مفعّلة');
     saveSettings(out); audit(ctx, 'settings.update', 'settings', null, { keys: Object.keys(out) });
     return { settings: getSettings() };
   });
@@ -407,6 +411,79 @@ export function register(r) {
     if (target?.role === 'admin' && left < 1) throw new HttpError(409, 'last_admin', 'لا يمكن حذف المدير الوحيد');
     tx(() => { destroyUserSessions(id); run("UPDATE profiles SET deleted_at = ?, email = NULL, phone = NULL, password_hash = 'deleted' WHERE id = ? AND role IN ('admin','staff')", nowIso(), id); });
     audit(ctx, 'staff.delete', 'staff', id); return { ok: true };
+  });
+
+
+  // ── Payment gateways (credentials entered here; secrets are encrypted and never sent back) ──
+  const gwView = (row) => {
+    const t = TYPES[row.type]; const secrets = unseal(row.secrets); let cfg = {}; try { cfg = JSON.parse(row.config || '{}'); } catch { /* */ }
+    return {
+      id: row.id, type: row.type, type_label: t?.label || row.type, label: row.label, enabled: !!row.enabled, mode: row.mode, sort_order: row.sort_order,
+      available: !!t, config: cfg, secrets_masked: Object.fromEntries((t?.fields || []).filter((f) => f.kind === 'secret').map((f) => [f.key, mask(secrets[f.key])])),
+      webhook_url: webhookUrlForId(row.id), updated_at: row.updated_at,
+    };
+  };
+  function gatewayInput(type, b, existing) {
+    const t = TYPES[type]; if (!t) throw bad('invalid_type', 'نوع البوابة غير متاح');
+    const label = str(b.label, { min: 2, max: 60, required: true, field: 'label' });
+    const mode = b.mode === 'test' ? 'test' : 'live';
+    const enabled = flag(b.enabled, 0);
+    const old = existing ? unseal(existing.secrets) : {};
+    const config = {}; const secrets = { ...old };
+    for (const f of t.fields) {
+      if (f.kind === 'secret') {
+        const v = b.secrets?.[f.key];
+        if (typeof v === 'string' && v.trim()) secrets[f.key] = v.trim().slice(0, 500);
+        if (Array.isArray(b.clear_secrets) && b.clear_secrets.includes(f.key)) delete secrets[f.key];
+      } else {
+        let v = typeof b.config?.[f.key] === 'string' ? b.config[f.key].trim() : (f.def ?? '');
+        if (v === '' && f.def !== undefined && f.input !== 'textarea') v = f.def;
+        if (v.length > 4000) throw bad('invalid_' + f.key, 'النص طويل جدًا', { field: f.key });
+        if (f.input === 'select' && v && !f.options.some(([k]) => k === v)) throw bad('invalid_' + f.key, 'قيمة غير صالحة', { field: f.key });
+        if (f.input === 'url' && v) {
+          let u; try { u = new URL(v); } catch { throw bad('invalid_' + f.key, 'رابط غير صالح', { field: f.key }); }
+          if (u.protocol !== 'https:' && !(!config.isProd && process.env.PAYMENT_ALLOW_LOCAL === '1' && u.protocol === 'http:')) throw bad('invalid_' + f.key, 'يجب أن يبدأ الرابط بـ https://', { field: f.key });
+        }
+        if ((f.key === 'create_headers' || f.key === 'create_body') && v) { try { const o = JSON.parse(v); if (!o || typeof o !== 'object') throw 0; } catch { throw bad('invalid_' + f.key, 'JSON غير صالح', { field: f.key }); } }
+        config[f.key] = v;
+      }
+    }
+    if (enabled) {
+      for (const f of t.fields) {
+        const val = f.kind === 'secret' ? secrets[f.key] : config[f.key];
+        if (f.required && !val) throw bad('invalid_' + f.key, `الحقل «${f.label}» مطلوب لتفعيل البوابة`, { field: f.key });
+      }
+      if (type === 'generic' && !secrets.webhook_secret) throw bad('invalid_webhook_secret', 'أدخل Webhook Secret لقبول إشعارات الدفع المؤكَّدة (أو اعتمد الاستعلام عن الحالة بعد العودة).', { field: 'webhook_secret' });
+    }
+    return { label, mode, enabled, config, secrets, sort_order: int(b.sort_order, { min: 0, max: 100000, required: false, def: 0 }) };
+  }
+  const guardPaymentMethods = (exceptId, willEnable) => {
+    const settingsNow = getSettings();
+    const others = all('SELECT id FROM payment_gateways WHERE enabled = 1 AND id != ?', exceptId ?? -1).filter((x) => x).length;
+    if (!settingsNow.cash_enabled && !others && !willEnable) throw new HttpError(409, 'no_payment_method', 'لا يمكن تعطيل آخر طريقة دفع مفعّلة (الدفع عند الاستلام معطّل).');
+  };
+  r.get('/api/admin/payment-gateways', admin, () => ({ items: all('SELECT * FROM payment_gateways ORDER BY sort_order, id').map(gwView), types: catalog(), siteUrl: config.siteUrl }));
+  r.post('/api/admin/payment-gateways', admin, async (ctx) => {
+    const b = await ctx.json(32 * 1024); const g = gatewayInput(b.type, b, null);
+    const id = Number(run('INSERT INTO payment_gateways (type, label, enabled, mode, config, secrets, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      b.type, g.label, g.enabled, g.mode, JSON.stringify(g.config), seal(g.secrets), g.sort_order).lastInsertRowid);
+    audit(ctx, 'gateway.create', 'gateway', id, { type: b.type, enabled: g.enabled }); return { id, item: gwView(get('SELECT * FROM payment_gateways WHERE id = ?', id)) };
+  });
+  r.put('/api/admin/payment-gateways/:id', admin, async (ctx) => {
+    const ex = get('SELECT * FROM payment_gateways WHERE id = ?', int(ctx.params.id, { min: 1 }));
+    if (!ex) throw new HttpError(404, 'not_found', 'البوابة غير موجودة');
+    const b = await ctx.json(32 * 1024); const g = gatewayInput(ex.type, b, ex);
+    if (!g.enabled) guardPaymentMethods(ex.id, false);
+    run('UPDATE payment_gateways SET label = ?, enabled = ?, mode = ?, config = ?, secrets = ?, sort_order = ?, updated_at = ? WHERE id = ?',
+      g.label, g.enabled, g.mode, JSON.stringify(g.config), seal(g.secrets), g.sort_order, nowIso(), ex.id);
+    audit(ctx, 'gateway.update', 'gateway', ex.id, { enabled: g.enabled }); return { item: gwView(get('SELECT * FROM payment_gateways WHERE id = ?', ex.id)) };
+  });
+  r.delete('/api/admin/payment-gateways/:id', admin, (ctx) => {
+    const id = int(ctx.params.id, { min: 1 });
+    if (get('SELECT 1 AS x FROM payments WHERE gateway_id = ? LIMIT 1', id)) throw new HttpError(409, 'has_payments', 'عليها عمليات دفع مسجّلة. عطّلها بدل حذفها لتبقى السجلات.');
+    const ex = get('SELECT enabled FROM payment_gateways WHERE id = ?', id);
+    if (ex?.enabled) guardPaymentMethods(id, false);
+    run('DELETE FROM payment_gateways WHERE id = ?', id); audit(ctx, 'gateway.delete', 'gateway', id); return { ok: true };
   });
 
   // ── Image upload (binary body; validated by magic bytes) ───────────────────

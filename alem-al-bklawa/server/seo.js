@@ -27,6 +27,12 @@ export function logoUrl(settings) {
   return '';
 }
 
+const PLACEHOLDER_LOGO = '<svg viewBox="0 0 200 200" role="img" aria-label="عالم البكلاوه"><rect width="200" height="200" fill="#800020"/><circle cx="100" cy="100" r="88" fill="none" stroke="#C6A15B" stroke-width="1.5"/><circle cx="100" cy="100" r="81" fill="none" stroke="#C6A15B" stroke-width=".6" opacity=".6"/><text x="100" y="94" text-anchor="middle" font-family="Cairo,sans-serif" font-weight="800" font-size="34" fill="#fff">عالم</text><text x="100" y="134" text-anchor="middle" font-family="Cairo,sans-serif" font-weight="800" font-size="34" fill="#C6A15B">البكلاوه</text></svg>';
+function logoInner(settings) {
+  const url = logoUrl(settings);
+  return url ? `<img src="${esc(url)}" alt="${esc(settings.brand_name_ar)}" width="190" height="190" decoding="async" fetchpriority="high">` : PLACEHOLDER_LOGO;
+}
+
 const NOINDEX = /^\/(account|checkout|login|register|forgot|reset|order|cart|search)(\/|$)/;
 const KNOWN = /^\/(shop|bundles|branches|about|privacy|terms|rights|track)?\/?$|^\/(product|bundle)\/\d+(\/[^/]*)?$|^\/(account|checkout|login|register|forgot|reset|order|cart|search)(\/|$)/;
 
@@ -105,6 +111,7 @@ export function renderApp(pathname) {
   boot.settings = { ...boot.settings, logo_url: logo };
   return html
     .replace('<!--SEO-->', () => headTags(metaFor(pathname, boot)))
+    .replace('<!--LOGO-->', () => logoInner(boot.settings))
     .replace('<!--BOOT-->', () => `<script id="boot" type="application/json">${jsonSafe(boot)}</script>`);
 }
 

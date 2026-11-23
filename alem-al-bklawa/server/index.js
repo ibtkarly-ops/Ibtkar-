@@ -7,7 +7,6 @@ import { seedIfEmpty } from './settings.js';
 import { Router, readJson, sendJson, send, serveStatic, securityHeaders, sameOriginOk, clientIp } from './http.js';
 import { currentUser, bootstrapAdmin } from './auth.js';
 import { HttpError } from './lib.js';
-import { loadProvider } from './payments/index.js';
 import { renderApp, sitemapXml, robotsTxt, routeStatus } from './seo.js';
 import * as publicRoutes from './routes/public.js';
 import * as accountRoutes from './routes/account.js';
@@ -84,7 +83,7 @@ export async function start({ port = config.port, host = config.host } = {}) {
   migrate();
   seedIfEmpty();
   await bootstrapAdmin();
-  await loadProvider();
+  if (config.payment.sandboxRequestedInProd) console.warn('[payments] PAYMENT_SANDBOX تجاهل: بوابة الاختبار ممنوعة في الإنتاج.');
   const server = http.createServer((req, res) => { handle(req, res).catch((e) => { console.error('[fatal]', e); try { res.destroy(); } catch { /* */ } }); });
   server.requestTimeout = 30_000; server.headersTimeout = 15_000; server.keepAliveTimeout = 65_000;
   await new Promise((resolve) => server.listen(port, host, resolve));

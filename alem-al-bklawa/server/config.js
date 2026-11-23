@@ -24,9 +24,7 @@ export const config = {
     password: env.ADMIN_PASSWORD || '',
   },
   payment: {
-    provider: (env.PAYMENT_PROVIDER || '').trim(),
-    webhookSecret: env.PAYMENT_WEBHOOK_SECRET || '',
-    // The sandbox gateway is a test double. It can never run in production.
+    // The sandbox gateway type is a test double. It can never exist in production.
     sandbox: env.PAYMENT_SANDBOX === '1' && !isProd,
     sandboxRequestedInProd: env.PAYMENT_SANDBOX === '1' && isProd,
   },

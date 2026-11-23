@@ -18,6 +18,7 @@ export const DEFAULTS = {
   tiktok_url: 'https://www.tiktok.com/@alemalbklawa',
   currency: 'LYD',
   currency_label: 'د.ل',
+  banner_interval_ms: 2500,
   hero_title: 'عالم البكلاوه',
   hero_text: 'بكلاوه وحلويات وعصائر وباقات مناسبات، تُحضَّر بعناية وتصلك من أقرب فروعنا.',
   hero_button_text: 'تصفح المنتجات',
@@ -26,7 +27,6 @@ export const DEFAULTS = {
   delivery_fee: 0,
   delivery_note: '',
   cash_enabled: true,
-  online_payment_enabled: false,
   about_title: 'من نحن',
   about_text:
     'عالم البكلاوه محل متخصص في البكلاوه والحلويات والعصائر وباقات المناسبات.\n' +

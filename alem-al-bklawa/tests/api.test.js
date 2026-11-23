@@ -9,7 +9,7 @@ import crypto from 'node:crypto';
 const PORT = 3987;
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'abk-test-'));
 Object.assign(process.env, {
-  DATA_DIR: dir, NODE_ENV: 'test', PAYMENT_SANDBOX: '1', SITE_URL: `http://127.0.0.1:${PORT}`,
+  DATA_DIR: dir, NODE_ENV: 'test', PAYMENT_SANDBOX: '1', PAYMENT_ALLOW_LOCAL: '1', SITE_URL: `http://127.0.0.1:${PORT}`,
   ORDER_RATE_MAX: '1000', ADMIN_EMAIL: 'owner@example.ly', ADMIN_PASSWORD: 'Owner-Strong-Pass-9', PORT: String(PORT),
 });
 const base = `http://127.0.0.1:${PORT}`;
@@ -333,71 +333,242 @@ test('path traversal on static files is blocked', async () => {
   }
 });
 
-test('payments (sandbox): success needs provider confirmation; duplicates are no-ops', async () => {
-  await admin('PUT', '/api/admin/settings', { online_payment_enabled: true });
+// ── Payments ───────────────────────────────────────────────────────────────
+import http from 'node:http';
+const hmacHex = (algo, secret, data) => crypto.createHmac(algo, secret).update(data).digest('hex');
+const dbq = async () => await import('../server/db.js');
+const orderId = async (number) => (await dbq()).get('SELECT id FROM orders WHERE number = ?', number).id;
+let sandboxId; let payProduct;
+
+test('gateways: admin-only, secrets masked + encrypted at rest, validation', async () => {
+  assert.equal((await client()('GET', '/api/admin/payment-gateways')).status, 401);
+  const cust = client(); await cust('POST', '/api/auth/login', { identifier: '0921112233', password: 'sara-pass-2026' });
+  assert.equal((await cust('GET', '/api/admin/payment-gateways')).status, 403);
+  const st = client(); await st('POST', '/api/auth/login', { identifier: 'staff@example.ly', password: 'Staff-Pass-2026' });
+  assert.equal((await st('GET', '/api/admin/payment-gateways')).status, 403);
+  const list = (await admin('GET', '/api/admin/payment-gateways')).json;
+  assert.deepEqual(list.types.map((t) => t.type).sort(), ['generic', 'plutu', 'sandbox']);
+  // can't enable without required keys
+  const missing = await admin('POST', '/api/admin/payment-gateways', { type: 'plutu', label: 'Plutu', enabled: true, config: { gateway: 'localbankcards' }, secrets: { api_key: 'k' } });
+  assert.equal(missing.status, 400); assert.equal(missing.json.field, 'access_token');
+  assert.equal((await admin('POST', '/api/admin/payment-gateways', { type: 'nope', label: 'x' })).status, 400);
+  assert.equal((await admin('POST', '/api/admin/payment-gateways', { type: 'plutu', label: 'Plutu', config: { base_url: 'ftp://insecure.example/api' }, secrets: {} })).status, 400); // https only
+  const made = await admin('POST', '/api/admin/payment-gateways', { type: 'sandbox', label: 'بوابة اختبار', enabled: true });
+  assert.equal(made.status, 200); sandboxId = made.json.id;
+  const pg = await admin('POST', '/api/admin/payment-gateways', { type: 'plutu', label: 'بطاقات (Plutu)', enabled: false, config: { gateway: 'localbankcards', base_url: 'https://api.plutus.ly/api/v1' }, secrets: { api_key: 'PLUTU-KEY-123456', access_token: 'TOKEN-ABCDEF', secret_key: 'SUPER-SECRET-9' } });
+  assert.equal(pg.status, 200);
+  const view = pg.json.item;
+  assert.equal(view.secrets_masked.api_key, '••••456');
+  assert.ok(!JSON.stringify(view).includes('PLUTU-KEY-123456') && !JSON.stringify(view).includes('SUPER-SECRET-9'));
+  assert.ok(!JSON.stringify((await admin('GET', '/api/admin/payment-gateways')).json).includes('TOKEN-ABCDEF'));
+  const row = (await dbq()).get('SELECT config, secrets FROM payment_gateways WHERE id = ?', view.id);
+  assert.match(row.secrets, /^v1:/); assert.ok(!row.secrets.includes('PLUTU-KEY') && !row.config.includes('PLUTU-KEY'));
+  // updating without secrets keeps them
+  const upd = await admin('PUT', `/api/admin/payment-gateways/${view.id}`, { label: 'بطاقات ليبية', mode: 'test', enabled: false, config: view.config, secrets: {} });
+  assert.equal(upd.json.item.secrets_masked.secret_key, '••••T-9');
+  assert.equal(upd.json.item.mode, 'test');
+  await admin('DELETE', `/api/admin/payment-gateways/${view.id}`);
+});
+
+test('vault: seal/unseal round trip, tamper → empty', async () => {
+  const { seal, unseal } = await import('../server/vault.js');
+  const s = seal({ a: 'سر', b: 2 }); assert.deepEqual(unseal(s), { a: 'سر', b: 2 });
+  assert.notEqual(seal({ a: 1 }), seal({ a: 1 })); // random IV
+  assert.deepEqual(unseal(s.slice(0, -4) + 'AAAA'), {}); assert.deepEqual(unseal('garbage'), {}); assert.deepEqual(unseal(''), {});
+});
+
+test('SSRF guard: gateway URLs must be public https', async () => {
+  const { assertPublicHttps, isPrivateIp } = await import('../server/payments/net.js');
+  const saved = process.env.PAYMENT_ALLOW_LOCAL; delete process.env.PAYMENT_ALLOW_LOCAL;
+  try {
+    for (const u of ['http://example.com/x', 'https://127.0.0.1/x', 'https://10.1.2.3/x', 'https://192.168.1.5/x', 'https://169.254.169.254/latest/meta-data', 'https://[::1]/x', 'https://user:pw@example.com/x', 'ftp://example.com']) await assert.rejects(() => assertPublicHttps(u), u);
+    assert.ok(isPrivateIp('172.16.0.1') && isPrivateIp('100.64.0.1') && isPrivateIp('::ffff:10.0.0.1') && !isPrivateIp('8.8.8.8'));
+  } finally { process.env.PAYMENT_ALLOW_LOCAL = saved; }
+});
+
+test('payments (sandbox gateway): success needs gateway confirmation; duplicates are no-ops', async () => {
   const boot = (await client()('GET', '/api/bootstrap')).json;
-  assert.equal(boot.payments.online.length, 1);
-  const pid = await mkProduct({ name: 'تشكيلة', variants: [], price: 20 });
+  assert.deepEqual(boot.payments.online.map((m) => m.id), [sandboxId]);
+  payProduct = await mkProduct({ name: 'تشكيلة', variants: [], price: 20 });
   const c = client();
-  const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: pid, qty: 1 }], { paymentMethod: 'online' }))).json;
+  assert.equal((await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: 'online:9999' }))).status, 400); // unknown gateway
+  const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: `online:${sandboxId}` }))).json;
   assert.ok(o.redirectUrl.startsWith('/sandbox/pay/sbx_'));
   assert.equal(o.order.payment_status, 'pending');
-  const number = o.order.number; const token = o.token;
-  const ref = o.redirectUrl.split('/').pop();
+  const number = o.order.number; const token = o.token; const ref = o.redirectUrl.split('/').pop();
   // Returning from the gateway WITHOUT a confirmation must not mark the order paid.
-  await fetch(`${base}/pay/return/${number}?t=${token}&status=success&paid=1`, { redirect: 'manual' });
+  await fetch(`${base}/pay/return/${number}/${token}?status=success&paid=1`, { redirect: 'manual' });
   assert.equal((await c('GET', `/api/orders/${number}?t=${token}`)).json.order.payment_status, 'pending');
   // forged webhook (bad signature) rejected
   const body = JSON.stringify({ id: 'evt_forged', ref, status: 'paid', amount: 20000 });
-  const forged = await fetch(`${base}/api/payments/webhook/sandbox`, { method: 'POST', body, headers: { 'x-signature': 'deadbeef'.repeat(8) } });
-  assert.equal(forged.status, 401);
+  assert.equal((await fetch(`${base}/api/payments/webhook/${sandboxId}`, { method: 'POST', body, headers: { 'x-signature': 'deadbeef'.repeat(8) } })).status, 401);
   assert.equal((await c('GET', `/api/orders/${number}?t=${token}`)).json.order.payment_status, 'pending');
-  // real flow through the hosted page (success)
-  const page = await fetch(base + o.redirectUrl);
-  assert.equal(page.status, 200);
-  const done = await fetch(`${base}${o.redirectUrl}/paid`, { method: 'POST', redirect: 'manual' });
-  assert.equal(done.status, 303);
-  const after = (await c('GET', `/api/orders/${number}?t=${token}`)).json.order;
-  assert.equal(after.payment_status, 'paid');
-  const { all } = await import('../server/db.js');
-  assert.equal(all("SELECT * FROM payments WHERE status = 'paid'").length >= 1, true);
-  assert.equal(all("SELECT * FROM order_events WHERE kind = 'payment' AND to_value = 'paid' AND order_id = (SELECT id FROM orders WHERE number = ?)", number).length, 1); // duplicate webhook did nothing
-  // paying again is refused
+  // real flow through the hosted page
+  assert.equal((await fetch(base + o.redirectUrl)).status, 200);
+  assert.equal((await fetch(`${base}${o.redirectUrl}/paid`, { method: 'POST', redirect: 'manual' })).status, 303);
+  assert.equal((await c('GET', `/api/orders/${number}?t=${token}`)).json.order.payment_status, 'paid');
+  const { all } = await dbq();
+  assert.equal(all("SELECT * FROM order_events WHERE kind = 'payment' AND to_value = 'paid' AND order_id = ?", await orderId(number)).length, 1); // duplicate webhook did nothing
   assert.equal((await c('POST', `/api/orders/${number}/pay?t=${token}`)).status, 409);
-  // manual "paid" is refused for online orders
-  const oid = (await import('../server/db.js')).get('SELECT id FROM orders WHERE number = ?', number).id;
-  assert.equal((await admin('POST', `/api/admin/orders/${oid}/payment`, { status: 'unpaid' })).status, 409);
+  assert.equal((await admin('POST', `/api/admin/orders/${await orderId(number)}/payment`, { status: 'unpaid' })).status, 409); // online status only from the gateway
 });
 
-test('payments (sandbox): failure and cancel leave the order unpaid and retryable', async () => {
-  const pid = (await admin('GET', '/api/admin/products')).json.items.find((p) => p.name === 'تشكيلة').id;
+test('payments (sandbox gateway): failure and cancel leave the order unpaid and retryable', async () => {
   const c = client();
   for (const outcome of ['failed', 'cancelled']) {
-    const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: pid, qty: 1 }], { paymentMethod: 'online' }))).json;
+    const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: `online:${sandboxId}` }))).json;
     await fetch(`${base}${o.redirectUrl}/${outcome}`, { method: 'POST', redirect: 'manual' });
     const v = (await c('GET', `/api/orders/${o.order.number}?t=${o.token}`)).json.order;
-    assert.equal(v.payment_status, outcome === 'failed' ? 'failed' : 'cancelled');
-    assert.equal(v.status, 'new');
+    assert.equal(v.payment_status, outcome === 'failed' ? 'failed' : 'cancelled'); assert.equal(v.status, 'new');
     const retry = await c('POST', `/api/orders/${o.order.number}/pay?t=${o.token}`);
-    assert.equal(retry.status, 200);
-    assert.ok(retry.json.redirectUrl.startsWith('/sandbox/pay/'));
+    assert.equal(retry.status, 200); assert.ok(retry.json.redirectUrl.startsWith('/sandbox/pay/'));
   }
-  // double-click on "pay" reuses the same pending payment
-  const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: pid, qty: 1 }], { paymentMethod: 'online' }))).json;
-  const again = await c('POST', `/api/orders/${o.order.number}/pay?t=${o.token}`);
-  assert.equal(again.json.redirectUrl, o.redirectUrl);
+  const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: `online:${sandboxId}` }))).json;
+  assert.equal((await c('POST', `/api/orders/${o.order.number}/pay?t=${o.token}`)).json.redirectUrl, o.redirectUrl); // double click reuses the pending payment
 });
 
-test('payments: amount mismatch from provider is never marked paid', async () => {
+test('payments: amount mismatch from a gateway is never marked paid', async () => {
   const { applyResult } = await import('../server/payments/index.js');
-  const { get } = await import('../server/db.js');
-  const pid = (await admin('GET', '/api/admin/products')).json.items.find((p) => p.name === 'تشكيلة').id;
+  const { get } = await dbq();
   const c = client();
-  const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: pid, qty: 1 }], { paymentMethod: 'online' }))).json;
-  const pay = get('SELECT * FROM payments WHERE order_id = (SELECT id FROM orders WHERE number = ?) ORDER BY id DESC', o.order.number);
+  const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: `online:${sandboxId}` }))).json;
+  const pay = get('SELECT * FROM payments WHERE order_id = ? ORDER BY id DESC', await orderId(o.order.number));
   const r = applyResult(pay.id, { status: 'paid', amount: 1 });
-  assert.equal(r.payment.status, 'failed');
-  assert.equal(r.order.payment_status, 'failed');
+  assert.equal(r.payment.status, 'failed'); assert.equal(r.order.payment_status, 'failed');
+});
+
+// A tiny fake gateway server: Plutu-style confirm endpoint + a generic create/status API.
+let mock; let mockUrl; const mockCalls = [];
+before(async () => {
+  mock = http.createServer((req, res) => {
+    let raw = ''; req.on('data', (d) => { raw += d; });
+    req.on('end', () => {
+      mockCalls.push({ method: req.method, url: req.url, headers: req.headers, body: raw });
+      const send = (code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); };
+      if (req.url === '/api/v1/transaction/localbankcards/confirm') {
+        if (req.headers['x-api-key'] !== 'PLUTU-KEY-123456' || req.headers.authorization !== 'Bearer TOKEN-ABCDEF') return send(401, { error: { code: 'UNAUTHORIZED', message: 'bad credentials' } });
+        return send(200, { result: { redirect_url: 'https://pay.example/redirect/abc', transaction_id: 'T-' + mockCalls.length } });
+      }
+      if (req.url === '/create') return send(200, { data: { id: 'G-' + mockCalls.length, checkout_url: 'https://pay.example/g' } });
+      if (req.url.startsWith('/status/')) return send(200, { data: { status: globalThis.__genericStatus || 'pending' } });
+      send(404, { error: 'nope' });
+    });
+  }).listen(0, '127.0.0.1');
+  await new Promise((r) => mock.on('listening', r));
+  mockUrl = `http://127.0.0.1:${mock.address().port}`;
+});
+after(() => mock?.close());
+
+test('Plutu gateway: real request contract, signed return query decides the result', async () => {
+  const secret = 'SUPER-SECRET-9';
+  const made = await admin('POST', '/api/admin/payment-gateways', { type: 'plutu', label: 'بطاقات ليبية', enabled: true, config: { gateway: 'localbankcards', base_url: `${mockUrl}/api/v1` }, secrets: { api_key: 'PLUTU-KEY-123456', access_token: 'TOKEN-ABCDEF', secret_key: secret } });
+  assert.equal(made.status, 200, JSON.stringify(made.json)); const gid = made.json.id;
+  assert.equal((await client()('GET', '/api/bootstrap')).json.payments.online.length, 2);
+  const c = client();
+  const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: `online:${gid}` }))).json;
+  assert.equal(o.redirectUrl, 'https://pay.example/redirect/abc');
+  const call = mockCalls.filter((x) => x.url.endsWith('/confirm')).pop(); const sent = JSON.parse(call.body);
+  assert.equal(sent.amount, 20); assert.match(sent.invoice_no, /^ABK-\d+-1$/); assert.equal(sent.return_url, `${process.env.SITE_URL}/pay/return/${o.order.number}/${o.token}`);
+  assert.equal(call.headers.accept, 'application/json');
+  const number = o.order.number; const token = o.token; const invoice = sent.invoice_no;
+  const mk = (over = {}, key = secret) => {
+    const p = { gateway: 'localbankcards', approved: '1', canceled: '0', invoice_no: invoice, amount: '20.000', transaction_id: 'T-77', ...over };
+    const data = Object.entries(p).map(([k, v]) => `${k}=${v}`).join('&');
+    return new URLSearchParams({ ...p, hashed: hmacHex('sha256', key, data).toUpperCase() }).toString();
+  };
+  const ret = (q) => fetch(`${base}/pay/return/${number}/${token}?${q}`, { redirect: 'manual' });
+  const status = async () => (await c('GET', `/api/orders/${number}?t=${token}`)).json.order.payment_status;
+  // wrong key, tampered amount, and unsigned queries do nothing
+  await ret(mk({}, 'wrong-key')); assert.equal(await status(), 'pending');
+  await ret(mk().replace('amount=20.000', 'amount=1.000')); assert.equal(await status(), 'pending');
+  await ret('approved=1&invoice_no=' + invoice); assert.equal(await status(), 'pending');
+  // valid signature but wrong amount → flagged, never paid
+  await ret(mk({ amount: '5.000' })); assert.equal(await status(), 'failed');
+  // a fresh attempt: retry then a valid approved callback → paid
+  const retry = await c('POST', `/api/orders/${number}/pay?t=${token}`); assert.equal(retry.status, 200);
+  const inv2 = JSON.parse(mockCalls.filter((x) => x.url.endsWith('/confirm')).pop().body).invoice_no; assert.match(inv2, /-2$/);
+  const q2 = (() => { const p = { gateway: 'localbankcards', approved: '1', canceled: '0', invoice_no: inv2, amount: '20.000', transaction_id: 'T-88' }; return new URLSearchParams({ ...p, hashed: hmacHex('sha256', secret, Object.entries(p).map(([k, v]) => `${k}=${v}`).join('&')).toUpperCase() }).toString(); })();
+  await ret(q2); assert.equal(await status(), 'paid');
+  await ret(q2); assert.equal(await status(), 'paid'); // replay is a no-op
+  assert.equal((await dbq()).all("SELECT 1 FROM order_events WHERE kind='payment' AND to_value='paid' AND order_id = ?", await orderId(number)).length, 1);
+  // gateway rejection (bad credentials) → order kept, payment failed with a clear error
+  assert.equal((await admin('PUT', `/api/admin/payment-gateways/${gid}`, { label: 'بطاقات ليبية', enabled: true, config: made.json.item.config, secrets: { api_key: 'WRONG' } })).status, 200);
+  const bad = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: `online:${gid}` }))).json;
+  assert.equal(bad.redirectUrl, null); assert.match(bad.paymentError, /تعذّر/); assert.equal(bad.order.payment_status, 'failed');
+});
+
+test('Plutu Tlync: callback (POST) is verified with the secret key', async () => {
+  const secret = 'TL-SECRET';
+  const made = await admin('POST', '/api/admin/payment-gateways', { type: 'plutu', label: 'Tlync', enabled: false, config: { gateway: 'tlync', base_url: `${mockUrl}/api/v1` }, secrets: { api_key: 'k', access_token: 't', secret_key: secret } });
+  const gid = made.json.id;
+  const { get } = await dbq();
+  const c = client(); const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: 'cash' }))).json;
+  const oid = await orderId(o.order.number);
+  const info = (await dbq()).run("INSERT INTO payments (order_id, provider, gateway_id, amount, currency, status, idempotency_key) VALUES (?, 'plutu', ?, ?, 'LYD', 'pending', ?)", oid, gid, 20000, `${o.order.number}-1`);
+  const p = { gateway: 'tlync', approved: '1', amount: '20.000', invoice_no: `${o.order.number}-1`, canceled: '0', payment_method: 'sadad', transaction_id: 'TX9' };
+  const hashed = hmacHex('sha256', secret, Object.entries(p).map(([k, v]) => `${k}=${v}`).join('&')).toUpperCase();
+  const post = (body, ct) => fetch(`${base}/api/payments/webhook/${gid}`, { method: 'POST', body, headers: { 'content-type': ct } });
+  assert.equal((await post(new URLSearchParams({ ...p, hashed: 'AAAA' }).toString(), 'application/x-www-form-urlencoded')).status, 401);
+  assert.equal((await post(JSON.stringify({ ...p, hashed }), 'application/json')).status, 200);
+  assert.equal(get('SELECT status FROM payments WHERE id = ?', Number(info.lastInsertRowid)).status, 'paid');
+  assert.equal((await post(JSON.stringify({ ...p, hashed }), 'application/json')).json?.duplicate ?? true, true);
+  await admin('DELETE', `/api/admin/payment-gateways/${gid}`);
+});
+
+test('generic gateway: configurable request template, status lookup and HMAC webhook', async () => {
+  const cfg = {
+    create_url: `${mockUrl}/create`, body_format: 'json', create_headers: '{"Authorization":"Bearer {{api_key}}"}',
+    create_body: '{"amount":"{{amount:number}}","minor":"{{amount_minor}}","reference":"{{payment_ref}}","order":"{{order_number}}","return_url":"{{return_url}}","hook":"{{webhook_url}}","phone":"{{customer_phone_local}}"}',
+    redirect_path: 'data.checkout_url', ref_path: 'data.id', status_url: `${mockUrl}/status/{{provider_ref}}`, status_path: 'data.status',
+    paid_values: 'paid,succeeded', failed_values: 'failed', cancelled_values: 'cancelled', webhook_sig_header: 'x-gw-signature', webhook_algo: 'sha256', webhook_encoding: 'hex',
+    webhook_ref_path: 'data.reference', webhook_ref_kind: 'payment_ref', webhook_status_path: 'data.status', webhook_event_path: 'id', webhook_amount_path: 'data.amount', webhook_amount_unit: 'lyd',
+  };
+  // enabling requires a webhook secret
+  assert.equal((await admin('POST', '/api/admin/payment-gateways', { type: 'generic', label: 'عامة', enabled: true, config: cfg, secrets: { api_key: 'GK' } })).status, 400);
+  assert.equal((await admin('POST', '/api/admin/payment-gateways', { type: 'generic', label: 'عامة', enabled: false, config: { ...cfg, create_body: '{not json' }, secrets: {} })).status, 400);
+  const made = await admin('POST', '/api/admin/payment-gateways', { type: 'generic', label: 'بوابة عامة', enabled: true, config: cfg, secrets: { api_key: 'GK-1', webhook_secret: 'WH-SECRET' } });
+  assert.equal(made.status, 200, JSON.stringify(made.json)); const gid = made.json.id;
+  const c = client();
+  const o = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 2 }], { paymentMethod: `online:${gid}`, phone: '0911234567' }))).json;
+  assert.equal(o.redirectUrl, 'https://pay.example/g');
+  const call = mockCalls.filter((x) => x.url === '/create').pop(); const sent = JSON.parse(call.body);
+  assert.equal(call.headers.authorization, 'Bearer GK-1');
+  assert.deepEqual([sent.amount, sent.minor, sent.order, sent.phone], [40, '40000', o.order.number, '0911234567']);
+  assert.equal(sent.reference, `${o.order.number}-1`); assert.equal(sent.hook, `${process.env.SITE_URL}/api/payments/webhook/${gid}`);
+  const number = o.order.number; const token = o.token; const st = async () => (await c('GET', `/api/orders/${number}?t=${token}`)).json.order.payment_status;
+  // return with the gateway still saying "pending" → nothing changes; when it says paid → server-side lookup confirms
+  await fetch(`${base}/pay/return/${number}/${token}`, { redirect: 'manual' }); assert.equal(await st(), 'pending');
+  globalThis.__genericStatus = 'paid'; await fetch(`${base}/pay/return/${number}/${token}`, { redirect: 'manual' }); assert.equal(await st(), 'paid');
+  globalThis.__genericStatus = 'pending';
+  // webhook path on a second order
+  const o2 = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: `online:${gid}` }))).json;
+  const evt = JSON.stringify({ id: 'ev-1', data: { reference: `${o2.order.number}-1`, status: 'succeeded', amount: 20 } });
+  const hook = (body, sig) => fetch(`${base}/api/payments/webhook/${gid}`, { method: 'POST', body, headers: { 'content-type': 'application/json', 'x-gw-signature': sig } });
+  assert.equal((await hook(evt, 'bad')).status, 401);
+  assert.equal((await hook(evt, hmacHex('sha256', 'WRONG', evt))).status, 401);
+  assert.equal((await hook(evt, hmacHex('sha256', 'WH-SECRET', evt))).status, 200);
+  assert.equal((await c('GET', `/api/orders/${o2.order.number}?t=${o2.token}`)).json.order.payment_status, 'paid');
+  assert.equal((await (await hook(evt, hmacHex('sha256', 'WH-SECRET', evt))).json()).duplicate, true);
+  // wrong amount → not paid
+  const o3 = (await c('POST', '/api/orders', orderBody([{ type: 'product', id: payProduct, qty: 1 }], { paymentMethod: `online:${gid}` }))).json;
+  const e3 = JSON.stringify({ id: 'ev-3', data: { reference: `${o3.order.number}-1`, status: 'succeeded', amount: 1 } });
+  await hook(e3, hmacHex('sha256', 'WH-SECRET', e3));
+  assert.equal((await c('GET', `/api/orders/${o3.order.number}?t=${o3.token}`)).json.order.payment_status, 'failed');
+  // SSRF guard also applies when saving a private URL while local access is off is covered by the SSRF test.
+});
+
+test('settings: cash may be disabled only while another enabled way to pay exists', async () => {
+  try {
+    assert.equal((await admin('PUT', '/api/admin/settings', { cash_enabled: false })).status, 200); // gateways are enabled
+    // turning off every gateway while cash is off must be refused
+    const gws = (await admin('GET', '/api/admin/payment-gateways')).json.items.filter((g) => g.enabled);
+    let refused = false;
+    for (const g of gws) { const r = await admin('PUT', `/api/admin/payment-gateways/${g.id}`, { label: g.label, enabled: false, config: g.config, secrets: {} }); if (r.status === 409) refused = true; }
+    assert.equal(refused, true);
+  } finally {
+    await admin('PUT', '/api/admin/settings', { cash_enabled: true });
+    for (const g of (await admin('GET', '/api/admin/payment-gateways')).json.items) if (!g.enabled) await admin('PUT', `/api/admin/payment-gateways/${g.id}`, { label: g.label, enabled: true, config: g.config, secrets: {} });
+  }
 });
 
 test('account: update profile, change password (others signed out), delete account scrubs PII', async () => {
@@ -466,4 +637,16 @@ test('XSS: product names are stored raw but the shell/JSON-LD escapes them', asy
   assert.ok(!html.includes('</script><img'));
   assert.ok(!html.includes('<img src=x'));
   await admin('DELETE', `/api/admin/products/${pid}`);
+});
+
+test('phone numbers: the owner\'s real numbers normalise to the exact WhatsApp format', async () => {
+  const { normalizePhone, displayPhone } = await import('../server/lib.js');
+  assert.equal(normalizePhone('0925006674'), '218925006674'); // سوق الجمعة
+  assert.equal(normalizePhone('093158884'), '21893158884');   // دعم العملاء
+  assert.equal(normalizePhone('+218 92 500 6674'), '218925006674');
+  assert.equal(normalizePhone('00218925006674'), '218925006674');
+  assert.equal(normalizePhone('٠٩٢٥٠٠٦٦٧٤'), '218925006674');
+  assert.equal(normalizePhone('12'), '');
+  assert.equal(displayPhone('218925006674'), '0925006674');
+  assert.equal((await admin('PUT', '/api/admin/settings', { support_phone: '093158884', support_whatsapp: '21893158884', main_whatsapp: '218925006674' })).status, 200);
 });

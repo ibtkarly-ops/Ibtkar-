@@ -3,7 +3,7 @@ import { all, get, run } from '../db.js';
 import { getSettings } from '../settings.js';
 import { listProducts, getProduct, listBundles, getBundle, search } from '../catalog.js';
 import { priceCart } from '../pricing.js';
-import { onlineMethods, paymentStatus } from '../payments/index.js';
+import { onlineMethods } from '../payments/index.js';
 import { HttpError, str, int, normalizePhone, tokens } from '../lib.js';
 import { rateLimit } from '../http.js';
 
@@ -31,7 +31,7 @@ export function bootstrapData() {
     branches,
     banners: activeBanners(),
     mainBranchId: main?.id ?? null,
-    payments: { cash: !!settings.cash_enabled, online: onlineMethods(), gateway: { sandbox: paymentStatus().sandbox } },
+    payments: { cash: !!settings.cash_enabled, online: onlineMethods() },
     delivery: { enabled: !!settings.delivery_enabled, fee: settings.delivery_fee, note: settings.delivery_note },
   };
 }

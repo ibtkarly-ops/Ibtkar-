@@ -46,7 +46,8 @@ export function normalizePhone(input) {
   else if (d.startsWith('0')) d = '218' + d.slice(1);
   else if (/^9\d{8}$/.test(d)) d = '218' + d;
   if (!/^\d{9,15}$/.test(d)) return '';
-  if (d.startsWith('218') && !/^218\d{9,10}$/.test(d)) return '';
+  // Libya: the owner's own support line has 8 digits after the country code, mobiles have 9.
+  if (d.startsWith('218') && !/^218\d{8,10}$/.test(d)) return '';
   return d;
 }
 /** 218925006674 → 0925006674 (local display) */

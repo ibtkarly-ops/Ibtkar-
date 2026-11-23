@@ -6,7 +6,8 @@ import { priceCart } from '../pricing.js';
 import { config } from '../config.js';
 import { HttpError, str, int, normalizePhone, emailOrEmpty, bad, ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from '../lib.js';
 import { rateLimit, readBody, redirect, send, randomHex } from '../http.js';
-import { onlineMethods, startPayment, verifyPayment, handleWebhook, getProvider } from '../payments/index.js';
+import { onlineMethods, startPayment, handleReturn, handleWebhook, getGateway, gatewayIdOf } from '../payments/index.js';
+import { TYPES } from '../payments/registry.js';
 
 // ── Views ──────────────────────────────────────────────────────────────────
 const branchContact = (id) => id ? get('SELECT id, name, address, phone, whatsapp, maps_url, hours FROM branches WHERE id = ?', id) : null;
@@ -59,10 +60,13 @@ async function createOrder(ctx) {
   const branch = get('SELECT * FROM branches WHERE id = ? AND active = 1', branchId);
   if (!branch || !branch.accepts_orders) throw bad('invalid_branch', 'الفرع المختار لا يستقبل الطلبات حاليًا', { field: 'branchId' });
 
-  let method = b.paymentMethod === 'online' ? 'online' : 'cash';
-  if (source === 'whatsapp') method = 'cash';
+  let method = 'cash';
+  if (source !== 'whatsapp' && typeof b.paymentMethod === 'string' && b.paymentMethod.startsWith('online:')) {
+    const gid = Number(b.paymentMethod.slice(7));
+    if (!onlineMethods().some((m) => m.id === gid)) throw bad('payment_unavailable', 'طريقة الدفع الإلكتروني غير متاحة حاليًا', { field: 'paymentMethod' });
+    method = `online:${gid}`;
+  }
   if (method === 'cash' && !settings.cash_enabled) throw bad('payment_unavailable', 'طريقة الدفع غير متاحة', { field: 'paymentMethod' });
-  if (method === 'online' && !onlineMethods().length) throw bad('payment_unavailable', 'الدفع الإلكتروني غير متاح حاليًا', { field: 'paymentMethod' });
 
   // Duplicate submit / retry → return the original order untouched.
   const dup = get('SELECT * FROM orders WHERE idempotency_key = ?', idem);
@@ -83,7 +87,7 @@ async function createOrder(ctx) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unpaid', 'new', ?, ?)`,
       'TMP-' + randomHex(6), token, ctx.user?.id ?? null, name, phone, email || null, branch.id, branch.name,
       fulfillment, address || null, notes || null, pricing.subtotal, pricing.deliveryFee, pricing.total, settings.currency,
-      method === 'online' ? `online:${getProvider()?.id}` : 'cash', source, idem);
+      method, source, idem);
     const id = Number(info.lastInsertRowid);
     const number = `ABK-${1000 + id}`;
     run('UPDATE orders SET number = ? WHERE id = ?', number, id);
@@ -99,7 +103,7 @@ async function createOrder(ctx) {
   });
 
   let redirectUrl = null; let paymentError = null;
-  if (method === 'online') {
+  if (method.startsWith('online:')) {
     try { redirectUrl = (await startPayment(order)).redirectUrl; }
     catch (e) { console.error('[orders] payment start failed:', e.message); paymentError = 'تعذّر بدء الدفع الإلكتروني. تم حفظ طلبك ويمكنك إعادة المحاولة من صفحة الطلب.'; }
   }
@@ -129,18 +133,17 @@ export function register(r) {
   r.post('/api/orders/:number/pay', async (ctx) => {
     if (!rateLimit(`pay:${ctx.ip}`, 10, 10 * 60_000)) throw new HttpError(429, 'rate_limited', 'محاولات كثيرة، انتظر قليلًا.');
     const o = findAuthorised(ctx, ctx.params.number);
-    if (!o.payment_method.startsWith('online') || !onlineMethods().length) throw new HttpError(400, 'not_online', 'هذا الطلب ليس بالدفع الإلكتروني');
+    if (!o.payment_method.startsWith('online') || !onlineMethods().some((m) => m.id === gatewayIdOf(o))) throw new HttpError(400, 'not_online', 'الدفع الإلكتروني غير متاح لهذا الطلب حاليًا');
     if (o.payment_status === 'paid') throw new HttpError(409, 'already_paid', 'تم دفع هذا الطلب بالفعل');
     if (o.status === 'cancelled') throw new HttpError(409, 'cancelled', 'الطلب ملغي');
     try { return { redirectUrl: (await startPayment(o)).redirectUrl }; }
     catch { throw new HttpError(502, 'payment_unavailable', 'تعذّر بدء الدفع الآن. حاول لاحقًا.'); }
   });
 
-  // Provider → us. Raw body is needed for signature verification.
-  r.post('/api/payments/webhook/:provider', async (ctx) => {
+  // Gateway → us. The raw body is needed for signature verification. :id is the gateway id shown in the admin panel.
+  r.post('/api/payments/webhook/:id', async (ctx) => {
     const raw = await readBody(ctx.req, 64 * 1024);
-    if (getProvider()?.id !== ctx.params.provider) throw new HttpError(404, 'not_found');
-    const out = handleWebhook(raw, ctx.req.headers);
+    const out = handleWebhook(Number(ctx.params.id), raw, ctx.req.headers);
     ctx.status = out.status;
     return out.body;
   });
@@ -148,31 +151,31 @@ export function register(r) {
 
 /** Non-/api routes: payment return + sandbox hosted page. Handled directly (they redirect / render HTML). */
 export async function pageRoutes(req, res, url, ctx) {
-  const m = /^\/pay\/return\/([^/]+)\/?$/.exec(url.pathname);
+  // Customer returns from the gateway: /pay/return/<number>/<token>  (legacy: ?t=<token>)
+  const m = /^\/pay\/return\/([^/]+)(?:\/([a-f0-9]+))?\/?$/.exec(url.pathname);
   if (m && req.method === 'GET') {
     const number = decodeURIComponent(m[1]);
     const o = get('SELECT * FROM orders WHERE number = ?', number);
-    const t = url.searchParams.get('t') || '';
+    const t = m[2] || url.searchParams.get('t') || '';
     if (!o || !tokenEq(t, o.public_token)) { redirect(res, '/'); return true; }
-    await verifyPayment(o); // server-side truth — the query string says nothing about success
+    await handleReturn(o, Object.fromEntries(url.searchParams)); // signed query or server-side lookup — never the browser's word
     redirect(res, `/order/${encodeURIComponent(o.number)}?t=${o.public_token}`);
     return true;
   }
 
-  const sb = getProvider()?.id === 'sandbox' ? /^\/sandbox\/pay\/(sbx_[a-f0-9]+)(?:\/(paid|failed|cancelled))?\/?$/.exec(url.pathname) : null;
+  const sb = TYPES.sandbox ? /^\/sandbox\/pay\/(sbx_[a-f0-9]+)(?:\/(paid|failed|cancelled))?\/?$/.exec(url.pathname) : null;
   if (sb) {
-    const prov = getProvider(); const ref = sb[1];
-    const pay = get('SELECT p.*, o.number, o.public_token, o.total FROM payments p JOIN orders o ON o.id = p.order_id WHERE p.provider = ? AND p.provider_ref = ?', 'sandbox', ref);
+    const prov = TYPES.sandbox; const ref = sb[1];
+    const pay = get('SELECT p.*, o.number, o.public_token FROM payments p JOIN orders o ON o.id = p.order_id WHERE p.provider = ? AND p.provider_ref = ?', 'sandbox', ref);
     if (!pay) { send(res, 404, 'not found', { 'Content-Type': 'text/plain' }); return true; }
     if (req.method === 'POST' && sb[2]) {
       await readBody(req, 1024);
       if (!rateLimit(`sbx:${ctx.ip}`, 30, 60_000)) { send(res, 429, 'slow down'); return true; }
       const g = prov._gateway.get(ref); if (g && g.status === 'pending') g.status = sb[2];
       const ev = prov._signedEvent(ref, sb[2]);
-      handleWebhook(Buffer.from(ev.body), { 'x-signature': ev.signature }); // what a real provider's server would POST to us
-      // Mimic a duplicate delivery of the same event (must be a no-op).
-      handleWebhook(Buffer.from(ev.body), { 'x-signature': ev.signature });
-      redirect(res, `/pay/return/${encodeURIComponent(pay.number)}?t=${pay.public_token}`, 303);
+      handleWebhook(pay.gateway_id, Buffer.from(ev.body), { 'x-signature': ev.signature }); // what a real gateway's server would POST to us
+      handleWebhook(pay.gateway_id, Buffer.from(ev.body), { 'x-signature': ev.signature }); // duplicate delivery must be a no-op
+      redirect(res, `/pay/return/${encodeURIComponent(pay.number)}/${pay.public_token}`, 303);
       return true;
     }
     const html = `<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">

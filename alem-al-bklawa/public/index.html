@@ -1,1 +1,36 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><!--SEO--></head><body><div id="app"></div><!--BOOT--></body></html>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#800020">
+<!--SEO-->
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preload" href="/fonts/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
+<script src="/js/early.js"></script>
+<style>
+/* critical: the splash paints before the stylesheet arrives */
+body{margin:0;background:#4B071B}
+#splash{position:fixed;inset:0;z-index:1000;background:radial-gradient(700px 500px at 50% 35%,#7a0a2a,#4B071B 55%,#2B0713);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px}
+html.no-splash #splash{display:none}
+#splash .logo-disc{width:min(46vw,190px);height:min(46vw,190px);border-radius:50%;overflow:hidden;background:#800020;box-shadow:0 0 0 3px #C6A15B}
+#splash .logo-disc img,#splash .logo-disc svg{width:100%;height:100%;object-fit:cover;display:block}
+.sp-line{width:min(56vw,230px);height:3px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden}
+.sp-line i{display:block;height:100%;width:0;background:#C6A15B}
+</style>
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<a class="skip" href="#main">تخطي إلى المحتوى</a>
+<div id="splash" role="status" aria-live="polite" aria-label="جارٍ التحميل">
+  <div class="logo-disc"><!--LOGO--></div>
+  <div class="sp-line" aria-hidden="true"><i id="sp-bar"></i></div>
+</div>
+<div id="root"></div>
+<div id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+<noscript><p style="padding:24px;text-align:center;font-family:sans-serif">يحتاج متجر عالم البكلاوه إلى تفعيل JavaScript ليعمل.</p></noscript>
+<!--BOOT-->
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>
