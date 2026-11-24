@@ -13,7 +13,7 @@ const html = '<html><body>' + 'x'.repeat(40) + '</body></html>';
     const btn = h.page.locator('[data-act="publish"]');
     check('publish button disabled while contract is not cleared', await btn.isDisabled());
     check('tooltip explains why', /عقد/.test(await btn.getAttribute('title')));
-    check('pending-contract note shown on the overview tab', await h.page.locator('text=لن يُنشر حتى يرسل لك فريقنا عقد الاشتراك').count() === 1);
+    check('pending-contract note shown on the overview tab', await h.page.locator('text=لن يُنشر قبل أن تراجع العقد وتوقّعه').count() === 1);
     await h.close();
   }
   // ---- 2) vSite: draft site, contract cleared -> Publish enabled, no note ----
@@ -22,7 +22,7 @@ const html = '<html><body>' + 'x'.repeat(40) + '</body></html>';
     const h = await launch({ role: 'customer', tables: { websites: [w], platform_settings: [{ key: 'public.sites_base_url', value: 'https://x.pages.dev' }] }, rpc: { site_is_contract_cleared: true } });
     await h.open('#/app/site/s1/overview'); await h.page.waitForSelector('[data-act="publish"]');
     check('publish button enabled once the contract is signed', !(await h.page.locator('[data-act="publish"]').isDisabled()));
-    check('no pending-contract note', await h.page.locator('text=لن يُنشر حتى يرسل لك فريقنا عقد الاشتراك').count() === 0);
+    check('no pending-contract note', await h.page.locator('text=لن يُنشر قبل أن تراجع العقد وتوقّعه').count() === 0);
     await h.close();
   }
   // ---- 3) vSite: already published -> never gated, regardless of contract status ----
@@ -31,7 +31,7 @@ const html = '<html><body>' + 'x'.repeat(40) + '</body></html>';
     const h = await launch({ role: 'customer', tables: { websites: [w], platform_settings: [{ key: 'public.sites_base_url', value: 'https://x.pages.dev' }] }, rpc: { site_is_contract_cleared: false } });
     await h.open('#/app/site/s1/overview'); await h.page.waitForSelector('[data-act="publish"]');
     check('already-published site: publish stays enabled even if the RPC says not cleared', !(await h.page.locator('[data-act="publish"]').isDisabled()));
-    check('already-published site: no pending-contract note', await h.page.locator('text=لن يُنشر حتى يرسل لك فريقنا عقد الاشتراك').count() === 0);
+    check('already-published site: no pending-contract note', await h.page.locator('text=لن يُنشر قبل أن تراجع العقد وتوقّعه').count() === 0);
     await h.close();
   }
   // ---- 4) a direct publish click surfaces the friendly message when the server rejects with contract_pending ----
@@ -40,14 +40,14 @@ const html = '<html><body>' + 'x'.repeat(40) + '</body></html>';
     const h = await launch({ role: 'customer', tables: { websites: [w], platform_settings: [{ key: 'public.sites_base_url', value: 'https://x.pages.dev' }] }, rpc: { site_is_contract_cleared: true, request_publish: { __status: 400, __body: { message: 'contract_pending' } } } });
     await h.open('#/app/site/s1/overview'); await h.page.waitForSelector('[data-act="publish"]');
     await h.page.click('[data-act="publish"]'); await h.page.waitForTimeout(400);
-    check('generic publish click explains the contract is pending (not a raw error code)', await h.page.locator('text=بانتظار إرسال العقد وتوقيعه من الإدارة').count() > 0);
+    check('generic publish click explains the contract is pending (not a raw error code)', await h.page.locator('text=لا يمكن نشر الموقع حالياً. يجب على العميل مراجعة العقد وتوقيعه أولاً.').count() > 0);
     await h.close();
   }
   // ---- 5) wizard end-to-end: brand-new site build succeeds but publish is gated ----
   {
     const h = await launch({
       role: 'customer', viewport: { width: 390, height: 844 },
-      rpc: { slug_available: true, request_publish: { __status: 400, __body: { message: 'contract_pending' } }, notify_site_needs_contract: true },
+      rpc: { slug_available: true, request_publish: { __status: 400, __body: { message: 'contract_pending' } }, issue_contract_for_site: { ok: true } },
       functions: { 'ai-gateway': { ok: false, error: 'service_not_configured' } },
       tables: { websites: [], website_versions: [] },
     });
@@ -59,9 +59,9 @@ const html = '<html><body>' + 'x'.repeat(40) + '</body></html>';
     await page.fill('input[name=phone]', '0912345678'); await next(); await next(); await next(); await next();
     await page.click('#wzgo'); await page.waitForSelector('#bo.ok, #bo.err', { timeout: 15000 });
     check('wizard shows the friendly "ready, awaiting contract" card', await page.locator('text=موقعك جاهز!').count() === 1);
-    check('wizard message mentions the team will send the contract', await page.locator('text=سيرسل لك فريقنا عقد الاشتراك').count() === 1);
+    check('wizard message points the customer to "My contracts"', await page.locator('text=صفحة «عقودي»').count() === 1);
     check('no "send/publish" retry button offered on this card (only manage)', await page.locator('[data-act="bopublish"]').count() === 0 && await page.locator('[data-act="boview"]').count() === 1);
-    check('the admin notification RPC was called for the new site', h.calls.some((c) => /rpc\/notify_site_needs_contract/.test(c.url)));
+    check('the contract is issued automatically (idempotent RPC) once the site is ready', h.calls.some((c) => /rpc\/issue_contract_for_site/.test(c.url)));
     check('no page errors', h.errors.length === 0 || (console.log(h.errors), false));
     await h.close();
   }

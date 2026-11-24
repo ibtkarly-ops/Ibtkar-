@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
 
   const { data: dep } = await db.from("deployments").select("*").eq("id", b.deployment_id).maybeSingle();
   if (!dep) return json({ error: "not_found" }, 404);
-  const { data: site } = await db.from("websites").select("id,owner_id,org_id,name,slug").eq("id", dep.website_id).maybeSingle();
+  const { data: site } = await db.from("websites").select("id,owner_id,org_id,name,slug,status").eq("id", dep.website_id).maybeSingle();
   if (!site) return json({ error: "not_found" }, 404);
   const { data: prof } = await db.from("profiles").select("role,status").eq("id", u.user.id).maybeSingle();
   let allowed = site.owner_id === u.user.id || (prof && prof.status === "active" && ["super_admin", "admin", "technical_manager"].includes(prof.role));
@@ -79,6 +79,8 @@ Deno.serve(async (req) => {
   if (!allowed) return json({ error: "forbidden" }, 403);
   if (dep.status === "live" && dep.verified_live) return json({ ok: true, url: dep.public_url, already: true });
   if (dep.status !== "building") return json({ error: "not_pending" }, 409);
+  // the same gate as request_publish and the database trigger: contract approved + payment condition. A site that is already live is only re-verified.
+  if (site.status !== "published") { const { data: blk } = await db.rpc("site_publish_block", { p_site: site.id }); if (blk) return json({ error: blk }, 403); }
 
   const { data: pub } = await db.from("published_sites").select("hash,slug").eq("website_id", site.id).maybeSingle();
   if (!pub) return await fail(dep, site.owner_id, "nothing published");
