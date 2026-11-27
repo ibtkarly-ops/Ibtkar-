@@ -13,7 +13,7 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
   const p = await boot.context.newPage(); const errs = []; p.on('pageerror', (e) => errs.push(e.message));
   await p.setContent(html); await p.waitForTimeout(400);
   check('one hero slide per banner (+ the main one)', await p.locator('.hero .slide').count() === 5);
-  check('banner images become full-bleed hero layers', await p.locator('.hero .himg').count() === 2);
+  check('banner images become full-bleed hero layers (one per banner + the first photo behind the opening slide)', await p.locator('.hero .himg').count() === 3 && await p.locator('.hero .himg.on[data-k="0"]').count() === 1);
   check('unsafe banner image/link are dropped', !/javascript:/.test(html));
   check('banner link becomes a button', await p.locator('.slide a.btn[href="https://example.com/sale"]').count() === 1);
   check('logo shown in the hero', await p.locator('.slide .hlogo').count() === 1);
