@@ -67,7 +67,8 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
   check('animated background layer present (data-animated-bg)', (await fp.locator('.hero [data-animated-bg="aurora"]').count()) === 1 && /@keyframes gs/.test(fxHtml));
   check('no floating WhatsApp button or bar', (await fp.locator('#wa-float').count()) === 0 && !/id="wa-float"/.test(fxHtml));
   check('store: products come right after the hero (before about)', await fp.evaluate(() => document.querySelector('#items').compareDocumentPosition(document.querySelector('#about')) & Node.DOCUMENT_POSITION_FOLLOWING));
-  check('selling point shown as a card', (await fp.locator('#about .card').first().innerText()).includes('الباتيناج'));
+  check('selling points shown in the highlights strip right under the hero', (await fp.locator('.hl div').first().innerText()).includes('الباتيناج') && (await fp.locator('.hl div').count()) >= 1);
+  check('highlights come only from the owner (usp) or the AI extraction of their own text', !/>\s*(جودة مضمونة|توصيل سريع)\s*</.test(fxHtml));
   await fp.screenshot({ path: out + '/fx-hero.png' });
   await fp.evaluate(() => window.scrollTo(0, 900)); await fp.waitForTimeout(900); await fp.screenshot({ path: out + '/fx-scroll.png' });
   check('scroll reveal adds .in to cards', (await fp.locator('.rv.in').count()) > 0);
@@ -89,6 +90,32 @@ let fails = 0; const check = (n, c) => { console.log((c ? 'PASS' : 'FAIL') + '  
   const ld = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html)[1]);
   check('JSON-LD valid (name, phone, image)', ld.name === 'ملكي' && ld.telephone === '+218912345678' && !!ld.image);
   await ctx.close();
+
+  // ---- look & structure: readable hero, no leaked platform CSS, no empty boxes, the owner's photo, AI highlights ----
+  {
+    const lumOf = (hex) => { const f = (i) => { const v = parseInt(hex.substr(i, 2), 16) / 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(1) + .7152 * f(3) + .0722 * f(5); };
+    const ratio = (a, b) => { const x = lumOf(a), y = lumOf(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+    const types = ['store', 'restaurant', 'company', 'landing'], bad = [];
+    for (const ty of types) for (const color of ['#ffe066', '#ffffff', '#2433ff', '#111111', '#7cffb2']) for (let i = 0; i < 8; i++) {
+      const html = await h.page.evaluate(([t, c]) => genSite({ name: 'اختبار', type: t, lang: 'ar', color: c, desc: 'وصف', phone: '0912345678', dna: { ...newDNA(t), ht: 'tint' } }), [ty, color]);
+      const m = /\.hero\{[^}]*background:linear-gradient\(135deg,(#[0-9a-f]{6}),(#[0-9a-f]{6})\);color:(#[0-9a-f]{3,6})/i.exec(html);
+      if (!m) continue;
+      const ink = m[3].length === 4 ? '#' + [...m[3].slice(1)].map((x) => x + x).join('') : m[3];
+      if (Math.min(ratio(ink, m[1]), ratio(ink, m[2])) < 3) bad.push(ty + color + ink);
+    }
+    check('tint hero: text keeps >= 3:1 contrast with both gradient colours (light brand colours flip the ink)', bad.length === 0 || (console.log(bad.slice(0, 5)), false));
+    const full = await h.page.evaluate(() => genSite({ name: 'متجر', type: 'store', lang: 'ar', color: '#0f766e', desc: 'وصف', dna: newDNA('store') }));
+    check('no platform (contract) CSS leaks into a generated site', !/\.ctbar|\.ctpg|\.ctbox|\.cted/.test(full));
+    check('no contact section, nav link or empty card when the owner gave no contact info', !/id="contact"/.test(full) && !/href="#contact"/.test(full));
+    const withC = await h.page.evaluate(() => genSite({ name: 'متجر', type: 'store', lang: 'ar', color: '#0f766e', phone: '0912345678', wa: '0912345678', dna: newDNA('store') }));
+    check('same number for call and WhatsApp is listed once', (withC.match(/0912345678<\/a><\/span>/g) || []).length === 1);
+    const ph = await h.page.evaluate(() => genSite({ name: 'م', type: 'company', lang: 'ar', color: '#0f766e', banners: [{ t: 'عرض', img: 'https://x.supabase.co/storage/v1/object/public/site-assets/a.jpg' }], dna: { ...newDNA('company'), hero: 'mesh' } }));
+    check('the first photo the owner uploaded is the hero background from the start', /class="himg on" data-k="0"/.test(ph) && /class="hero[^"]*imgon/.test(ph));
+    const hl = await h.page.evaluate(() => genSite({ name: 'م', type: 'company', lang: 'ar', color: '#0f766e', copy: { highlights: ['خبرة طويلة', 'التزام بالمواعيد', '<b>x</b>'] }, dna: newDNA('company') }));
+    check('AI highlights (extracted from the owner text) render as a strip and are escaped', (hl.match(/<section class="hl rv">/g) || []).length === 1 && hl.includes('خبرة طويلة') && !hl.includes('<b>x</b>'));
+    const none = await h.page.evaluate(() => genSite({ name: 'م', type: 'company', lang: 'ar', color: '#0f766e', dna: newDNA('company') }));
+    check('no highlights strip when there is nothing to highlight (nothing invented)', !/class="hl rv"/.test(none));
+  }
   await h.close();
   process.exit(fails ? 2 : 0);
 })();

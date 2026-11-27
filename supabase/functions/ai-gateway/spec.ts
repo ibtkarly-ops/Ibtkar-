@@ -47,6 +47,7 @@ export function cleanCopy(c: unknown, img: (u: unknown) => boolean): Record<stri
   if ("hero" in o) { const h = pair(o.hero, "t", "s", 120, 220); if (h.t) out.hero = h; }
   if ("about" in o) { const v = str(o.about, 900); if (v) out.about = v; }
   if ("items_title" in o) { const v = str(o.items_title, 60); if (v) out.items_title = v; }
+  if ("highlights" in o) out.highlights = arr(o.highlights, 4).map((x) => (typeof x === "string" ? str(x, 70) : str(obj(x).t, 70))).filter(Boolean);
   for (const k of ["why", "steps"]) if (k in o) out[k] = arr(o[k], 4).map((x) => pair(x, "t", "d", 80, 240)).filter((x) => x.t);
   if ("faq" in o) out.faq = arr(o.faq, 6).map((x) => pair(x, "q", "a", 140, 500)).filter((x) => x.q && x.a);
   if ("band" in o) { const b = pair(o.band, "t", "s", 90, 220); if (b.t) out.band = b; }
@@ -112,7 +113,8 @@ export function applyPatch(spec: Spec, patch: unknown, img: (u: unknown) => bool
 
 export const DESIGN_PROMPT = `أنت كاتب محتوى ومدير إبداعي لمواقع الأعمال الصغيرة. من بيانات النشاط اكتب نصوص موقعه بأسلوب احترافي مقنع.
 أعد JSON فقط بهذا الشكل (بلا أي نص خارجه):
-{"copy":{"hero":{"t":"عنوان رئيسي قوي (حتى 8 كلمات)","s":"جملة داعمة واضحة"},"about":"فقرة من نحن (3-4 جمل)","items_title":"عنوان قسم الأصناف/الخدمات","why":[{"t":"ميزة","d":"شرحها"}],"steps":[{"t":"خطوة","d":"شرحها"}],"faq":[{"q":"سؤال","a":"جواب"}],"band":{"t":"دعوة ختامية","s":"جملة"},"sections":[]},"items":[]}
+{"copy":{"hero":{"t":"عنوان رئيسي قوي (حتى 8 كلمات)","s":"جملة داعمة واضحة"},"about":"فقرة من نحن (3-4 جمل)","items_title":"عنوان قسم الأصناف/الخدمات","highlights":["نقطة قوة قصيرة"],"why":[{"t":"ميزة","d":"شرحها"}],"steps":[{"t":"خطوة","d":"شرحها"}],"faq":[{"q":"سؤال","a":"جواب"}],"band":{"t":"دعوة ختامية","s":"جملة"},"sections":[]},"items":[]}
+- highlights: من 3 إلى 4 جمل قصيرة جداً (3-5 كلمات) **مستخرجة من كلام العميل نفسه** (وصفه ونقاط قوته) وليست من خيالك؛ وإن لم يتوفر ما يكفي فأعد [] . about: فقرتان قصيرتان على الأكثر بصياغة واضحة من وصف العميل فقط.
 - لا تضف أي شيء لم يذكره العميل. why: من selling_points فقط (وإلا []). steps: فقط إن وصف العميل طريقة الطلب أو التعامل (وإلا []). faq: فقط إن ذكر العميل أسئلة وأجوبة (وإلا []). band: فقط إن طلب العميل دعوة ختامية (وإلا {}). sections: [] إلا إذا طلب العميل قسماً إضافياً صراحةً في customer_notes، وحينها من النوع {"type":"list","title":"...","items":["..."]} أو {"type":"text","title":"...","body":"..."}.
 - items: فقط إذا needs_items=true: من 6 إلى 8 أصناف واقعية تناسب النشاط بالشكل {"n":"الاسم","c":"التصنيف","d":"وصف قصير"} بلا أسعار. وإلا أعد [].
 قواعد: اكتب بلغة الموقع (language) وبنبرة tone إن وُجدت. لا تخترع أرقام هواتف ولا أسعاراً ولا خصومات ولا آراء عملاء ولا إحصائيات ولا عناوين. نصوص قصيرة واضحة بلا مبالغة.`;
@@ -120,7 +122,7 @@ export const DESIGN_PROMPT = `أنت كاتب محتوى ومدير إبداعي
 export const EDIT_PROMPT = `أنت محرّر مواقع في منصة ابتكار. الموقع يُبنى آلياً من «مواصفات» JSON (spec)، وأنت تعدّلها حسب طلب صاحب الموقع ليُعاد رسم الموقع فوراً.
 أعد JSON فقط بهذا الشكل: {"reply":"رد عربي قصير يشرح ما عدّلته","patch":{...}} وضع في patch الأجزاء التي تتغير فقط:
 - "brief": أي من name, tag, desc, phone, wa, email, addr, hours, ig, fb, tt, tg, color (#RRGGBB), lang (ar|en|both), bg (aurora|particles|waves|none), motion (strong|none), float ("1"|"0"), banner, usp (أسطر), cur.
-- "copy": أي من hero{t,s}, about, items_title, why[{t,d}], steps[{t,d}], faq[{q,a}], band{t,s}, sections[] (المصفوفات تُرسل كاملة بعد التعديل).
+- "copy": أي من hero{t,s}, about, items_title, highlights[], why[{t,d}], steps[{t,d}], faq[{q,a}], band{t,s}, sections[] (المصفوفات تُرسل كاملة بعد التعديل).
   أنواع sections: {"type":"text","title","body"} | {"type":"list","title","items":["..."]} | {"type":"stats","title","items":[{"v","l"}]} | {"type":"pricing","title","items":[{"n","p","d","f":["..."]}]} | {"type":"cta","title","body"} | {"type":"gallery","title","items":["رابط صورة من صور الموقع الحالية"]}
 - "items": قائمة الأصناف كاملة بعد التعديل [{"n","c","p","d","img"}] (أبقِ img كما هو).
 - "banners": البانرات كاملة [{"t","img","u"}].

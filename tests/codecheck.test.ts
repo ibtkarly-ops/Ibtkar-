@@ -90,3 +90,13 @@ export default function A() { return <View><Text><ScrollView /></Text></View>; }
   const id = repairCode(`import uuid from 'uuid';\nimport { nanoid } from 'nanoid';\nexport const a = () => uuid.v4() + nanoid();\nexport default function X() { return null; }`);
   assert(!/from 'uuid'|from 'nanoid'/.test(id.code) && checkCode(id.code) === null, "default and named id imports are both replaced:\n" + id.code);
 });
+
+// ---- AI copy: the new "highlights" field is cleaned like everything else (short, escaped later by genSite, never more than 4) ----
+import { cleanCopy } from "../supabase/functions/ai-gateway/spec.ts";
+Deno.test("copy.highlights: at most 4 short strings, objects accepted, junk dropped", () => {
+  const c = cleanCopy({ highlights: ["خبرة طويلة", { t: "التزام بالمواعيد" }, "", 7, "x".repeat(200), "رابع", "خامس"] }, () => true);
+  assert(Array.isArray(c.highlights) && c.highlights.length <= 4, "max 4: " + JSON.stringify(c.highlights));
+  assert(c.highlights[0] === "خبرة طويلة" && c.highlights[1] === "التزام بالمواعيد", "strings and {t} accepted: " + JSON.stringify(c.highlights));
+  assert(c.highlights.every((x: string) => x.length > 0 && x.length <= 70), "bounded: " + JSON.stringify(c.highlights));
+  assert(!("highlights" in cleanCopy({ about: "x" }, () => true)), "absent when not sent (nothing invented)");
+});
